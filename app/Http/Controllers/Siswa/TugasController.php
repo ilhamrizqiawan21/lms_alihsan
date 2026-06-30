@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Siswa;
 
 use App\Http\Controllers\Controller;
 use App\Models\KelasMapel;
+use App\Models\PengumpulanFile;
 use App\Models\PengumpulanTugas;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use App\Models\Tugas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class TugasController extends Controller
 {
@@ -67,27 +69,57 @@ class TugasController extends Controller
 
         $validated = $request->validate([
             'file_upload' => 'nullable|file|mimes:pdf,doc,docx,png,jpg,jpeg,zip,rar|max:20480',
+            'files.*' => 'nullable|file|mimes:pdf,doc,docx,png,jpg,jpeg,zip,rar|max:20480',
             'teks_jawaban' => 'nullable|string|max:5000',
         ]);
 
-        $filePath = null;
-        if ($request->hasFile('file_upload')) {
-            $filePath = $request->file('file_upload')
-                ->store('tugas/' . $tugas->id . '/' . $siswa->id, 'public');
-        }
-
-        PengumpulanTugas::updateOrCreate(
+        // Simpan atau update pengumpulan
+        $pengumpulan = PengumpulanTugas::updateOrCreate(
             [
                 'tugas_id' => $tugas->id,
                 'siswa_id' => $siswa->id,
             ],
             [
                 'status' => 'sudah',
-                'file_upload' => $filePath,
+                'file_upload' => null, // akan diisi path pertama jika ada
                 'teks_jawaban' => $validated['teks_jawaban'],
                 'tanggal_kumpul' => now(),
             ]
         );
+
+        $uploadedFiles = [];
+
+        // Upload single file (kompatibilitas dengan form lama)
+        if ($request->hasFile('file_upload')) {
+            $file = $request->file('file_upload');
+            $path = $file->store('tugas/' . $tugas->id . '/' . $siswa->id, 'public');
+            $uploadedFiles[] = [
+                'pengumpulan_id' => $pengumpulan->id,
+                'file_name' => $file->getClientOriginalName(),
+                'file_path' => $path,
+                'uploaded_at' => now(),
+            ];
+        }
+
+        // Upload multiple files
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $file) {
+                $path = $file->store('tugas/' . $tugas->id . '/' . $siswa->id, 'public');
+                $uploadedFiles[] = [
+                    'pengumpulan_id' => $pengumpulan->id,
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_path' => $path,
+                    'uploaded_at' => now(),
+                ];
+            }
+        }
+
+        // Simpan ke tabel pengumpulan_files
+        if (count($uploadedFiles) > 0) {
+            PengumpulanFile::insert($uploadedFiles);
+            // Set file_upload ke file pertama untuk kompatibilitas
+            $pengumpulan->update(['file_upload' => $uploadedFiles[0]['file_path']]);
+        }
 
         $guruId = $tugas->kelasMapel->guru_id;
         $notifikasiService = app(\App\Services\NotifikasiService::class);

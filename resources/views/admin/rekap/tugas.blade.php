@@ -26,7 +26,8 @@
             <div class="col-md-3">
                 <button class="btn btn-primary"><i class="bi bi-search me-1"></i> Tampilkan</button>
                 @if($kelasId && count($tugasList) > 0)
-                <a href="#" class="btn btn-outline-success"><i class="bi bi-file-earmark-excel me-1"></i> Export</a>
+                <a href="{{ route('admin.export.tugas.excel', request()->only(['kelas_id', 'semester'])) }}" class="btn btn-outline-success"><i class="bi bi-file-earmark-excel me-1"></i> Excel</a>
+                <a href="{{ route('admin.export.tugas.pdf', request()->only(['kelas_id', 'semester'])) }}" class="btn btn-outline-danger"><i class="bi bi-file-earmark-pdf me-1"></i> PDF</a>
                 @endif
             </div>
         </form>

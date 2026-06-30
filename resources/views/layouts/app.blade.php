@@ -360,10 +360,99 @@
         .form-switch .form-check-label { font-size:0.82rem; padding-top:2px; cursor:pointer; }
 
         /* ── PAGINATION ── */
-        .pagination { margin-bottom:0; }
-        .page-item.active .page-link { background-color:var(--primary-600); border-color:var(--primary-600); }
-        .page-link { color:var(--primary-600); border-radius:var(--radius-sm); }
-        .page-link:hover { color:var(--primary-800); background:var(--primary-50); }
+        .pagination {
+            margin-bottom:0; gap:3px;
+            --bs-pagination-padding-x:0.6rem;
+            --bs-pagination-padding-y:0.25rem;
+            --bs-pagination-font-size:0.82rem;
+            --bs-pagination-border-radius:0.375rem;
+        }
+        .page-item.active .page-link {
+            background-color:var(--primary-600) !important;
+            border-color:var(--primary-600) !important;
+            font-weight:700 !important;
+        }
+        .page-link {
+            color:var(--primary-600);
+            border-color:var(--gray-200);
+            transition:var(--transition-fast);
+        }
+        .page-link:hover {
+            color:var(--primary-800);
+            background:var(--primary-50);
+            border-color:var(--primary-300);
+            transform:translateY(-1px);
+        }
+        .page-item.disabled .page-link {
+            background:var(--gray-100);
+            color:var(--gray-400);
+            border-color:var(--gray-200);
+            opacity:0.7;
+        }
+        /* Perbaikan SVG panah pagination agar tidak raksasa */
+        .pagination svg,
+        nav[role="navigation"] svg {
+            width:1rem !important;
+            height:1rem !important;
+        }
+        /* Sembunyikan versi mobile Tailwind jika masih ada */
+        nav[role="navigation"] .flex.justify-between {
+            display:none;
+        }
+
+        /* ── DATATABLES PAGINATION OVERRIDE ── */
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            padding:0.25rem 0.6rem !important;
+            font-size:0.78rem !important;
+            min-width:30px;
+            text-align:center;
+            border:1px solid var(--gray-200) !important;
+            border-radius:var(--radius-sm) !important;
+            color:var(--primary-600) !important;
+            margin:0 1px !important;
+            background:white !important;
+            transition:var(--transition-fast);
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background:var(--primary-50) !important;
+            border-color:var(--primary-300) !important;
+            color:var(--primary-800) !important;
+            transform:translateY(-1px);
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background:var(--primary-600) !important;
+            border-color:var(--primary-600) !important;
+            color:white !important;
+            font-weight:700 !important;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+            background:var(--gray-100) !important;
+            color:var(--gray-400) !important;
+            border-color:var(--gray-200) !important;
+            opacity:0.7;
+            cursor:default !important;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {
+            transform:none;
+            background:var(--gray-100) !important;
+        }
+        .dataTables_wrapper .dataTables_length label,
+        .dataTables_wrapper .dataTables_filter label {
+            font-size:0.82rem;
+            color:var(--gray-600);
+        }
+        .dataTables_wrapper .dataTables_length select,
+        .dataTables_wrapper .dataTables_filter input {
+            border-radius:var(--radius-md);
+            border:1px solid var(--gray-300);
+            padding:0.3rem 0.5rem;
+            font-size:0.82rem;
+        }
+        .dataTables_wrapper .dataTables_info {
+            font-size:0.78rem;
+            color:var(--gray-500);
+            padding-top:0.5rem;
+        }
 
         /* ── FOOTER ── */
         footer { text-align:center; padding:1.5rem; color:var(--gray-400); font-size:0.78rem; border-top:1px solid var(--gray-200); margin-top:2rem; }
@@ -639,11 +728,21 @@
         // ── DataTables + Select2 init ──
         $(document).ready(function() {
             $('.select2').select2({ theme: 'bootstrap-5', width: '100%' });
-            $('.datatable').DataTable({
-                language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/id.json' },
-                pageLength: 25,
-                lengthMenu: [10, 25, 50, 100]
-            });
+
+            // DataTables hanya untuk tabel dengan class 'datatable'
+            if ($.fn.DataTable) {
+                $('.datatable').each(function() {
+                    var hasServerPagination = $(this).closest('.card').find('.pagination').length > 0;
+                    if (!hasServerPagination) {
+                        $(this).DataTable({
+                            language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/id.json' },
+                            pageLength: 25,
+                            lengthMenu: [10, 25, 50, 100],
+                            dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>t<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>'
+                        });
+                    }
+                });
+            }
         });
 
         // ── Sidebar open on desktop ──
