@@ -20,7 +20,7 @@
                 <p class="text-muted text-center pt-5">Belum ada pesan. Mulai percakapan!</p>
             @endif
         </div>
-        <form action="" method="POST" class="d-flex gap-2">
+        <form action="{{ route('guru.chat.send', $kelasMapel) }}" method="POST" class="d-flex gap-2">
             @csrf
             <input type="text" name="message" class="form-control" placeholder="Ketik pesan..." required maxlength="1000">
             <button type="submit" class="btn btn-success"><i class="bi bi-send-fill"></i></button>
