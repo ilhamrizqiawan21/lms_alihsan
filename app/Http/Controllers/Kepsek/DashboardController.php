@@ -9,7 +9,7 @@ use App\Models\NilaiAkhir;
 use App\Models\Pengumuman;
 use App\Services\StatistikService;
 use Illuminate\Support\Facades\DB;
-
+//DashboardController untuk kepala sekolah, menampilkan statistik, absensi, nilai rata-rata, pengumuman, dan login terbaru
 class DashboardController extends Controller
 {
     protected StatistikService $statistikService;

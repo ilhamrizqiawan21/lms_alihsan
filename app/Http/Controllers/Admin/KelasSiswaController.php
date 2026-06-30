@@ -16,7 +16,7 @@ class KelasSiswaController extends Controller
     public function index(Request $request)
     {
         $kelasList = Kelas::orderBy('tingkat')->orderBy('nama_kelas')->get();
-
+        //Urutan User berdasarkan NIS/Kode Guru
         $query = Siswa::with(['user', 'kelas'])
             ->whereHas('user')
             ->orderBy('nis');
@@ -36,7 +36,7 @@ class KelasSiswaController extends Controller
 
         return view('admin.kelas-siswa.index', compact('kelasList', 'siswa'));
     }
-
+    //Save new Siswa
     public function storeSiswa(Request $request)
     {
         $validated = $request->validate([
@@ -78,7 +78,7 @@ class KelasSiswaController extends Controller
                 ->with('error', 'Data sudah ada di database. Silakan periksa kembali NIS atau username yang dimasukkan.');
         }
     }
-
+    //Edit Siswa
     public function updateSiswa(Request $request, Siswa $siswa)
     {
         $validated = $request->validate([
@@ -103,13 +103,13 @@ class KelasSiswaController extends Controller
 
         return back()->with('success', 'Data siswa berhasil diperbarui.');
     }
-
+    //Reset Password balik lagi ke default yaitu  123456
     public function resetPassword(Siswa $siswa)
     {
         $siswa->user->update(['password' => Hash::make('123456')]);
         return back()->with('success', 'Password siswa direset menjadi 123456.');
     }
-
+    //Delete Siswa beserta Usernya
     public function destroySiswa(Siswa $siswa)
     {
         $nama = $siswa->user->nama_lengkap;
@@ -118,7 +118,7 @@ class KelasSiswaController extends Controller
         User::destroy($userId);
         return back()->with('success', "Siswa {$nama} berhasil dihapus.");
     }
-
+    //Tampilkan daftar siswa yang sudah lulus
     public function luluskanKelas(Kelas $kelas)
     {
         if ($kelas->tingkat !== 'IX') {

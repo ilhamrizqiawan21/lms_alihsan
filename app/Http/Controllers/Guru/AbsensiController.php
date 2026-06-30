@@ -85,7 +85,7 @@ class AbsensiController extends Controller
             'bulan', 'bulanNum', 'tahun', 'bulanIndo'
         ));
     }
-
+    //Simpan Absensi
     public function store(Request $request, KelasMapel $kelasMapel)
     {
         $this->authorize('mengajar', $kelasMapel);

@@ -30,7 +30,7 @@ class NilaiController extends Controller
 
         return view('guru.nilai.index', compact('kelasMapel'));
     }
-
+    //Input nilai
     public function input(KelasMapel $kelasMapel)
     {
         $this->authorize('mengajar', $kelasMapel);
@@ -52,7 +52,7 @@ class NilaiController extends Controller
 
         return view('guru.nilai.input', compact('kelasMapel', 'siswa', 'nilaiList', 'tahunAjaran', 'semester'));
     }
-
+    //Simpan nilai
     public function store(Request $request, KelasMapel $kelasMapel)
     {
         $this->authorize('mengajar', $kelasMapel);
@@ -107,7 +107,7 @@ class NilaiController extends Controller
         return redirect()->route('guru.nilai.input', $kelasMapel)
             ->with('success', 'Nilai berhasil disimpan.');
     }
-
+    //Bahan untuk merekap nilai siswa per kelas dan mata pelajaran yang diampu oleh guru
     public function rekap(Request $request)
     {
         $kelasMapel = KelasMapel::with(['kelas', 'mataPelajaran'])

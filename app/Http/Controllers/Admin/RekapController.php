@@ -58,7 +58,7 @@ class RekapController extends Controller
 
         return view('admin.rekap.absensi', compact('kelasList', 'rekap', 'tanggalList', 'kelasNama', 'bulan', 'kelasId'));
     }
-
+    //Mengambil nilai berdasarkan kelas
     public function nilai(Request $request)
     {
         $kelasList = Kelas::orderBy('tingkat')->orderBy('nama_kelas')->get();
@@ -98,7 +98,7 @@ class RekapController extends Controller
 
         return view('admin.rekap.nilai', compact('kelasList', 'rekap', 'mapelList', 'kelasNama', 'kelasId', 'taAktif', 'semester'));
     }
-
+    //Nilai Sikap
     public function sikap(Request $request)
     {
         $kelasList = Kelas::orderBy('tingkat')->orderBy('nama_kelas')->get();
@@ -151,7 +151,7 @@ class RekapController extends Controller
 
         return view('admin.rekap.sikap', compact('kelasList', 'rekap', 'kelasNama', 'kelasId', 'taAktif', 'semester'));
     }
-
+    //Rekap Tugas Siswa
     public function tugas(Request $request)
     {
         $kelasList = Kelas::orderBy('tingkat')->orderBy('nama_kelas')->get();

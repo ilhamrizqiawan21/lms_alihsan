@@ -13,7 +13,7 @@ class ProfilController extends Controller
     {
         return view('guru.profil', ['user' => Auth::user()]);
     }
-
+    //Edit profil siswa atau guru
     public function update(Request $request)
     {
         $user = Auth::user();

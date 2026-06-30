@@ -20,7 +20,7 @@ class MateriController extends Controller
 
         return view('guru.materi.index', compact('kelasMapel'));
     }
-
+    //Daftar materi yang diupload oleh guru untuk kelas dan mata pelajaran tertentu
     public function list(KelasMapel $kelasMapel)
     {
         $this->authorize('mengajar', $kelasMapel);
@@ -31,7 +31,7 @@ class MateriController extends Controller
 
         return view('guru.materi.list', compact('kelasMapel', 'materi'));
     }
-
+    //Menyimpan materi baru
     public function store(Request $request, KelasMapel $kelasMapel)
     {
         $this->authorize('mengajar', $kelasMapel);
@@ -55,7 +55,7 @@ class MateriController extends Controller
         return redirect()->route('guru.materi.list', $kelasMapel)
             ->with('success', 'Materi berhasil diupload.');
     }
-
+    //Menghapus materi yang sudah diupload oleh guru untuk kelas dan mata pelajaran tertentu
     public function destroy(KelasMapel $kelasMapel, Materi $materi)
     {
         $this->authorize('mengajar', $kelasMapel);

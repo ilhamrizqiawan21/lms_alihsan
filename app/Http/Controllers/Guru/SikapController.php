@@ -23,7 +23,7 @@ class SikapController extends Controller
 
         return view('guru.sikap.index', compact('kelasMapel'));
     }
-
+    //Input nilai sikap  siswa
     public function input(KelasMapel $kelasMapel)
     {
         $this->authorize('mengajar', $kelasMapel);
@@ -51,7 +51,7 @@ class SikapController extends Controller
 
         return view('guru.sikap.input', compact('kelasMapel', 'siswa', 'sikapSosial', 'sikapSpiritual', 'tahunAjaran', 'semester'));
     }
-
+    //Simpan nilai sikap siswa
     public function store(Request $request, KelasMapel $kelasMapel)
     {
         $this->authorize('mengajar', $kelasMapel);
@@ -102,7 +102,7 @@ class SikapController extends Controller
         return redirect()->route('guru.sikap.input', $kelasMapel)
             ->with('success', 'Nilai sikap berhasil disimpan.');
     }
-
+    //Bahan untuk merekap nilai sikap siswa per kelas dan mata pelajaran yang diampu oleh guru
     public function rekap(Request $request)
     {
         $kelasMapel = KelasMapel::with(['kelas', 'mataPelajaran'])

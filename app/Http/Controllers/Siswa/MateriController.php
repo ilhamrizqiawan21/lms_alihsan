@@ -26,7 +26,7 @@ class MateriController extends Controller
 
         return view('siswa.materi.index', compact('kelasMapel'));
     }
-
+    //Daftar materi yang sudah di input guru
     public function list(KelasMapel $kelasMapel)
     {
         $user = Auth::user();
@@ -42,7 +42,7 @@ class MateriController extends Controller
 
         return view('siswa.materi.list', compact('kelasMapel', 'materi'));
     }
-
+    //Unduh materi
     public function download(KelasMapel $kelasMapel, Materi $materi)
     {
         $user = Auth::user();

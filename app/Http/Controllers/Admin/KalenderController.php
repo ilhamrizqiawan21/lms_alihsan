@@ -36,7 +36,7 @@ class KalenderController extends Controller
             'startDayOfWeek', 'prevMonth', 'nextMonth', 'firstDay', 'monthEvents'
         ));
     }
-
+    //Input Event
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -52,7 +52,7 @@ class KalenderController extends Controller
 
         return back()->with('success', 'Event berhasil ditambahkan.');
     }
-
+    //Update Event
     public function update(Request $request, CalendarEvent $calendarEvent)
     {
         $validated = $request->validate([
@@ -67,7 +67,7 @@ class KalenderController extends Controller
 
         return back()->with('success', 'Event berhasil diperbarui.');
     }
-
+    //Delete Event
     public function destroy(CalendarEvent $calendarEvent)
     {
         $calendarEvent->delete();

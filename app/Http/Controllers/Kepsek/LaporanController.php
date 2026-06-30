@@ -15,7 +15,7 @@ use App\Models\Tugas;
 use App\Services\AbsensiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-
+// Laporan Nilai, Sikap, Tugas, dan Absensi untuk Kepala Sekolah
 class LaporanController extends Controller
 {
     protected AbsensiService $absensiService;

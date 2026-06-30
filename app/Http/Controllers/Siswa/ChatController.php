@@ -29,7 +29,7 @@ class ChatController extends Controller
 
         return view('siswa.chat.index', compact('kelasMapel'));
     }
-
+    //Tampilan chat yang difilter sesuai dengan guru dan mapel yang dipilih oleh siswa, dan menampilkan pesan yang sudah dibaca dan belum dibaca
     public function show(KelasMapel $kelasMapel)
     {
         $user = Auth::user();
@@ -50,7 +50,7 @@ class ChatController extends Controller
 
         return view('siswa.chat.show', compact('kelasMapel', 'messages'));
     }
-
+    //Kirim Pesan
     public function send(Request $request, KelasMapel $kelasMapel)
     {
         $user = Auth::user();

@@ -20,6 +20,7 @@ class DashboardController extends Controller
 
     public function index()
     {
+        //fitur fitur dalam dashboard
         $guruId = Auth::id();
         $statistik = $this->statistikService->dashboardGuru($guruId);
 

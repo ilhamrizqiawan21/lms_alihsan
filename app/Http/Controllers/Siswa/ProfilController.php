@@ -14,7 +14,7 @@ class ProfilController extends Controller
         $user = Auth::user()->load('siswa.kelas');
         return view('siswa.profil', compact('user'));
     }
-
+    //Update username dan password siswa
     public function update(Request $request)
     {
         $user = Auth::user();

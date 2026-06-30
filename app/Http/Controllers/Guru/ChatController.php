@@ -21,7 +21,7 @@ class ChatController extends Controller
 
         return view('guru.chat.index', compact('kelasMapel'));
     }
-
+    //Pengaturan chat sesuai dengan guru mata pelajaran dan kelas yang diampu
     public function chat(KelasMapel $kelasMapel)
     {
         $this->authorize('mengajar', $kelasMapel);
@@ -37,7 +37,7 @@ class ChatController extends Controller
 
         return view('guru.chat.show', compact('kelasMapel', 'messages'));
     }
-
+    //Kirim pesan
     public function send(Request $request, KelasMapel $kelasMapel)
     {
         $this->authorize('mengajar', $kelasMapel);

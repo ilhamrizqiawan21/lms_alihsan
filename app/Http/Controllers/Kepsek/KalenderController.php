@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Kepsek;
 use App\Http\Controllers\Controller;
 use App\Models\CalendarEvent;
 use Illuminate\Http\Request;
-
+//Kalender untuk Kepala Sekolah, menampilkan kalender dengan event sekolah dan event milik kepala sekolah, serta fitur CRUD untuk event
 class KalenderController extends Controller
 {
     public function index(Request $request)

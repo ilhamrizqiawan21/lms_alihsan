@@ -13,7 +13,7 @@ class TahunAjaranController extends Controller
         $tahunAjaran = TahunAjaran::orderBy('tahun', 'desc')->get();
         return view('admin.tahun-ajaran.index', compact('tahunAjaran'));
     }
-
+    //Menyimpan Tahun Ajaran Baru
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -30,7 +30,7 @@ class TahunAjaranController extends Controller
         return redirect()->route('admin.tahun-ajaran.index')
             ->with('success', 'Tahun ajaran berhasil ditambahkan.');
     }
-
+    //Edit Tahun Ajaran
     public function update(Request $request, TahunAjaran $tahunAjaran)
     {
         $validated = $request->validate([
@@ -48,14 +48,14 @@ class TahunAjaranController extends Controller
         return redirect()->route('admin.tahun-ajaran.index')
             ->with('success', 'Tahun ajaran berhasil diperbarui.');
     }
-
+    //Hapus Tahun Ajaran
     public function destroy(TahunAjaran $tahunAjaran)
     {
         $tahunAjaran->delete();
         return redirect()->route('admin.tahun-ajaran.index')
             ->with('success', 'Tahun ajaran berhasil dihapus.');
     }
-
+    //Set Tahun Ajaran Aktif
     public function setAktif(TahunAjaran $tahunAjaran)
     {
         TahunAjaran::where('is_active', true)->update(['is_active' => false]);

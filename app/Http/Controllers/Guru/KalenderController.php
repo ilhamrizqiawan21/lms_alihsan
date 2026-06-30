@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Guru;
 use App\Http\Controllers\Controller;
 use App\Models\CalendarEvent;
 use Illuminate\Http\Request;
-
+//Sama dengan Admin\KalenderController, namun ini untuk guru
 class KalenderController extends Controller
 {
     public function index(Request $request)

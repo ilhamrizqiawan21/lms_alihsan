@@ -13,6 +13,7 @@ class SystemController extends Controller
 {
     public function logLogin(Request $request)
     {
+        //Mengecek aktivitas login user
         $query = LogLogin::orderBy('login_time', 'desc');
 
         if ($request->filled('search')) {
@@ -24,7 +25,7 @@ class SystemController extends Controller
 
         return view('admin.log-login', compact('logs'));
     }
-
+    //Menampilkan riwayat login sistem
     public function logError(Request $request)
     {
         $query = SystemError::orderBy('created_at', 'desc');
@@ -38,13 +39,13 @@ class SystemController extends Controller
 
         return view('admin.log-error', compact('errors', 'levels'));
     }
-
+    //Pengaturan sistem seperti warna tema, nama sekolah, semester aktif, tahun ajaran aktif, dan mode kenaikan kelas
     public function pengaturan()
     {
         $settings = Pengaturan::pluck('value', 'key')->toArray();
         return view('admin.pengaturan', compact('settings'));
     }
-
+    //Simpan pengaturan sistem
     public function savePengaturan(Request $request)
     {
         $data = $request->validate([
@@ -63,13 +64,13 @@ class SystemController extends Controller
 
         return back()->with('success', 'Pengaturan berhasil disimpan.');
     }
-
+    //Memblokir IP tertentu agar tidak bisa mengakses sistem
     public function blockedIps()
     {
         $ips = BlockedIp::orderBy('created_at', 'desc')->paginate(25);
         return view('admin.blocked-ips', compact('ips'));
     }
-
+    //Membuka blokir IP tertentu agar bisa mengakses sistem kembali
     public function unblockIp(BlockedIp $blockedIp)
     {
         $blockedIp->delete();
