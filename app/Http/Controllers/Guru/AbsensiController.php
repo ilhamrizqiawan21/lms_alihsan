@@ -73,7 +73,8 @@ class AbsensiController extends Controller
                     $absensiData[$s->id] = [];
                 }
                 foreach ($absensiRaw as $a) {
-                    $absensiData[$a->siswa_id][$a->tanggal] = $a->status;
+                    $tgl = $a->tanggal instanceof \Carbon\Carbon ? $a->tanggal->format('Y-m-d') : $a->tanggal;
+                    $absensiData[$a->siswa_id][$tgl] = $a->status;
                 }
             }
         }

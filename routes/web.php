@@ -172,7 +172,7 @@ Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(f
 
     // Notifikasi
     Route::get('/notifikasi', [GuruNotifikasiController::class, 'index'])->name('notifikasi.index');
-    Route::post('/notifikasi/{notifikasi}/read', [GuruNotifikasiController::class, 'markRead'])->name('notifikasi.mark-read');
+    Route::get('/notifikasi/{notifikasi}/read', [GuruNotifikasiController::class, 'markRead'])->name('notifikasi.mark-read');
     Route::post('/notifikasi/mark-all-read', [GuruNotifikasiController::class, 'markAllRead'])->name('notifikasi.mark-all-read');
 
     // Profil
@@ -212,7 +212,7 @@ Route::middleware(['auth', 'role:siswa'])->prefix('siswa')->name('siswa.')->grou
 
     // Notifikasi
     Route::get('/notifikasi', [SiswaNotifikasiController::class, 'index'])->name('notifikasi.index');
-    Route::post('/notifikasi/{notifikasi}/read', [SiswaNotifikasiController::class, 'markRead'])->name('notifikasi.mark-read');
+    Route::get('/notifikasi/{notifikasi}/read', [SiswaNotifikasiController::class, 'markRead'])->name('notifikasi.mark-read');
     Route::post('/notifikasi/mark-all-read', [SiswaNotifikasiController::class, 'markAllRead'])->name('notifikasi.mark-all-read');
 
     // Profil

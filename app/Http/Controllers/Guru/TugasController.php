@@ -103,4 +103,29 @@ class TugasController extends Controller
 
         return back()->with('success', 'Nilai berhasil diberikan.');
     }
+
+    public function destroy(Tugas $tugas)
+    {
+        $kelasMapel = $tugas->kelasMapel;
+
+        // Hapus semua pengumpulan terkait beserta file
+        $pengumpulanList = PengumpulanTugas::where('tugas_id', $tugas->id)->get();
+        foreach ($pengumpulanList as $p) {
+            if ($p->file_upload) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($p->file_upload);
+            }
+            // Hapus file di pengumpulan_files
+            foreach ($p->files as $file) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($file->file_path);
+                $file->delete();
+            }
+            $p->delete();
+        }
+
+        $tugas->delete();
+
+        return redirect()->route('guru.tugas.list', $kelasMapel)
+            ->with('success', 'Tugas berhasil dihapus.');
+    }
 }
+
