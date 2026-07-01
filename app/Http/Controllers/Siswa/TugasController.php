@@ -68,8 +68,8 @@ class TugasController extends Controller
         }
 
         $validated = $request->validate([
-            'file_upload' => 'nullable|file|mimes:pdf,doc,docx,png,jpg,jpeg,zip,rar|max:20480',
-            'files.*' => 'nullable|file|mimes:pdf,doc,docx,png,jpg,jpeg,zip,rar|max:20480',
+            'file_upload' => 'nullable|file|mimes:png,jpg,jpeg,pdf|max:20480',
+            'files.*' => 'nullable|file|mimes:png,jpg,jpeg,pdf|max:20480',
             'teks_jawaban' => 'nullable|string|max:5000',
         ]);
 

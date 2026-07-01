@@ -117,8 +117,8 @@
                 <form action="{{ route('siswa.tugas.kumpul', $tugas->id) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="mb-3">
-                        <label class="form-label">Upload File <small class="text-muted">(PDF, DOC, DOCX, PNG, JPG, ZIP, RAR — max 20MB)</small></label>
-                        <input type="file" name="file_upload" class="form-control @error('file_upload') is-invalid @enderror">
+                        <label class="form-label">Upload File <small class="text-muted">(PNG, JPG, JPEG, PDF — max 20MB)</small></label>
+                        <input type="file" name="file_upload" class="form-control @error('file_upload') is-invalid @enderror" accept=".png,.jpg,.jpeg,.pdf,image/png,image/jpeg,application/pdf">
                         @error('file_upload') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="mb-3">

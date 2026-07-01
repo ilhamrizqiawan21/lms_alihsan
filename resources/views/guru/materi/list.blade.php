@@ -24,8 +24,8 @@
                         <textarea name="deskripsi" class="form-control" rows="3"></textarea>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">File (PDF/DOC/ZIP, max 20MB)</label>
-                        <input type="file" name="file_materi" class="form-control" required>
+                        <label class="form-label">File (PNG, JPG, JPEG, PDF, max 20MB)</label>
+                        <input type="file" name="file_materi" class="form-control" accept=".png,.jpg,.jpeg,.pdf,image/png,image/jpeg,application/pdf" required>
                     </div>
                     <button class="btn btn-success w-100"><i class="bi bi-upload me-1"></i> Upload</button>
                 </form>
