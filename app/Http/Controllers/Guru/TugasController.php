@@ -9,6 +9,7 @@ use App\Models\Tugas;
 use App\Services\NotifikasiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class TugasController extends Controller
 {
@@ -79,6 +80,7 @@ class TugasController extends Controller
     public function pengumpulan(KelasMapel $kelasMapel, Tugas $tugas)
     {
         $this->authorize('mengajar', $kelasMapel);
+        $this->ensureTugasBelongsToKelasMapel($tugas, $kelasMapel);
 
         $pengumpulan = PengumpulanTugas::with(['siswa.user', 'files'])
             ->where('tugas_id', $tugas->id)
@@ -90,6 +92,8 @@ class TugasController extends Controller
     public function nilai(Request $request, KelasMapel $kelasMapel, Tugas $tugas, PengumpulanTugas $pengumpulan)
     {
         $this->authorize('mengajar', $kelasMapel);
+        $this->ensureTugasBelongsToKelasMapel($tugas, $kelasMapel);
+        $this->ensurePengumpulanBelongsToTugas($pengumpulan, $tugas);
 
         $validated = $request->validate([
             'nilai' => 'required|numeric|min:0|max:100',
@@ -107,16 +111,19 @@ class TugasController extends Controller
     public function destroy(Tugas $tugas)
     {
         $kelasMapel = $tugas->kelasMapel;
+        $this->authorize('mengajar', $kelasMapel);
 
         // Hapus semua pengumpulan terkait beserta file
-        $pengumpulanList = PengumpulanTugas::where('tugas_id', $tugas->id)->get();
+        $pengumpulanList = PengumpulanTugas::with('files')
+            ->where('tugas_id', $tugas->id)
+            ->get();
         foreach ($pengumpulanList as $p) {
             if ($p->file_upload) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($p->file_upload);
+                Storage::disk('public')->delete($p->file_upload);
             }
             // Hapus file di pengumpulan_files
             foreach ($p->files as $file) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($file->file_path);
+                Storage::disk('public')->delete($file->file_path);
                 $file->delete();
             }
             $p->delete();
@@ -127,5 +134,14 @@ class TugasController extends Controller
         return redirect()->route('guru.tugas.list', $kelasMapel)
             ->with('success', 'Tugas berhasil dihapus.');
     }
-}
 
+    private function ensureTugasBelongsToKelasMapel(Tugas $tugas, KelasMapel $kelasMapel): void
+    {
+        abort_unless((int) $tugas->kelas_mapel_id === (int) $kelasMapel->id, 403);
+    }
+
+    private function ensurePengumpulanBelongsToTugas(PengumpulanTugas $pengumpulan, Tugas $tugas): void
+    {
+        abort_unless((int) $pengumpulan->tugas_id === (int) $tugas->id, 403);
+    }
+}

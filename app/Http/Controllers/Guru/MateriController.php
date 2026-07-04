@@ -39,7 +39,7 @@ class MateriController extends Controller
         $validated = $request->validate([
             'judul' => 'required|string|max:200',
             'deskripsi' => 'nullable|string',
-            'file_materi' => 'required|file|mimes:png,jpg,jpeg,pdf|max:20480',
+            'file_materi' => 'required|file|mimes:jpg,jpeg,pdf|extensions:jpg,jpeg,pdf|max:20480',
         ]);
 
         $file = $request->file('file_materi');
@@ -49,7 +49,7 @@ class MateriController extends Controller
             'kelas_mapel_id' => $kelasMapel->id,
             'judul' => $validated['judul'],
             'deskripsi' => $validated['deskripsi'],
-            'file_materi' => $path,
+            'file_path' => $path,
         ]);
 
         return redirect()->route('guru.materi.list', $kelasMapel)
@@ -59,14 +59,20 @@ class MateriController extends Controller
     public function destroy(KelasMapel $kelasMapel, Materi $materi)
     {
         $this->authorize('mengajar', $kelasMapel);
+        $this->ensureMateriBelongsToKelasMapel($materi, $kelasMapel);
 
-        if ($materi->file_materi) {
-            Storage::disk('public')->delete($materi->file_materi);
+        if ($materi->file_path) {
+            Storage::disk('public')->delete($materi->file_path);
         }
 
         $materi->delete();
 
         return redirect()->route('guru.materi.list', $kelasMapel)
             ->with('success', 'Materi berhasil dihapus.');
+    }
+
+    private function ensureMateriBelongsToKelasMapel(Materi $materi, KelasMapel $kelasMapel): void
+    {
+        abort_unless((int) $materi->kelas_mapel_id === (int) $kelasMapel->id, 403);
     }
 }

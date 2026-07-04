@@ -15,7 +15,7 @@ class Materi extends Model
         'kelas_mapel_id',
         'judul',
         'deskripsi',
-        'file_materi',
+        'file_path',
     ];
 
     public function kelasMapel(): BelongsTo

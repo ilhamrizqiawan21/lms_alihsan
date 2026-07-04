@@ -55,7 +55,7 @@
                                 <td>
                                     <form action="{{ route('admin.mata-pelajaran.destroy', $m) }}" method="POST" class="d-inline">
                                         @csrf @method('DELETE')
-                                        <button class="btn btn-sm btn-danger" onclick="return confirm('Hapus {{ $m->nama_mapel }}?')">
+                                        <button class="btn btn-sm btn-danger" data-confirm="Hapus {{ $m->nama_mapel }}?">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>

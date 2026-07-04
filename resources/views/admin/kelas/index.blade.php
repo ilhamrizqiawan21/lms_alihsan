@@ -55,7 +55,7 @@
                                 <td>
                                     <form action="{{ route('admin.kelas.destroy', $k) }}" method="POST" class="d-inline">
                                         @csrf @method('DELETE')
-                                        <button class="btn btn-sm btn-danger" onclick="return confirm('Hapus kelas {{ $k->nama_kelas }}?')">
+                                        <button class="btn btn-sm btn-danger" data-confirm="Hapus kelas {{ $k->nama_kelas }}?">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>

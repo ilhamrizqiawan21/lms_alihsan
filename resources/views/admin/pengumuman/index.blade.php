@@ -61,7 +61,7 @@
                                 <td>
                                     <form action="{{ route('admin.pengumuman.destroy', $p) }}" method="POST" class="d-inline">
                                         @csrf @method('DELETE')
-                                        <button class="btn btn-sm btn-danger" onclick="return confirm('Hapus pengumuman?')">
+                                        <button class="btn btn-sm btn-danger" data-confirm="Hapus pengumuman?">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>

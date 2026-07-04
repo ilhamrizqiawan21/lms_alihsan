@@ -48,7 +48,7 @@
                                 <a href="{{ route('guru.tugas.pengumpulan', [$kelasMapel, $t]) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i> Nilai</a>
                                 <form action="{{ route('guru.tugas.destroy', $t) }}" method="POST" class="d-inline">
                                     @csrf @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Hapus?')"><i class="bi bi-trash"></i></button>
+                                    <button class="btn btn-sm btn-outline-danger" data-confirm="Hapus tugas ini?"><i class="bi bi-trash"></i></button>
                                 </form>
                             </td>
                         </tr>

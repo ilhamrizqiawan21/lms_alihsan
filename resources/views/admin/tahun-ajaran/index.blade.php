@@ -51,14 +51,14 @@
                                     <form action="{{ route('admin.tahun-ajaran.set-aktif', $ta) }}" method="POST" class="d-inline">
                                         @csrf
                                         <button class="btn btn-sm btn-{{ $ta->is_active ? 'secondary' : 'primary' }}"
-                                                onclick="return confirm('{{ $ta->is_active ? 'Nonaktifkan' : 'Aktifkan' }} tahun ajaran ini?')">
+                                                data-confirm="{{ $ta->is_active ? 'Nonaktifkan' : 'Aktifkan' }} tahun ajaran ini?">
                                             <i class="bi bi-{{ $ta->is_active ? 'pause-fill' : 'check-circle-fill' }}"></i>
                                             {{ $ta->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
                                         </button>
                                     </form>
                                     <form action="{{ route('admin.tahun-ajaran.destroy', $ta) }}" method="POST" class="d-inline">
                                         @csrf @method('DELETE')
-                                        <button class="btn btn-sm btn-danger" onclick="return confirm('Hapus?')">
+                                        <button class="btn btn-sm btn-danger" data-confirm="Hapus tahun ajaran ini?">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>

@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Siswa;
 use App\Http\Controllers\Controller;
 use App\Models\Absensi;
 use App\Models\KelasMapel;
+use App\Models\Materi;
 use App\Models\Notifikasi;
+use App\Models\PengumpulanTugas;
 use App\Models\Pengumuman;
 use App\Models\Siswa;
+use App\Models\Tugas;
 use App\Services\StatistikService;
 use Illuminate\Support\Facades\Auth;
 
@@ -36,6 +39,25 @@ class DashboardController extends Controller
             ->whereHas('tahunAjaran', fn($q) => $q->where('is_active', true))
             ->get();
 
+        $kelasMapelIds = $kelasMapel->pluck('id');
+
+        $totalTugas = Tugas::whereIn('kelas_mapel_id', $kelasMapelIds)->count();
+        $tugasSelesai = PengumpulanTugas::where('siswa_id', $siswa->id)
+            ->where('status', 'sudah')
+            ->whereHas('tugas', fn($q) => $q->whereIn('kelas_mapel_id', $kelasMapelIds))
+            ->count();
+        $tugasBelum = max($totalTugas - $tugasSelesai, 0);
+        $totalMateri = Materi::whereIn('kelas_mapel_id', $kelasMapelIds)->count();
+
+        $tugasTerbaru = Tugas::with([
+            'kelasMapel.mataPelajaran',
+            'pengumpulan' => fn($q) => $q->where('siswa_id', $siswa->id),
+        ])
+            ->whereIn('kelas_mapel_id', $kelasMapelIds)
+            ->orderBy('batas_waktu', 'asc')
+            ->take(5)
+            ->get();
+
         $pengumuman = Pengumuman::with('creator')
             ->where(function ($q) {
                 $q->where('target', 'semua')
@@ -57,6 +79,18 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        return view('siswa.dashboard', compact('statistik', 'kelasMapel', 'pengumuman', 'notifikasi', 'absensiTerbaru', 'siswa'));
+        return view('siswa.dashboard', compact(
+            'statistik',
+            'kelasMapel',
+            'pengumuman',
+            'notifikasi',
+            'absensiTerbaru',
+            'siswa',
+            'totalTugas',
+            'tugasSelesai',
+            'tugasBelum',
+            'totalMateri',
+            'tugasTerbaru'
+        ));
     }
 }

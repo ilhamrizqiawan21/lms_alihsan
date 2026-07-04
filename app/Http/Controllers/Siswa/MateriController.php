@@ -52,11 +52,18 @@ class MateriController extends Controller
             abort(403);
         }
 
-        $path = storage_path('app/public/' . $materi->file_materi);
+        $this->ensureMateriBelongsToKelasMapel($materi, $kelasMapel);
+
+        $path = storage_path('app/public/' . $materi->file_path);
         if (!file_exists($path)) {
             return back()->with('error', 'File materi tidak ditemukan.');
         }
 
-        return response()->download($path, $materi->judul . '_' . basename($materi->file_materi));
+        return response()->download($path, $materi->judul . '_' . basename($materi->file_path));
+    }
+
+    private function ensureMateriBelongsToKelasMapel(Materi $materi, KelasMapel $kelasMapel): void
+    {
+        abort_unless((int) $materi->kelas_mapel_id === (int) $kelasMapel->id, 403);
     }
 }

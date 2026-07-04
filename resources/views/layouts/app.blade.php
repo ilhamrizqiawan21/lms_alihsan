@@ -644,6 +644,24 @@
     <!-- Main Content -->
     <div class="main-content">
         <div class="page-content">
+            @if(session('success'))
+                <div class="alert alert-success d-flex align-items-center gap-2 mb-3" role="alert">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>{{ session('success') }}</span>
+                </div>
+            @endif
+            @if(session('error'))
+                <div class="alert alert-danger d-flex align-items-center gap-2 mb-3" role="alert">
+                    <i class="bi bi-x-circle-fill"></i>
+                    <span>{{ session('error') }}</span>
+                </div>
+            @endif
+            @if(session('warning'))
+                <div class="alert alert-warning d-flex align-items-center gap-2 mb-3" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span>{{ session('warning') }}</span>
+                </div>
+            @endif
             @yield('content')
         </div>
         <footer>
@@ -654,9 +672,6 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    @if(session('success'))<script>document.addEventListener('DOMContentLoaded',function(){showToast(@json(session('success')),'success')})</script>@endif
-    @if(session('error'))<script>document.addEventListener('DOMContentLoaded',function(){showToast(@json(session('error')),'error')})</script>@endif
-    @if(session('warning'))<script>document.addEventListener('DOMContentLoaded',function(){showToast(@json(session('warning')),'warning')})</script>@endif
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
@@ -704,13 +719,23 @@
             if (!el) return;
             e.preventDefault();
             e.stopPropagation();
-            var msg = el.getAttribute('data-confirm');
-            var danger = el.classList.contains('btn-danger') || el.getAttribute('data-danger') === 'true';
+            var msg = el.getAttribute('data-confirm') || 'Anda yakin ingin melanjutkan?';
+            var danger = el.className.indexOf('danger') !== -1 || el.getAttribute('data-danger') === 'true';
             confirmAction(msg, function(ok) {
                 if (!ok) return;
+                var parentForm = el.closest('form');
                 var formAction = el.getAttribute('data-action');
                 var method = (el.getAttribute('data-method') || 'get').toUpperCase();
-                if (formAction) {
+                if (parentForm) {
+                    if (el.name) {
+                        var submitValue = document.createElement('input');
+                        submitValue.type = 'hidden';
+                        submitValue.name = el.name;
+                        submitValue.value = el.value;
+                        parentForm.appendChild(submitValue);
+                    }
+                    parentForm.submit();
+                } else if (formAction) {
                     var form = document.createElement('form');
                     form.method = method === 'POST' ? 'POST' : 'GET';
                     form.action = formAction;

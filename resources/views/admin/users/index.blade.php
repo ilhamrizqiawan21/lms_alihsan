@@ -65,13 +65,13 @@
                             <form action="{{ route('admin.users.toggle-active', $user) }}" method="POST" class="d-inline">
                                 @csrf
                                 <button class="btn btn-sm btn-{{ $user->is_active ? 'secondary' : 'success' }}"
-                                        onclick="return confirm('{{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }} user ini?')">
+                                        data-confirm="{{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }} user ini?">
                                     <i class="bi bi-{{ $user->is_active ? 'pause-fill' : 'play-fill' }}"></i>
                                 </button>
                             </form>
                             <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="d-inline">
                                 @csrf @method('DELETE')
-                                <button class="btn btn-sm btn-danger" onclick="return confirm('Hapus user ini?')">
+                                <button class="btn btn-sm btn-danger" data-confirm="Hapus user ini?">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </form>

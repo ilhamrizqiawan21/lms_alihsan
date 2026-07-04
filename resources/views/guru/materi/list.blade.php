@@ -24,8 +24,8 @@
                         <textarea name="deskripsi" class="form-control" rows="3"></textarea>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">File (PNG, JPG, JPEG, PDF, max 20MB)</label>
-                        <input type="file" name="file_materi" class="form-control" accept=".png,.jpg,.jpeg,.pdf,image/png,image/jpeg,application/pdf" required>
+                        <label class="form-label">File (JPG, JPEG, PDF, max 20MB)</label>
+                        <input type="file" name="file_materi" class="form-control" accept=".jpg,.jpeg,.pdf,image/jpeg,application/pdf" required>
                     </div>
                     <button class="btn btn-success w-100"><i class="bi bi-upload me-1"></i> Upload</button>
                 </form>
@@ -45,12 +45,12 @@
                             <td style="font-size:0.82rem;">{{ \Illuminate\Support\Str::limit($m->deskripsi, 60) }}</td>
                             <td style="white-space:nowrap;font-size:0.82rem;">{{ $m->created_at ? \Carbon\Carbon::parse($m->created_at)->format('d M Y') : '-' }}</td>
                             <td>
-                                @if($m->file_materi)
-                                <a href="{{ asset('storage/'.$m->file_materi) }}" class="btn btn-sm btn-outline-primary" target="_blank"><i class="bi bi-download"></i></a>
+                                @if($m->file_path)
+                                <a href="{{ asset('storage/'.$m->file_path) }}" class="btn btn-sm btn-outline-primary" target="_blank"><i class="bi bi-download"></i></a>
                                 @endif
                                 <form action="{{ route('guru.materi.destroy', [$kelasMapel, $m]) }}" method="POST" class="d-inline">
                                     @csrf @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Hapus?')"><i class="bi bi-trash"></i></button>
+                                    <button class="btn btn-sm btn-outline-danger" data-confirm="Hapus materi ini?"><i class="bi bi-trash"></i></button>
                                 </form>
                             </td>
                         </tr>

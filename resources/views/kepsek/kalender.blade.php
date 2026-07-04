@@ -202,7 +202,7 @@
         <div class="modal-footer justify-content-between">
             <form action="{{ route('kepsek.kalender.destroy', $e) }}" method="POST" class="d-inline">
                 @csrf @method('DELETE')
-                <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Hapus event ini?')"><i class="bi bi-trash"></i> Hapus</button>
+                <button class="btn btn-sm btn-outline-danger" data-confirm="Hapus event ini?"><i class="bi bi-trash"></i> Hapus</button>
             </form>
             <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-check-lg"></i> Simpan</button>
         </div>

@@ -62,7 +62,7 @@
                         @if ($kls->tingkat === 'IX')
                         <form action="{{ route('admin.kelas-siswa.luluskan-kelas', $kls) }}" method="POST" class="d-inline">
                             @csrf
-                            <button class="btn btn-sm btn-outline-success" onclick="return confirm('Luluskan semua siswa kelas {{ $kls->nama_kelas }}?')">
+                            <button class="btn btn-sm btn-outline-success" data-confirm="Luluskan semua siswa kelas {{ $kls->nama_kelas }}?">
                                 <i class="bi bi-check-circle"></i> Luluskan
                             </button>
                         </form>
@@ -70,7 +70,7 @@
                         <form action="{{ route('admin.kelas.destroy', $kls) }}" method="POST" class="d-inline">
                             @csrf
                             @method('DELETE')
-                            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Hapus kelas {{ $kls->nama_kelas }}?')">
+                            <button class="btn btn-sm btn-outline-danger" data-confirm="Hapus kelas {{ $kls->nama_kelas }}?">
                                 <i class="bi bi-trash"></i>
                             </button>
                         </form>
@@ -131,14 +131,14 @@
                             </button>
                             <form action="{{ route('admin.kelas-siswa.reset-password', $s) }}" method="POST" class="d-inline">
                                 @csrf
-                                <button class="btn btn-sm btn-outline-secondary" onclick="return confirm('Reset password ke 123456?')" title="Reset Password">
+                                <button class="btn btn-sm btn-outline-secondary" data-confirm="Reset password ke 123456?" title="Reset Password">
                                     <i class="bi bi-key"></i>
                                 </button>
                             </form>
                             <form action="{{ route('admin.kelas-siswa.destroy-siswa', $s) }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('DELETE')
-                                <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Hapus siswa {{ $s->user->nama_lengkap ?? $s->nis }}?')">
+                                <button class="btn btn-sm btn-outline-danger" data-confirm="Hapus siswa {{ $s->user->nama_lengkap ?? $s->nis }}?">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </form>

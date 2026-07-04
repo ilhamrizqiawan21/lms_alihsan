@@ -94,7 +94,7 @@
                                 <td>
                                     <form action="{{ route('admin.kelas-mapel.destroy', $km) }}" method="POST" class="d-inline">
                                         @csrf @method('DELETE')
-                                        <button class="btn btn-sm btn-danger" onclick="return confirm('Hapus pengajaran ini?')">
+                                        <button class="btn btn-sm btn-danger" data-confirm="Hapus pengajaran ini?">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>

@@ -55,7 +55,7 @@
                             <tr>
                                 <td>{{ $t->judul }}</td>
                                 <td>{{ $t->kelasMapel?->mataPelajaran?->nama_mapel ?? '-' }}</td>
-                                <td>{{ $t->deadline ? \Carbon\Carbon::parse($t->deadline)->format('d/m/Y') : '-' }}</td>
+                                <td>{{ $t->batas_waktu ? \Carbon\Carbon::parse($t->batas_waktu)->format('d/m/Y H:i') : '-' }}</td>
                                 <td>
                                     @php
                                         $sudahKumpul = $t->pengumpulan->where('siswa_id', auth()->user()->siswa?->id)->first();

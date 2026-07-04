@@ -28,7 +28,7 @@
                         <td>
                             <form action="{{ route('admin.blocked-ips.unblock', $ip) }}" method="POST" class="d-inline">
                                 @csrf @method('DELETE')
-                                <button class="btn btn-sm btn-outline-success" onclick="return confirm('Unblock IP {{ $ip->ip_address }}?')">
+                                <button class="btn btn-sm btn-outline-success" data-confirm="Unblock IP {{ $ip->ip_address }}?">
                                     <i class="bi bi-unlock-fill"></i> Unblock
                                 </button>
                             </form>

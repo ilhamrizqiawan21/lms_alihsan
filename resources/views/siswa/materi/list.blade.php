@@ -18,9 +18,9 @@
                 <p class="text-muted" style="font-size:0.85rem;">{{ $m->deskripsi ?: 'Tidak ada deskripsi' }}</p>
                 <small class="text-muted">{{ $m->created_at ? \Carbon\Carbon::parse($m->created_at)->format('d M Y') : '' }}</small>
             </div>
-            @if($m->file_materi)
+            @if($m->file_path)
             <div class="card-footer bg-transparent">
-                <a href="{{ asset('storage/'.$m->file_materi) }}" class="btn btn-sm btn-success" target="_blank"><i class="bi bi-download me-1"></i> Download</a>
+                <a href="{{ route('siswa.materi.download', [$kelasMapel, $m]) }}" class="btn btn-sm btn-success" target="_blank"><i class="bi bi-download me-1"></i> Download</a>
             </div>
             @endif
         </div>

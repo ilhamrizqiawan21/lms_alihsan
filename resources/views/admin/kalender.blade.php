@@ -180,7 +180,7 @@
     <div class="modal-footer border-top-0 pt-0">
         <form action="{{ route('admin.kalender.destroy', $e) }}" method="POST" class="d-inline">
             @csrf @method('DELETE')
-            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Hapus event ini?')"><i class="bi bi-trash"></i> Hapus</button>
+            <button class="btn btn-sm btn-outline-danger" data-confirm="Hapus event ini?"><i class="bi bi-trash"></i> Hapus</button>
         </form>
     </div>
     </div></div>
