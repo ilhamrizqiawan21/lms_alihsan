@@ -73,7 +73,7 @@
                     <ul class="list-unstyled mb-0">
                         @foreach($pengumpulan->files as $file)
                         <li>
-                            <a href="{{ asset('storage/'.$file->file_path) }}" target="_blank" class="text-decoration-none">
+                            <a href="{{ route('siswa.tugas.file.download', [$tugas, $file]) }}" target="_blank" class="text-decoration-none">
                                 <i class="bi bi-paperclip me-1"></i> {{ $file->file_name }}
                             </a>
                         </li>
@@ -84,7 +84,7 @@
                 <div class="mb-2">
                     <small class="text-muted">File yang diupload:</small>
                     <br>
-                    <a href="{{ asset('storage/'.$pengumpulan->file_upload) }}" target="_blank" class="text-decoration-none">
+                    <a href="{{ route('siswa.tugas.pengumpulan.download', [$tugas, $pengumpulan]) }}" target="_blank" class="text-decoration-none">
                         <i class="bi bi-paperclip me-1"></i> Download File
                     </a>
                 </div>

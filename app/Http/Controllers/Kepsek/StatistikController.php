@@ -23,7 +23,7 @@ class StatistikController extends Controller
             ->get();
 
         // Statistik guru
-        $totalGuru = User::where('role_id', 2)->count();
+        $totalGuru = User::whereHas('role', fn($query) => $query->where('nama_role', 'guru'))->count();
 
         // Statistik absensi per bulan (6 bulan terakhir)
         $absensiBulanan = Absensi::select(

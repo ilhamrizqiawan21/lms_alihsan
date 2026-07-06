@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Kelas;
+use App\Models\Role;
 use App\Models\Siswa;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Database\UniqueConstraintViolationException;
 
 class KelasSiswaController extends Controller
@@ -49,13 +51,20 @@ class KelasSiswaController extends Controller
         ]);
 
         try {
-            $user = DB::transaction(function () use ($validated) {
+            $created = DB::transaction(function () use ($validated) {
+                $siswaRoleId = Role::where('nama_role', 'siswa')->value('id');
+                $password = $this->generateInitialPassword();
+
+                if (!$siswaRoleId) {
+                    throw new \RuntimeException('Role siswa belum tersedia.');
+                }
+
                 // Buat user dulu
                 $user = User::create([
                     'username' => $validated['nis'],
-                    'password' => Hash::make('123456'),
+                    'password' => Hash::make($password),
                     'nama_lengkap' => $validated['nama_lengkap'],
-                    'role_id' => 3,
+                    'role_id' => $siswaRoleId,
                     'jenis_kelamin' => $validated['jenis_kelamin'],
                     'is_active' => true,
                 ]);
@@ -68,10 +77,13 @@ class KelasSiswaController extends Controller
                     'status' => 'aktif',
                 ]);
 
-                return $user;
+                return compact('user', 'password');
             });
 
-            return back()->with('success', "Siswa {$validated['nama_lengkap']} berhasil ditambahkan.");
+            return back()->with(
+                'success',
+                "Siswa {$validated['nama_lengkap']} berhasil ditambahkan. Password awal: {$created['password']}"
+            );
         } catch (UniqueConstraintViolationException $e) {
             return back()
                 ->withInput()
@@ -103,11 +115,14 @@ class KelasSiswaController extends Controller
 
         return back()->with('success', 'Data siswa berhasil diperbarui.');
     }
-    //Reset Password balik lagi ke default yaitu  123456
+    //Reset password ke password acak baru.
     public function resetPassword(Siswa $siswa)
     {
-        $siswa->user->update(['password' => Hash::make('123456')]);
-        return back()->with('success', 'Password siswa direset menjadi 123456.');
+        $password = $this->generateInitialPassword();
+
+        $siswa->user->update(['password' => Hash::make($password)]);
+
+        return back()->with('success', "Password siswa direset. Password baru: {$password}");
     }
     //Delete Siswa beserta Usernya
     public function destroySiswa(Siswa $siswa)
@@ -130,5 +145,10 @@ class KelasSiswaController extends Controller
             ->update(['status' => 'lulus']);
 
         return back()->with('success', "{$count} siswa kelas {$kelas->nama_kelas} berhasil diluluskan.");
+    }
+
+    private function generateInitialPassword(): string
+    {
+        return Str::upper(Str::random(4)) . random_int(1000, 9999);
     }
 }

@@ -65,9 +65,12 @@
                         </td>
                         <td>
                             @if($n->link)
-                            <a href="{{ route('siswa.notifikasi.mark-read', $n) }}" class="btn btn-sm" style="background: var(--primary-50); color: var(--primary-700);" title="Lihat">
-                                <i class="bi bi-arrow-right"></i>
-                            </a>
+                            <form action="{{ route('siswa.notifikasi.mark-read', $n) }}" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit" class="btn btn-sm" style="background: var(--primary-50); color: var(--primary-700);" title="Lihat">
+                                    <i class="bi bi-arrow-right"></i>
+                                </button>
+                            </form>
                             @else
                             <form action="{{ route('siswa.notifikasi.mark-read', $n) }}" method="POST" class="d-inline">
                                 @csrf

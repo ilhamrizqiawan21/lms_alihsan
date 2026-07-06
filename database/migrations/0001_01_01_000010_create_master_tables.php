@@ -8,12 +8,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // roles
-        Schema::create('roles', function (Blueprint $table) {
-            $table->tinyInteger('id', true); // AUTO_INCREMENT tinyint
-            $table->string('nama_role', 20);
-        });
-
         // tahun_ajaran
         Schema::create('tahun_ajaran', function (Blueprint $table) {
             $table->id();
@@ -79,6 +73,5 @@ return new class extends Migration
         Schema::dropIfExists('mata_pelajaran');
         Schema::dropIfExists('kelas');
         Schema::dropIfExists('tahun_ajaran');
-        Schema::dropIfExists('roles');
     }
 };

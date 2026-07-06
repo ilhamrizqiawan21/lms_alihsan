@@ -131,7 +131,7 @@
                             </button>
                             <form action="{{ route('admin.kelas-siswa.reset-password', $s) }}" method="POST" class="d-inline">
                                 @csrf
-                                <button class="btn btn-sm btn-outline-secondary" data-confirm="Reset password ke 123456?" title="Reset Password">
+                                <button class="btn btn-sm btn-outline-secondary" data-confirm="Reset password siswa ke password acak baru?" title="Reset Password">
                                     <i class="bi bi-key"></i>
                                 </button>
                             </form>

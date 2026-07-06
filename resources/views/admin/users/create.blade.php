@@ -4,6 +4,7 @@
 @section('page_title', 'Tambah User Baru')
 
 @section('content')
+@php($siswaRoleId = $roles->firstWhere('nama_role', 'siswa')?->id)
 <div class="card">
     <div class="card-header"><i class="bi bi-plus-circle me-1"></i> Form Tambah User</div>
     <div class="card-body">
@@ -82,10 +83,11 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
+        var siswaRoleId = @json((string) $siswaRoleId);
         $('select[name="role_id"]').change(function() {
-            $('#siswaFields').toggle($(this).val() == '3');
+            $('#siswaFields').toggle($(this).val() == siswaRoleId);
         });
-        $('#siswaFields').toggle($('select[name="role_id"]').val() == '3');
+        $('#siswaFields').toggle($('select[name="role_id"]').val() == siswaRoleId);
     });
 </script>
 @endpush

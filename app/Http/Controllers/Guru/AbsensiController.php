@@ -9,6 +9,7 @@ use App\Models\Notifikasi;
 use App\Models\Siswa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class AbsensiController extends Controller
 {
@@ -90,12 +91,31 @@ class AbsensiController extends Controller
     {
         $this->authorize('mengajar', $kelasMapel);
 
-        if ($request->has('absensi') && is_array($request->absensi)) {
-            foreach ($request->absensi as $siswaId => $mingguData) {
+        $validated = $request->validate([
+            'bulan' => 'required|date_format:Y-m',
+            'absensi' => 'nullable|array',
+            'absensi.*' => 'array',
+            'absensi.*.*' => 'nullable|in:hadir,sakit,izin,alpha',
+        ]);
+
+        $absensiInput = $validated['absensi'] ?? [];
+        $validSiswaIds = Siswa::where('kelas_id', $kelasMapel->kelas_id)
+            ->where('status', 'aktif')
+            ->pluck('id')
+            ->map(fn($id) => (string) $id);
+
+        if (collect(array_keys($absensiInput))->diff($validSiswaIds)->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'absensi' => 'Data absensi berisi siswa yang tidak termasuk kelas ini.',
+            ]);
+        }
+
+        if ($absensiInput) {
+            foreach ($absensiInput as $siswaId => $mingguData) {
                 foreach ($mingguData as $minggu => $status) {
                     if (!$status) continue;
                     // Reconstruct tanggal dari minggu
-                    $bulan = $request->input('bulan', date('Y-m'));
+                    $bulan = $validated['bulan'];
                     $firstDay = \Carbon\Carbon::create((int) substr($bulan, 0, 4), (int) substr($bulan, 5, 2), 1);
                     $startDow = $firstDay->dayOfWeek;
                     $seninPertama = $firstDay->copy();
@@ -119,12 +139,12 @@ class AbsensiController extends Controller
         }
 
         // Kirim notifikasi ke siswa yang diabsen
-        if ($request->has('absensi') && is_array($request->absensi)) {
-            $siswaIds = array_keys($request->absensi);
+        if ($absensiInput) {
+            $siswaIds = array_keys($absensiInput);
             $siswas = Siswa::whereIn('id', $siswaIds)->get()->keyBy('id');
-            $bulanLabel = $request->input('bulan', date('Y-m'));
+            $bulanLabel = $validated['bulan'];
 
-            foreach ($request->absensi as $siswaId => $mingguData) {
+            foreach ($absensiInput as $siswaId => $mingguData) {
                 $siswa = $siswas->get((int) $siswaId);
                 if (!$siswa || !$siswa->user_id) continue;
 

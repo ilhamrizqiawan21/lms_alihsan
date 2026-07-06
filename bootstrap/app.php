@@ -5,7 +5,12 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -22,6 +27,56 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
+
+        $redirectToDashboard = function () {
+            return match (Auth::user()?->role?->nama_role) {
+                'admin' => route('admin.dashboard'),
+                'guru' => route('guru.dashboard'),
+                'siswa' => route('siswa.dashboard'),
+                'kepala_sekolah' => route('kepsek.dashboard'),
+                default => route('login'),
+            };
+        };
+
+        $exceptions->render(function (AuthenticationException $e, Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return null;
+            }
+
+            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
+        });
+
+        $exceptions->render(function (AuthorizationException $e, Request $request) use ($redirectToDashboard) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return null;
+            }
+
+            if (!Auth::check()) {
+                return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
+            }
+
+            return redirect($redirectToDashboard())->with('error', 'Anda tidak memiliki akses ke halaman tersebut.');
+        });
+
+        $exceptions->render(function (AccessDeniedHttpException $e, Request $request) use ($redirectToDashboard) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return null;
+            }
+
+            if (!Auth::check()) {
+                return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
+            }
+
+            return redirect($redirectToDashboard())->with('error', 'Anda tidak memiliki akses ke halaman tersebut.');
+        });
+
+        $exceptions->render(function (NotFoundHttpException $e, Request $request) {
+            if ($request->expectsJson() || $request->is('api/*') || Auth::check()) {
+                return null;
+            }
+
+            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
+        });
 
         // Tangani duplicate key constraint violation
         $exceptions->render(function (UniqueConstraintViolationException $e, Request $request) {

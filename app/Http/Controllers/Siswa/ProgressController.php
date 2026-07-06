@@ -46,7 +46,11 @@ class ProgressController extends Controller
         // Penyelesaian tugas
         $totalTugas = \App\Models\Tugas::whereHas('kelasMapel', fn($q) => $q->where('kelas_id', $siswa->kelas_id)
             ->where('tahun_ajaran_id', $taAktif?->id)->where('semester', $semester))->count();
-        $selesai = PengumpulanTugas::where('siswa_id', $siswa->id)->where('status', 'sudah')->count();
+        $selesai = PengumpulanTugas::where('siswa_id', $siswa->id)
+            ->whereIn('status', ['sudah', 'dinilai'])
+            ->whereHas('tugas.kelasMapel', fn($q) => $q->where('kelas_id', $siswa->kelas_id)
+                ->where('tahun_ajaran_id', $taAktif?->id)->where('semester', $semester))
+            ->count();
         $persenTugas = $totalTugas > 0 ? round(($selesai / $totalTugas) * 100) : 0;
 
         // Nilai per mapel

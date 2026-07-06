@@ -11,6 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::create('roles', function (Blueprint $table) {
+            $table->tinyInteger('id', true);
+            $table->string('nama_role', 20);
+        });
+
         // =============================================
         // TABEL USERS — sesuai struktur lms_alihsan_btr
         // =============================================
@@ -49,5 +54,6 @@ return new class extends Migration
     {
         Schema::dropIfExists('sessions');
         Schema::dropIfExists('users');
+        Schema::dropIfExists('roles');
     }
 };

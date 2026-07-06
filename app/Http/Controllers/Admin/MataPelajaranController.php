@@ -56,6 +56,10 @@ class MataPelajaranController extends Controller
      */
     public function destroy(MataPelajaran $mataPelajaran)
     {
+        if ($mataPelajaran->kelasMapel()->exists()) {
+            return back()->with('error', 'Mata pelajaran tidak dapat dihapus karena sudah dipakai pada penugasan guru.');
+        }
+
         $mataPelajaran->delete();
         return redirect()->route('admin.mata-pelajaran.index')
             ->with('success', 'Mata pelajaran berhasil dihapus.');

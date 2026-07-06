@@ -31,8 +31,7 @@ class ExportController extends Controller
 
         $kelas = Kelas::findOrFail($kelasId);
         $siswaList = Siswa::with('user')->where('kelas_id', $kelasId)->where('status', 'aktif')->orderBy('nis')->get();
-        $mapelList = MataPelajaran::whereHas('kelasMapel', fn($q) => $q->where('kelas_id', $kelasId)->where('tahun_ajaran_id', $taAktif?->id)->where('semester', $semester))
-            ->orderBy('urutan')->get();
+        $mapelList = $this->mapelListUntukKelas($kelasId, $taAktif?->id, $semester);
 
         $nilaiData = NilaiAkhir::whereIn('siswa_id', $siswaList->pluck('id'))
             ->where('tahun_ajaran_id', $taAktif?->id)->where('semester', $semester)
@@ -61,7 +60,7 @@ class ExportController extends Controller
             $sn = $nilaiData->get($s->id, collect());
             $nilaiRow = [];
             foreach ($mapelList as $mp) {
-                $n = $sn->firstWhere('kelas_mapel_id', $mp->kelasMapel->first()?->id);
+                $n = $sn->firstWhere('kelas_mapel_id', $mp->kelas_mapel_id);
                 $nilaiRow[] = $n ? (float) $n->rata_akhir : '';
             }
             $validNilai = array_filter($nilaiRow, fn($v) => $v !== '');
@@ -216,8 +215,7 @@ class ExportController extends Controller
 
         $kelas = Kelas::findOrFail($kelasId);
         $siswaList = Siswa::with('user')->where('kelas_id', $kelasId)->where('status', 'aktif')->orderBy('nis')->get();
-        $mapelList = MataPelajaran::whereHas('kelasMapel', fn($q) => $q->where('kelas_id', $kelasId)->where('tahun_ajaran_id', $taAktif?->id)->where('semester', $semester))
-            ->orderBy('urutan')->get();
+        $mapelList = $this->mapelListUntukKelas($kelasId, $taAktif?->id, $semester);
 
         $nilaiData = NilaiAkhir::whereIn('siswa_id', $siswaList->pluck('id'))
             ->where('tahun_ajaran_id', $taAktif?->id)->where('semester', $semester)
@@ -228,7 +226,7 @@ class ExportController extends Controller
             $sn = $nilaiData->get($s->id, collect());
             $row = ['nis' => $s->nis, 'nama' => $s->user->nama_lengkap ?? '-', 'nilai' => []];
             foreach ($mapelList as $mp) {
-                $n = $sn->firstWhere('kelas_mapel_id', $mp->kelasMapel->first()?->id);
+                $n = $sn->firstWhere('kelas_mapel_id', $mp->kelas_mapel_id);
                 $row['nilai'][$mp->id] = $n ? $n->rata_akhir : null;
             }
             $validNilai = array_filter($row['nilai'], fn($v) => !is_null($v));
@@ -307,5 +305,25 @@ class ExportController extends Controller
         $pdf->setPaper('A4', 'landscape');
 
         return $pdf->download("rekap_tugas_{$kelas->tingkat}_{$kelas->nama_kelas}_semester_{$semester}.pdf");
+    }
+
+    private function mapelListUntukKelas(int|string|null $kelasId, int|string|null $tahunAjaranId, string $semester)
+    {
+        return KelasMapel::with('mataPelajaran')
+            ->where('kelas_id', $kelasId)
+            ->where('tahun_ajaran_id', $tahunAjaranId)
+            ->where('semester', $semester)
+            ->join('mata_pelajaran', 'mata_pelajaran.id', '=', 'kelas_mapel.mapel_id')
+            ->orderBy('mata_pelajaran.urutan')
+            ->orderBy('mata_pelajaran.nama_mapel')
+            ->select('kelas_mapel.*')
+            ->get()
+            ->map(function ($kelasMapel) {
+                return (object) [
+                    'id' => $kelasMapel->mapel_id,
+                    'kelas_mapel_id' => $kelasMapel->id,
+                    'nama_mapel' => $kelasMapel->mataPelajaran?->nama_mapel ?? '-',
+                ];
+            });
     }
 }

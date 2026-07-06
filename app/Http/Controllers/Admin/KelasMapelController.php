@@ -9,6 +9,7 @@ use App\Models\MataPelajaran;
 use App\Models\TahunAjaran;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class KelasMapelController extends Controller
 {
@@ -25,7 +26,9 @@ class KelasMapelController extends Controller
 
         $kelas = Kelas::all();
         $mapel = MataPelajaran::orderBy('urutan')->get();
-        $guru = User::where('role_id', 2)->orderBy('nama_lengkap')->get();
+        $guru = User::whereHas('role', fn($q) => $q->where('nama_role', 'guru'))
+            ->orderBy('nama_lengkap')
+            ->get();
         $tahunAjaran = TahunAjaran::orderBy('tahun', 'desc')->get();
 
         return view('admin.kelas-mapel.index', compact('kelasMapel', 'kelas', 'mapel', 'guru', 'tahunAjaran'));
@@ -38,7 +41,9 @@ class KelasMapelController extends Controller
     {
         $kelas = Kelas::all();
         $mapel = MataPelajaran::orderBy('urutan')->get();
-        $guru = User::where('role_id', 2)->orderBy('nama_lengkap')->get();
+        $guru = User::whereHas('role', fn($q) => $q->where('nama_role', 'guru'))
+            ->orderBy('nama_lengkap')
+            ->get();
         $tahunAjaran = TahunAjaran::orderBy('tahun', 'desc')->get();
 
         return view('admin.kelas-mapel.create', compact('kelas', 'mapel', 'guru', 'tahunAjaran'));
@@ -56,6 +61,16 @@ class KelasMapelController extends Controller
             'tahun_ajaran_id' => 'required|exists:tahun_ajaran,id',
             'semester' => 'required|in:1,2',
         ]);
+
+        $isGuru = User::whereKey($validated['guru_id'])
+            ->whereHas('role', fn($q) => $q->where('nama_role', 'guru'))
+            ->exists();
+
+        if (!$isGuru) {
+            throw ValidationException::withMessages([
+                'guru_id' => 'User yang dipilih bukan guru.',
+            ]);
+        }
 
         // Cek unique constraint
         $exists = KelasMapel::where([
@@ -81,6 +96,18 @@ class KelasMapelController extends Controller
      */
     public function destroy(KelasMapel $kelasMapel)
     {
+        $hasData = $kelasMapel->materi()->exists()
+            || $kelasMapel->tugas()->exists()
+            || $kelasMapel->absensi()->exists()
+            || $kelasMapel->nilaiAkhir()->exists()
+            || $kelasMapel->sikapSosial()->exists()
+            || $kelasMapel->sikapSpiritual()->exists()
+            || $kelasMapel->chatMessages()->exists();
+
+        if ($hasData) {
+            return back()->with('error', 'Pengajaran tidak dapat dihapus karena sudah memiliki data materi, tugas, absensi, nilai, sikap, atau chat.');
+        }
+
         $kelasMapel->delete();
         return redirect()->route('admin.kelas-mapel.index')
             ->with('success', 'Pengaturan kelas-mapel berhasil dihapus.');

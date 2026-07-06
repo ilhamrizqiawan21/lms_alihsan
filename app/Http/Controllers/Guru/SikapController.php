@@ -11,6 +11,7 @@ use App\Models\TahunAjaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class SikapController extends Controller
 {
@@ -74,25 +75,45 @@ class SikapController extends Controller
         ]);
 
         $tahunAjaran = TahunAjaran::getAktif();
+        if (!$tahunAjaran) {
+            return back()
+                ->withInput()
+                ->with('error', 'Tahun ajaran aktif belum diatur.');
+        }
 
-        foreach ($request->sosial as $siswaId => $data) {
+        $validSiswaIds = Siswa::where('kelas_id', $kelasMapel->kelas_id)
+            ->where('status', 'aktif')
+            ->pluck('id')
+            ->map(fn($id) => (string) $id);
+
+        $submittedSiswaIds = collect(array_keys($request->input('sosial', [])))
+            ->merge(array_keys($request->input('spiritual', [])))
+            ->unique();
+
+        if ($submittedSiswaIds->diff($validSiswaIds)->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'sosial' => 'Data sikap berisi siswa yang tidak termasuk kelas ini.',
+            ]);
+        }
+
+        foreach ($request->input('sosial', []) as $siswaId => $data) {
             SikapSosial::updateOrCreate(
                 [
                     'siswa_id' => $siswaId,
                     'kelas_mapel_id' => $kelasMapel->id,
-                    'tahun_ajaran_id' => $tahunAjaran?->id,
+                    'tahun_ajaran_id' => $tahunAjaran->id,
                     'semester' => $request->semester,
                 ],
                 $data
             );
         }
 
-        foreach ($request->spiritual as $siswaId => $data) {
+        foreach ($request->input('spiritual', []) as $siswaId => $data) {
             SikapSpiritual::updateOrCreate(
                 [
                     'siswa_id' => $siswaId,
                     'kelas_mapel_id' => $kelasMapel->id,
-                    'tahun_ajaran_id' => $tahunAjaran?->id,
+                    'tahun_ajaran_id' => $tahunAjaran->id,
                     'semester' => $request->semester,
                 ],
                 $data

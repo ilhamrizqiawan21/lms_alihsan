@@ -17,8 +17,9 @@ class PengumumanController extends Controller
         $pengumuman = Pengumuman::with('creator')
             ->orderBy('created_at', 'desc')
             ->paginate(15);
+        $routePrefix = $this->routePrefix();
 
-        return view('admin.pengumuman.index', compact('pengumuman'));
+        return view('admin.pengumuman.index', compact('pengumuman', 'routePrefix'));
     }
 
     /**
@@ -46,7 +47,7 @@ class PengumumanController extends Controller
 
         Pengumuman::create($validated);
 
-        return redirect()->route('admin.pengumuman.index')
+        return redirect()->route($this->routePrefix() . '.index')
             ->with('success', 'Pengumuman berhasil dipublikasikan.');
     }
 
@@ -82,8 +83,22 @@ class PengumumanController extends Controller
      */
     public function destroy(Pengumuman $pengumuman)
     {
+        $role = Auth::user()->role?->nama_role;
+        if ($role !== 'admin' && (int) $pengumuman->created_by !== (int) Auth::id()) {
+            abort(403);
+        }
+
         $pengumuman->delete();
-        return redirect()->route('admin.pengumuman.index')
+        return redirect()->route($this->routePrefix() . '.index')
             ->with('success', 'Pengumuman berhasil dihapus.');
+    }
+
+    private function routePrefix(): string
+    {
+        return match (Auth::user()->role?->nama_role) {
+            'guru' => 'guru.pengumuman',
+            'kepala_sekolah' => 'kepsek.pengumuman',
+            default => 'admin.pengumuman',
+        };
     }
 }

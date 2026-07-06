@@ -46,7 +46,7 @@
                             <td style="white-space:nowrap;font-size:0.82rem;">{{ $m->created_at ? \Carbon\Carbon::parse($m->created_at)->format('d M Y') : '-' }}</td>
                             <td>
                                 @if($m->file_path)
-                                <a href="{{ asset('storage/'.$m->file_path) }}" class="btn btn-sm btn-outline-primary" target="_blank"><i class="bi bi-download"></i></a>
+                                <a href="{{ route('guru.materi.download', [$kelasMapel, $m]) }}" class="btn btn-sm btn-outline-primary" target="_blank"><i class="bi bi-download"></i></a>
                                 @endif
                                 <form action="{{ route('guru.materi.destroy', [$kelasMapel, $m]) }}" method="POST" class="d-inline">
                                     @csrf @method('DELETE')

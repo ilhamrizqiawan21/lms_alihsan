@@ -56,6 +56,20 @@ class MateriController extends Controller
             ->with('success', 'Materi berhasil diupload.');
     }
     //Menghapus materi yang sudah diupload oleh guru untuk kelas dan mata pelajaran tertentu
+    public function download(KelasMapel $kelasMapel, Materi $materi)
+    {
+        $this->authorize('mengajar', $kelasMapel);
+        $this->ensureMateriBelongsToKelasMapel($materi, $kelasMapel);
+
+        $disk = Storage::disk('public');
+        if (!$materi->file_path || !$disk->exists($materi->file_path)) {
+            return back()->with('error', 'File materi tidak ditemukan.');
+        }
+
+        return response()->download($disk->path($materi->file_path), $materi->judul . '_' . basename($materi->file_path));
+    }
+
+    //Menghapus materi yang sudah diupload oleh guru untuk kelas dan mata pelajaran tertentu
     public function destroy(KelasMapel $kelasMapel, Materi $materi)
     {
         $this->authorize('mengajar', $kelasMapel);

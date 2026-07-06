@@ -32,9 +32,7 @@ class MateriController extends Controller
         $user = Auth::user();
         $siswa = $user->siswa;
 
-        if (!$siswa || $siswa->kelas_id !== $kelasMapel->kelas_id) {
-            abort(403, 'Anda tidak memiliki akses ke materi ini.');
-        }
+        $this->ensureKelasMapelAktifUntukSiswa($kelasMapel, $siswa);
 
         $materi = Materi::where('kelas_mapel_id', $kelasMapel->id)
             ->orderBy('created_at', 'desc')
@@ -48,9 +46,7 @@ class MateriController extends Controller
         $user = Auth::user();
         $siswa = $user->siswa;
 
-        if (!$siswa || $siswa->kelas_id !== $kelasMapel->kelas_id) {
-            abort(403);
-        }
+        $this->ensureKelasMapelAktifUntukSiswa($kelasMapel, $siswa);
 
         $this->ensureMateriBelongsToKelasMapel($materi, $kelasMapel);
 
@@ -65,5 +61,20 @@ class MateriController extends Controller
     private function ensureMateriBelongsToKelasMapel(Materi $materi, KelasMapel $kelasMapel): void
     {
         abort_unless((int) $materi->kelas_mapel_id === (int) $kelasMapel->id, 403);
+    }
+
+    private function ensureKelasMapelAktifUntukSiswa(KelasMapel $kelasMapel, ?Siswa $siswa): void
+    {
+        $kelasMapelAktif = $kelasMapel->exists
+            ? $kelasMapel->tahunAjaran()->where('is_active', true)->exists()
+            : true;
+
+        abort_unless(
+            $siswa
+            && (int) $siswa->kelas_id === (int) $kelasMapel->kelas_id
+            && $kelasMapelAktif,
+            403,
+            'Anda tidak memiliki akses ke materi ini.'
+        );
     }
 }

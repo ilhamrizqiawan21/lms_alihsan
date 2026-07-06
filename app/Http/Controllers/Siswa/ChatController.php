@@ -35,9 +35,7 @@ class ChatController extends Controller
         $user = Auth::user();
         $siswa = $user->siswa;
 
-        if (!$siswa || $siswa->kelas_id !== $kelasMapel->kelas_id) {
-            abort(403);
-        }
+        $this->ensureKelasMapelAktifUntukSiswa($kelasMapel, $siswa);
 
         $messages = ChatMessage::with('user')
             ->where('kelas_mapel_id', $kelasMapel->id)
@@ -56,9 +54,7 @@ class ChatController extends Controller
         $user = Auth::user();
         $siswa = $user->siswa;
 
-        if (!$siswa || $siswa->kelas_id !== $kelasMapel->kelas_id) {
-            abort(403);
-        }
+        $this->ensureKelasMapelAktifUntukSiswa($kelasMapel, $siswa);
 
         $validated = $request->validate([
             'message' => 'required|string|max:1000',
@@ -86,5 +82,19 @@ class ChatController extends Controller
         }
 
         return back()->with('success', 'Pesan berhasil dikirim.');
+    }
+
+    private function ensureKelasMapelAktifUntukSiswa(KelasMapel $kelasMapel, ?Siswa $siswa): void
+    {
+        $kelasMapelAktif = $kelasMapel->exists
+            ? $kelasMapel->tahunAjaran()->where('is_active', true)->exists()
+            : true;
+
+        abort_unless(
+            $siswa
+            && (int) $siswa->kelas_id === (int) $kelasMapel->kelas_id
+            && $kelasMapelAktif,
+            403
+        );
     }
 }

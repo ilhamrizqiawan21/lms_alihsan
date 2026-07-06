@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
 use App\Models\KelasMapel;
+use App\Models\PengumpulanFile;
 use App\Models\PengumpulanTugas;
 use App\Models\Tugas;
 use App\Services\NotifikasiService;
@@ -108,6 +109,26 @@ class TugasController extends Controller
         return back()->with('success', 'Nilai berhasil diberikan.');
     }
 
+    public function downloadFile(KelasMapel $kelasMapel, Tugas $tugas, PengumpulanFile $file)
+    {
+        $this->authorize('mengajar', $kelasMapel);
+        $this->ensureTugasBelongsToKelasMapel($tugas, $kelasMapel);
+        $file->loadMissing('pengumpulan');
+        abort_unless($file->pengumpulan, 404);
+        $this->ensurePengumpulanBelongsToTugas($file->pengumpulan, $tugas);
+
+        return $this->downloadPengumpulanPath($file->file_path, $file->file_name);
+    }
+
+    public function downloadLegacyFile(KelasMapel $kelasMapel, Tugas $tugas, PengumpulanTugas $pengumpulan)
+    {
+        $this->authorize('mengajar', $kelasMapel);
+        $this->ensureTugasBelongsToKelasMapel($tugas, $kelasMapel);
+        $this->ensurePengumpulanBelongsToTugas($pengumpulan, $tugas);
+
+        return $this->downloadPengumpulanPath($pengumpulan->file_upload, basename((string) $pengumpulan->file_upload));
+    }
+
     public function destroy(Tugas $tugas)
     {
         $kelasMapel = $tugas->kelasMapel;
@@ -119,11 +140,11 @@ class TugasController extends Controller
             ->get();
         foreach ($pengumpulanList as $p) {
             if ($p->file_upload) {
-                Storage::disk('public')->delete($p->file_upload);
+                $this->deletePengumpulanPath($p->file_upload);
             }
             // Hapus file di pengumpulan_files
             foreach ($p->files as $file) {
-                Storage::disk('public')->delete($file->file_path);
+                $this->deletePengumpulanPath($file->file_path);
                 $file->delete();
             }
             $p->delete();
@@ -143,5 +164,28 @@ class TugasController extends Controller
     private function ensurePengumpulanBelongsToTugas(PengumpulanTugas $pengumpulan, Tugas $tugas): void
     {
         abort_unless((int) $pengumpulan->tugas_id === (int) $tugas->id, 403);
+    }
+
+    private function downloadPengumpulanPath(?string $path, string $downloadName)
+    {
+        abort_unless($path, 404);
+
+        $disk = Storage::disk('local');
+        if (!$disk->exists($path)) {
+            $disk = Storage::disk('public');
+        }
+        abort_unless($disk->exists($path), 404);
+
+        return response()->download($disk->path($path), $downloadName);
+    }
+
+    private function deletePengumpulanPath(?string $path): void
+    {
+        if (!$path) {
+            return;
+        }
+
+        Storage::disk('local')->delete($path);
+        Storage::disk('public')->delete($path);
     }
 }

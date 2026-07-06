@@ -42,6 +42,7 @@ use Illuminate\Support\Facades\Route;
 // AUTH
 // ────────────────────────────────────────────
 Route::get('/', [LoginController::class, 'showLogin'])->name('login');
+Route::get('/login', [LoginController::class, 'showLogin']);
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
@@ -131,6 +132,11 @@ Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(f
     Route::put('/kalender/{calendarEvent}', [GuruKalenderController::class, 'update'])->name('kalender.update');
     Route::delete('/kalender/{calendarEvent}', [GuruKalenderController::class, 'destroy'])->name('kalender.destroy');
 
+    // Pengumuman
+    Route::get('/pengumuman', [AdminPengumumanController::class, 'index'])->name('pengumuman.index');
+    Route::post('/pengumuman', [AdminPengumumanController::class, 'store'])->name('pengumuman.store');
+    Route::delete('/pengumuman/{pengumuman}', [AdminPengumumanController::class, 'destroy'])->name('pengumuman.destroy');
+
     // Absensi
     Route::get('/absensi', [AbsensiController::class, 'index'])->name('absensi.index');
     Route::get('/absensi/{kelasMapel}/create', [AbsensiController::class, 'create'])->name('absensi.create');
@@ -141,6 +147,7 @@ Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(f
     Route::get('/materi', [GuruMateriController::class, 'index'])->name('materi.index');
     Route::get('/materi/{kelasMapel}/list', [GuruMateriController::class, 'list'])->name('materi.list');
     Route::post('/materi/{kelasMapel}/store', [GuruMateriController::class, 'store'])->name('materi.store');
+    Route::get('/materi/{kelasMapel}/{materi}/download', [GuruMateriController::class, 'download'])->name('materi.download');
     Route::delete('/materi/{kelasMapel}/{materi}', [GuruMateriController::class, 'destroy'])->name('materi.destroy');
 
     // Tugas
@@ -148,6 +155,8 @@ Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(f
     Route::get('/tugas/{kelasMapel}/list', [GuruTugasController::class, 'list'])->name('tugas.list');
     Route::post('/tugas/{kelasMapel}/store', [GuruTugasController::class, 'store'])->name('tugas.store');
     Route::get('/tugas/{kelasMapel}/{tugas}/pengumpulan', [GuruTugasController::class, 'pengumpulan'])->name('tugas.pengumpulan');
+    Route::get('/tugas/{kelasMapel}/{tugas}/pengumpulan/{file}/download', [GuruTugasController::class, 'downloadFile'])->name('tugas.file.download');
+    Route::get('/tugas/{kelasMapel}/{tugas}/pengumpulan/{pengumpulan}/legacy-download', [GuruTugasController::class, 'downloadLegacyFile'])->name('tugas.pengumpulan.download');
     Route::post('/tugas/{kelasMapel}/{tugas}/{pengumpulan}/nilai', [GuruTugasController::class, 'nilai'])->name('tugas.nilai');
     Route::delete('/tugas/{tugas}', [GuruTugasController::class, 'destroy'])->name('tugas.destroy');
 
@@ -172,7 +181,7 @@ Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(f
 
     // Notifikasi
     Route::get('/notifikasi', [GuruNotifikasiController::class, 'index'])->name('notifikasi.index');
-    Route::get('/notifikasi/{notifikasi}/read', [GuruNotifikasiController::class, 'markRead'])->name('notifikasi.mark-read');
+    Route::post('/notifikasi/{notifikasi}/read', [GuruNotifikasiController::class, 'markRead'])->name('notifikasi.mark-read');
     Route::post('/notifikasi/mark-all-read', [GuruNotifikasiController::class, 'markAllRead'])->name('notifikasi.mark-all-read');
 
     // Profil
@@ -200,6 +209,8 @@ Route::middleware(['auth', 'role:siswa'])->prefix('siswa')->name('siswa.')->grou
     // Tugas
     Route::get('/tugas', [SiswaTugasController::class, 'index'])->name('tugas.index');
     Route::get('/tugas/{tugas}', [SiswaTugasController::class, 'show'])->name('tugas.show');
+    Route::get('/tugas/{tugas}/file/{file}/download', [SiswaTugasController::class, 'downloadFile'])->name('tugas.file.download');
+    Route::get('/tugas/{tugas}/pengumpulan/{pengumpulan}/download', [SiswaTugasController::class, 'downloadLegacyFile'])->name('tugas.pengumpulan.download');
     Route::post('/tugas/{tugas}/kumpul', [SiswaTugasController::class, 'store'])->name('tugas.kumpul');
 
     // Nilai
@@ -212,7 +223,7 @@ Route::middleware(['auth', 'role:siswa'])->prefix('siswa')->name('siswa.')->grou
 
     // Notifikasi
     Route::get('/notifikasi', [SiswaNotifikasiController::class, 'index'])->name('notifikasi.index');
-    Route::get('/notifikasi/{notifikasi}/read', [SiswaNotifikasiController::class, 'markRead'])->name('notifikasi.mark-read');
+    Route::post('/notifikasi/{notifikasi}/read', [SiswaNotifikasiController::class, 'markRead'])->name('notifikasi.mark-read');
     Route::post('/notifikasi/mark-all-read', [SiswaNotifikasiController::class, 'markAllRead'])->name('notifikasi.mark-all-read');
 
     // Profil
@@ -232,6 +243,11 @@ Route::middleware(['auth', 'role:kepala_sekolah'])->prefix('kepsek')->name('keps
     Route::put('/kalender/{calendarEvent}', [KepsekKalenderController::class, 'update'])->name('kalender.update');
     Route::delete('/kalender/{calendarEvent}', [KepsekKalenderController::class, 'destroy'])->name('kalender.destroy');
     Route::patch('/kalender/{calendarEvent}/toggle-done', [KepsekKalenderController::class, 'toggleDone'])->name('kalender.toggle-done');
+
+    // Pengumuman
+    Route::get('/pengumuman', [AdminPengumumanController::class, 'index'])->name('pengumuman.index');
+    Route::post('/pengumuman', [AdminPengumumanController::class, 'store'])->name('pengumuman.store');
+    Route::delete('/pengumuman/{pengumuman}', [AdminPengumumanController::class, 'destroy'])->name('pengumuman.destroy');
 
     // Laporan
     Route::get('/laporan/absensi', [LaporanController::class, 'absensi'])->name('laporan.absensi');

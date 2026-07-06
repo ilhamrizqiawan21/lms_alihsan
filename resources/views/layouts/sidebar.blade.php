@@ -66,6 +66,9 @@
 <a href="{{ route('guru.kalender') }}" class="nav-link {{ request()->routeIs('guru.kalender') ? 'active' : '' }}">
     <i class="bi bi-calendar3"></i> Kalender & Reminder
 </a>
+<a href="{{ route('guru.pengumuman.index') }}" class="nav-link {{ request()->routeIs('guru.pengumuman.*') ? 'active' : '' }}">
+    <i class="bi bi-megaphone-fill"></i> Pengumuman
+</a>
 <a href="{{ route('guru.absensi.index') }}" class="nav-link {{ request()->routeIs('guru.absensi.*') ? 'active' : '' }}">
     <i class="bi bi-clipboard-check-fill"></i> Absensi
 </a>
@@ -143,6 +146,9 @@
 </a>
 <a href="{{ route('kepsek.kalender') }}" class="nav-link {{ request()->routeIs('kepsek.kalender') ? 'active' : '' }}">
     <i class="bi bi-calendar3"></i> Kalender & Reminder
+</a>
+<a href="{{ route('kepsek.pengumuman.index') }}" class="nav-link {{ request()->routeIs('kepsek.pengumuman.*') ? 'active' : '' }}">
+    <i class="bi bi-megaphone-fill"></i> Pengumuman
 </a>
 <li class="nav-section">Laporan</li>
 <a href="{{ route('kepsek.laporan.absensi') }}" class="nav-link {{ request()->routeIs('kepsek.laporan.*') ? 'active' : '' }}">

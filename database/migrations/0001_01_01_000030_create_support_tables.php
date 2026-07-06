@@ -140,7 +140,7 @@ return new class extends Migration
                         COALESCE(sas, 0) +
                         COALESCE(sat, 0)
                     ) /
-                    (
+                    NULLIF((
                         (CASE WHEN sum1 IS NOT NULL THEN 1 ELSE 0 END) +
                         (CASE WHEN sum2 IS NOT NULL THEN 1 ELSE 0 END) +
                         (CASE WHEN sum3 IS NOT NULL THEN 1 ELSE 0 END) +
@@ -149,7 +149,7 @@ return new class extends Migration
                         (CASE WHEN sts IS NOT NULL THEN 1 ELSE 0 END) +
                         (CASE WHEN sas IS NOT NULL THEN 1 ELSE 0 END) +
                         (CASE WHEN sat IS NOT NULL THEN 1 ELSE 0 END)
-                    )
+                    ), 0)
                 ) STORED
             ");
         }

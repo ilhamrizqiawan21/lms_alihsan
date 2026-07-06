@@ -9,7 +9,7 @@
         <div class="card">
             <div class="card-header"><i class="bi bi-plus-circle me-1"></i> Buat Pengumuman</div>
             <div class="card-body">
-                <form action="{{ route('admin.pengumuman.store') }}" method="POST">
+                <form action="{{ route($routePrefix . '.store') }}" method="POST">
                     @csrf
                     <div class="mb-3">
                         <label class="form-label">Judul</label>
@@ -59,12 +59,16 @@
                                 <td><span class="badge bg-info">{{ $p->target }}</span></td>
                                 <td>{{ $p->created_at ? \Carbon\Carbon::parse($p->created_at)->format('d/m/Y') : '-' }}</td>
                                 <td>
-                                    <form action="{{ route('admin.pengumuman.destroy', $p) }}" method="POST" class="d-inline">
+                                    @if(auth()->user()->isAdmin() || $p->created_by === auth()->id())
+                                    <form action="{{ route($routePrefix . '.destroy', $p) }}" method="POST" class="d-inline">
                                         @csrf @method('DELETE')
                                         <button class="btn btn-sm btn-danger" data-confirm="Hapus pengumuman?">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
+                                    @else
+                                    <span class="text-muted">—</span>
+                                    @endif
                                 </td>
                             </tr>
                             @empty

@@ -4,6 +4,7 @@
 @section('page_title', 'Edit User')
 
 @section('content')
+@php($siswaRoleId = $roles->firstWhere('nama_role', 'siswa')?->id)
 <div class="card">
     <div class="card-header"><i class="bi bi-pencil-square me-1"></i> Form Edit User</div>
     <div class="card-body">
@@ -41,10 +42,10 @@
                     @error('role_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-3 mb-3">
-                    <label class="form-label">Email</label>
-                    <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
-                           value="{{ old('email', $user->email) }}">
-                    @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <label class="form-label">NIP/NIS</label>
+                    <input type="text" name="nip_nis" class="form-control @error('nip_nis') is-invalid @enderror"
+                           value="{{ old('nip_nis', $user->nip_nis) }}">
+                    @error('nip_nis') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
             </div>
             <div class="mb-3">
@@ -54,7 +55,7 @@
                     <label class="form-check-label" for="is_active">Aktif</label>
                 </div>
             </div>
-            @if($user->role_id == 3)
+            <div id="siswaFields" style="{{ old('role_id', $user->role_id) == $siswaRoleId ? '' : 'display:none;' }}">
             <hr>
             <h6 class="text-muted mb-3">Data Siswa</h6>
             <div class="row">
@@ -82,7 +83,7 @@
                     </select>
                 </div>
             </div>
-            @endif
+            </div>
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> Simpan</button>
                 <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">Batal</a>
@@ -90,4 +91,14 @@
         </form>
     </div>
 </div>
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        var siswaRoleId = @json((string) $siswaRoleId);
+        $('select[name="role_id"]').change(function() {
+            $('#siswaFields').toggle($(this).val() == siswaRoleId);
+        });
+    });
+</script>
+@endpush
 @endsection

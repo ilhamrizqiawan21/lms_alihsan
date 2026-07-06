@@ -51,6 +51,14 @@ class TahunAjaranController extends Controller
     //Hapus Tahun Ajaran
     public function destroy(TahunAjaran $tahunAjaran)
     {
+        if ($tahunAjaran->is_active) {
+            return back()->with('error', 'Tahun ajaran aktif tidak dapat dihapus.');
+        }
+
+        if ($tahunAjaran->kelasMapel()->exists()) {
+            return back()->with('error', 'Tahun ajaran tidak dapat dihapus karena sudah dipakai pada penugasan guru.');
+        }
+
         $tahunAjaran->delete();
         return redirect()->route('admin.tahun-ajaran.index')
             ->with('success', 'Tahun ajaran berhasil dihapus.');

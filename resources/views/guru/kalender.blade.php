@@ -82,25 +82,35 @@ $today = date('Y-m-d');
 </div>
 
 @foreach($monthEvents as $e)
+@php($canManageEvent = (int) $e->user_id === (int) auth()->id())
 <div class="modal fade" id="editModal{{$e->id}}" tabindex="-1">
     <div class="modal-dialog"><div class="modal-content">
-    <div class="modal-header"><h5 class="modal-title">Edit Event</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-header"><h5 class="modal-title">{{ $canManageEvent ? 'Edit Event' : 'Detail Event' }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <form action="{{ route('guru.kalender.update', $e) }}" method="POST">
         @csrf @method('PUT')
         <div class="modal-body">
-            <div class="mb-2"><label class="form-label" style="font-size:0.82rem;">Judul</label><input type="text" name="title" class="form-control form-control-sm" value="{{$e->title}}" required></div>
-            <div class="mb-2"><label class="form-label" style="font-size:0.82rem;">Tanggal</label><input type="date" name="event_date" class="form-control form-control-sm" value="{{$e->event_date->format('Y-m-d')}}" required></div>
-            <div class="mb-2"><label class="form-label" style="font-size:0.82rem;">Deskripsi</label><textarea name="description" class="form-control form-control-sm" rows="2">{{$e->description}}</textarea></div>
+            <div class="mb-2"><label class="form-label" style="font-size:0.82rem;">Judul</label><input type="text" name="title" class="form-control form-control-sm" value="{{$e->title}}" required {{ $canManageEvent ? '' : 'disabled' }}></div>
+            <div class="mb-2"><label class="form-label" style="font-size:0.82rem;">Tanggal</label><input type="date" name="event_date" class="form-control form-control-sm" value="{{$e->event_date->format('Y-m-d')}}" required {{ $canManageEvent ? '' : 'disabled' }}></div>
+            <div class="mb-2"><label class="form-label" style="font-size:0.82rem;">Deskripsi</label><textarea name="description" class="form-control form-control-sm" rows="2" {{ $canManageEvent ? '' : 'disabled' }}>{{$e->description}}</textarea></div>
             <div class="d-flex gap-3 mb-2">
-                <div class="form-check"><input type="checkbox" name="is_holiday" value="1" class="form-check-input" id="eh{{$e->id}}" {{$e->is_holiday?'checked':''}}><label class="form-check-label" for="eh{{$e->id}}" style="font-size:0.82rem;">Libur</label></div>
-                <div class="form-check"><input type="checkbox" name="is_done" value="1" class="form-check-input" id="ed{{$e->id}}" {{$e->is_done?'checked':''}}><label class="form-check-label" for="ed{{$e->id}}" style="font-size:0.82rem;">Selesai</label></div>
+                <div class="form-check"><input type="checkbox" name="is_holiday" value="1" class="form-check-input" id="eh{{$e->id}}" {{$e->is_holiday?'checked':''}} {{ $canManageEvent ? '' : 'disabled' }}><label class="form-check-label" for="eh{{$e->id}}" style="font-size:0.82rem;">Libur</label></div>
+                <div class="form-check"><input type="checkbox" name="is_done" value="1" class="form-check-input" id="ed{{$e->id}}" {{$e->is_done?'checked':''}} {{ $canManageEvent ? '' : 'disabled' }}><label class="form-check-label" for="ed{{$e->id}}" style="font-size:0.82rem;">Selesai</label></div>
             </div>
+            @if(!$canManageEvent)
+            <div class="alert alert-info py-2 mb-0">
+                <i class="bi bi-info-circle me-1"></i> Event sekolah hanya dapat diubah oleh pembuatnya, admin, atau kepala sekolah.
+            </div>
+            @endif
         </div>
         <div class="modal-footer justify-content-between">
+            @if($canManageEvent)
             <button type="submit" class="btn btn-sm btn-primary">Simpan</button>
+            @else
+            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            @endif
         </div>
     </form>
-    @if($e->user_id === auth()->id())
+    @if($canManageEvent)
     <div class="modal-footer border-top-0 pt-0">
         <form action="{{ route('guru.kalender.destroy', $e) }}" method="POST" class="d-inline">
             @csrf @method('DELETE')

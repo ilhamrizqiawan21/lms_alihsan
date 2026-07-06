@@ -11,6 +11,7 @@ use App\Models\TahunAjaran;
 use App\Services\NilaiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class NilaiController extends Controller
 {
@@ -70,30 +71,54 @@ class NilaiController extends Controller
         ]);
 
         $tahunAjaran = TahunAjaran::getAktif();
+        if (!$tahunAjaran) {
+            return back()
+                ->withInput()
+                ->with('error', 'Tahun ajaran aktif belum diatur.');
+        }
 
         $siswas = Siswa::where('kelas_id', $kelasMapel->kelas_id)
             ->where('status', 'aktif')
             ->get()
             ->keyBy('id');
 
-        foreach ($request->nilai as $siswaId => $data) {
-            $this->nilaiService->simpanNilai([
+        $invalidSiswaIds = collect(array_keys($request->input('nilai', [])))
+            ->reject(fn($siswaId) => $siswas->has((int) $siswaId));
+
+        if ($invalidSiswaIds->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'nilai' => 'Data nilai berisi siswa yang tidak termasuk kelas ini.',
+            ]);
+        }
+
+        $fields = ['sum1', 'sum2', 'sum3', 'sum4', 'sts', 'sas', 'sat'];
+
+        foreach ($request->input('nilai', []) as $siswaId => $data) {
+            $nilaiData = collect($fields)
+                ->mapWithKeys(fn($field) => [$field => ($data[$field] ?? null) === '' ? null : ($data[$field] ?? null)])
+                ->all();
+
+            if (collect($nilaiData)->filter(fn($value) => !is_null($value))->isEmpty()) {
+                NilaiAkhir::where([
+                    'siswa_id' => (int) $siswaId,
+                    'kelas_mapel_id' => $kelasMapel->id,
+                    'tahun_ajaran_id' => $tahunAjaran->id,
+                    'semester' => $request->semester,
+                ])->delete();
+
+                continue;
+            }
+
+            $nilai = $this->nilaiService->simpanNilai([
                 'siswa_id' => $siswaId,
                 'kelas_mapel_id' => $kelasMapel->id,
-                'tahun_ajaran_id' => $tahunAjaran?->id,
+                'tahun_ajaran_id' => $tahunAjaran->id,
                 'semester' => $request->semester,
-                'sum1' => $data['sum1'] ?? null,
-                'sum2' => $data['sum2'] ?? null,
-                'sum3' => $data['sum3'] ?? null,
-                'sum4' => $data['sum4'] ?? null,
-                'sts' => $data['sts'] ?? null,
-                'sas' => $data['sas'] ?? null,
-                'sat' => $data['sat'] ?? null,
-            ]);
+            ] + $nilaiData);
 
             // Kirim notifikasi ke siswa
             $siswa = $siswas->get((int) $siswaId);
-            if ($siswa && $siswa->user_id) {
+            if ($siswa && $siswa->user_id && ($nilai->wasRecentlyCreated || $nilai->wasChanged($fields))) {
                 Notifikasi::create([
                     'user_id' => $siswa->user_id,
                     'tipe' => 'nilai_baru',

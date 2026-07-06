@@ -18,8 +18,8 @@ class StatistikService
     public function dashboardAdmin(): array
     {
         return [
-            'total_siswa' => User::where('role_id', 3)->count(),
-            'total_guru' => User::where('role_id', 2)->count(),
+            'total_siswa' => $this->countUsersByRole('siswa'),
+            'total_guru' => $this->countUsersByRole('guru'),
             'total_kelas' => Kelas::count(),
             'total_mapel' => MataPelajaran::count(),
             'siswa_aktif' => Siswa::where('status', 'aktif')->count(),
@@ -64,7 +64,7 @@ class StatistikService
     public function dashboardKepsek(): array
     {
         $totalSiswa = Siswa::where('status', 'aktif')->count();
-        $totalGuru = User::where('role_id', 2)->count();
+        $totalGuru = $this->countUsersByRole('guru');
         $totalKelas = Kelas::count();
 
         // Rata-rata nilai seluruh siswa
@@ -83,5 +83,10 @@ class StatistikService
             'persen_hadir' => $persenHadir,
             'total_mapel' => MataPelajaran::count(),
         ];
+    }
+
+    private function countUsersByRole(string $role): int
+    {
+        return User::whereHas('role', fn($query) => $query->where('nama_role', $role))->count();
     }
 }

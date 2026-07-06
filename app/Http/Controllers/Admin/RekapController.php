@@ -76,8 +76,22 @@ class RekapController extends Controller
 
             $siswaList = Siswa::with('user')->where('kelas_id', $kelasId)->where('status', 'aktif')->orderBy('nis')->get();
 
-            $mapelList = MataPelajaran::whereHas('kelasMapel', fn($q) => $q->where('kelas_id', $kelasId)->where('tahun_ajaran_id', $taAktif->id)->where('semester', $semester))
-                ->orderBy('urutan')->get();
+            $mapelList = KelasMapel::with('mataPelajaran')
+                ->where('kelas_id', $kelasId)
+                ->where('tahun_ajaran_id', $taAktif->id)
+                ->where('semester', $semester)
+                ->join('mata_pelajaran', 'mata_pelajaran.id', '=', 'kelas_mapel.mapel_id')
+                ->orderBy('mata_pelajaran.urutan')
+                ->orderBy('mata_pelajaran.nama_mapel')
+                ->select('kelas_mapel.*')
+                ->get()
+                ->map(function ($kelasMapel) {
+                    return (object) [
+                        'id' => $kelasMapel->mapel_id,
+                        'kelas_mapel_id' => $kelasMapel->id,
+                        'nama_mapel' => $kelasMapel->mataPelajaran?->nama_mapel ?? '-',
+                    ];
+                });
 
             $nilaiData = NilaiAkhir::whereIn('siswa_id', $siswaList->pluck('id'))
                 ->where('tahun_ajaran_id', $taAktif->id)->where('semester', $semester)
@@ -87,7 +101,7 @@ class RekapController extends Controller
                 $row = ['nis' => $s->nis, 'nama' => $s->user->nama_lengkap ?? '-', 'nilai' => []];
                 $sn = $nilaiData->get($s->id, collect());
                 foreach ($mapelList as $mp) {
-                    $n = $sn->firstWhere('kelas_mapel_id', $mp->kelasMapel->first()?->id);
+                    $n = $sn->firstWhere('kelas_mapel_id', $mp->kelas_mapel_id);
                     $row['nilai'][$mp->id] = $n ? $n->rata_akhir : null;
                 }
                 $validNilai = array_filter($row['nilai'], fn($v) => !is_null($v));

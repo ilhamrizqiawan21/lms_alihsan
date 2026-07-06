@@ -49,12 +49,12 @@
                         <td>
                             @if($p->files && $p->files->count() > 0)
                                 @foreach($p->files as $file)
-                                    <a href="{{ asset('storage/'.$file->file_path) }}" class="btn btn-sm btn-outline-primary mb-1" target="_blank" title="{{ $file->file_name }}">
+                                    <a href="{{ route('guru.tugas.file.download', [$kelasMapel, $tugas, $file]) }}" class="btn btn-sm btn-outline-primary mb-1" target="_blank" title="{{ $file->file_name }}">
                                         <i class="bi bi-paperclip"></i>
                                     </a>
                                 @endforeach
                             @elseif($p->file_upload)
-                                <a href="{{ asset('storage/'.$p->file_upload) }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                <a href="{{ route('guru.tugas.pengumpulan.download', [$kelasMapel, $tugas, $p]) }}" class="btn btn-sm btn-outline-primary" target="_blank">
                                     <i class="bi bi-download"></i>
                                 </a>
                             @else
@@ -114,11 +114,11 @@
                                     <p><strong>File:</strong></p>
                                     <ul>
                                         @foreach($p->files as $file)
-                                        <li><a href="{{ asset('storage/'.$file->file_path) }}" target="_blank">{{ $file->file_name }}</a></li>
+                                        <li><a href="{{ route('guru.tugas.file.download', [$kelasMapel, $tugas, $file]) }}" target="_blank">{{ $file->file_name }}</a></li>
                                         @endforeach
                                     </ul>
                                     @elseif($p->file_upload)
-                                    <p><strong>File:</strong> <a href="{{ asset('storage/'.$p->file_upload) }}" target="_blank">Download</a></p>
+                                    <p><strong>File:</strong> <a href="{{ route('guru.tugas.pengumpulan.download', [$kelasMapel, $tugas, $p]) }}" target="_blank">Download</a></p>
                                     @endif
 
                                     @if($p->teks_jawaban)

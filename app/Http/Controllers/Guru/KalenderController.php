@@ -56,7 +56,7 @@ class KalenderController extends Controller
 
     public function update(Request $request, CalendarEvent $calendarEvent)
     {
-        if ($calendarEvent->user_id !== auth()->id() && $calendarEvent->scope !== 'school') {
+        if ((int) $calendarEvent->user_id !== (int) auth()->id()) {
             abort(403);
         }
 
