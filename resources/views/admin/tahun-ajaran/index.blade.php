@@ -51,7 +51,7 @@
                                     @if(!$ta->is_active)
                                         <form action="{{ route('admin.tahun-ajaran.set-aktif', $ta) }}" method="POST" class="d-inline">
                                             @csrf
-                                            <button class="btn btn-sm btn-primary" data-confirm="Aktifkan tahun ajaran ini?">
+                                            <button class="btn btn-sm btn-primary" data-confirm="Aktifkan tahun ajaran ini? Semester aktif akan kembali ke Semester 1 dan kelas semua siswa aktif akan dikosongkan. Data lama tetap tersimpan sebagai arsip.">
                                                 <i class="bi bi-check-circle-fill"></i> Aktifkan
                                             </button>
                                         </form>

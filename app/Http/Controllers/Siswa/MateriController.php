@@ -21,7 +21,7 @@ class MateriController extends Controller
 
         $kelasMapel = KelasMapel::with(['mataPelajaran', 'guru'])
             ->where('kelas_id', $siswa->kelas_id)
-            ->whereHas('tahunAjaran', fn($q) => $q->where('is_active', true))
+            ->aktif()
             ->get();
 
         return view('siswa.materi.index', compact('kelasMapel'));
@@ -65,14 +65,10 @@ class MateriController extends Controller
 
     private function ensureKelasMapelAktifUntukSiswa(KelasMapel $kelasMapel, ?Siswa $siswa): void
     {
-        $kelasMapelAktif = $kelasMapel->exists
-            ? $kelasMapel->tahunAjaran()->where('is_active', true)->exists()
-            : true;
-
         abort_unless(
             $siswa
             && (int) $siswa->kelas_id === (int) $kelasMapel->kelas_id
-            && $kelasMapelAktif,
+            && $kelasMapel->isAktif(),
             403,
             'Anda tidak memiliki akses ke materi ini.'
         );

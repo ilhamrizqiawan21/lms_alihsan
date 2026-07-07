@@ -19,7 +19,7 @@ class SikapController extends Controller
     {
         $kelasMapel = KelasMapel::with(['kelas', 'mataPelajaran'])
             ->where('guru_id', Auth::id())
-            ->whereHas('tahunAjaran', fn($q) => $q->where('is_active', true))
+            ->aktif()
             ->get();
 
         return view('guru.sikap.index', compact('kelasMapel'));
@@ -128,7 +128,7 @@ class SikapController extends Controller
     {
         $kelasMapel = KelasMapel::with(['kelas', 'mataPelajaran'])
             ->where('guru_id', Auth::id())
-            ->whereHas('tahunAjaran', fn($q) => $q->where('is_active', true))
+            ->aktif()
             ->get();
 
         $tahunAjaran = TahunAjaran::getAktif();
@@ -141,7 +141,7 @@ class SikapController extends Controller
         $sosialQuery = SikapSosial::with(['siswa.user', 'siswa.kelas', 'kelasMapel.mataPelajaran'])
             ->where('tahun_ajaran_id', $tahunAjaran?->id)
             ->where('semester', $semester)
-            ->whereHas('kelasMapel', fn($q) => $q->where('guru_id', Auth::id()));
+            ->whereHas('kelasMapel', fn($q) => $q->where('guru_id', Auth::id())->aktif($semester));
 
         if ($kmId) $sosialQuery->where('kelas_mapel_id', $kmId);
 
@@ -158,7 +158,7 @@ class SikapController extends Controller
         $spiritualQuery = SikapSpiritual::with(['siswa.user', 'siswa.kelas', 'kelasMapel.mataPelajaran'])
             ->where('tahun_ajaran_id', $tahunAjaran?->id)
             ->where('semester', $semester)
-            ->whereHas('kelasMapel', fn($q) => $q->where('guru_id', Auth::id()));
+            ->whereHas('kelasMapel', fn($q) => $q->where('guru_id', Auth::id())->aktif($semester));
 
         if ($kmId) $spiritualQuery->where('kelas_mapel_id', $kmId);
 

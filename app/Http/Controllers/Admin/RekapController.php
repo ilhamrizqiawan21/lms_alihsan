@@ -24,22 +24,31 @@ class RekapController extends Controller
         $kelasList = Kelas::orderBy('tingkat')->orderBy('nama_kelas')->get();
         $kelasId = $request->input('kelas_id');
         $bulan = $request->input('bulan', date('Y-m'));
+        $taAktif = TahunAjaran::getAktif();
+        $semester = $request->input('semester', \App\Models\Pengaturan::getValue('semester_aktif', '1'));
 
         $rekap = [];
         $tanggalList = [];
         $kelasNama = '';
 
-        if ($kelasId) {
+        if ($kelasId && $taAktif) {
             $kelas = Kelas::find($kelasId);
             $kelasNama = $kelas ? "{$kelas->tingkat} {$kelas->nama_kelas}" : '';
 
             $siswaList = Siswa::with('user')->where('kelas_id', $kelasId)->where('status', 'aktif')->orderBy('nis')->get();
 
-            $tanggalList = Absensi::whereHas('siswa', fn($q) => $q->where('kelas_id', $kelasId))
+            $tanggalList = Absensi::whereHas('kelasMapel', fn($q) => $q
+                    ->where('kelas_id', $kelasId)
+                    ->where('tahun_ajaran_id', $taAktif->id)
+                    ->where('semester', $semester))
                 ->whereBetween('tanggal', ["{$bulan}-01", date('Y-m-t', strtotime("{$bulan}-01"))])
                 ->orderBy('tanggal')->pluck('tanggal')->unique()->map(fn($d) => $d->format('Y-m-d'))->values();
 
             $absensiData = Absensi::whereIn('siswa_id', $siswaList->pluck('id'))
+                ->whereHas('kelasMapel', fn($q) => $q
+                    ->where('kelas_id', $kelasId)
+                    ->where('tahun_ajaran_id', $taAktif->id)
+                    ->where('semester', $semester))
                 ->whereBetween('tanggal', ["{$bulan}-01", date('Y-m-t', strtotime("{$bulan}-01"))])
                 ->get()->groupBy('siswa_id');
 
@@ -56,7 +65,7 @@ class RekapController extends Controller
             }
         }
 
-        return view('admin.rekap.absensi', compact('kelasList', 'rekap', 'tanggalList', 'kelasNama', 'bulan', 'kelasId'));
+        return view('admin.rekap.absensi', compact('kelasList', 'rekap', 'tanggalList', 'kelasNama', 'bulan', 'kelasId', 'taAktif', 'semester'));
     }
     //Mengambil nilai berdasarkan kelas
     public function nilai(Request $request)

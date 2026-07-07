@@ -86,15 +86,24 @@ class ExportController extends Controller
     {
         $kelasId = $request->input('kelas_id');
         $bulan = $request->input('bulan', date('Y-m'));
+        $semester = $request->input('semester', Pengaturan::getValue('semester_aktif', '1'));
+        $taAktif = TahunAjaran::getAktif();
 
         $kelas = Kelas::findOrFail($kelasId);
         $siswaList = Siswa::with('user')->where('kelas_id', $kelasId)->where('status', 'aktif')->orderBy('nis')->get();
 
-        $tanggalList = Absensi::whereHas('siswa', fn($q) => $q->where('kelas_id', $kelasId))
+        $tanggalList = Absensi::whereHas('kelasMapel', fn($q) => $q
+                ->where('kelas_id', $kelasId)
+                ->where('tahun_ajaran_id', $taAktif?->id)
+                ->where('semester', $semester))
             ->whereBetween('tanggal', ["{$bulan}-01", date('Y-m-t', strtotime("{$bulan}-01"))])
             ->orderBy('tanggal')->pluck('tanggal')->unique()->map(fn($d) => $d->format('Y-m-d'))->values();
 
         $absensiData = Absensi::whereIn('siswa_id', $siswaList->pluck('id'))
+            ->whereHas('kelasMapel', fn($q) => $q
+                ->where('kelas_id', $kelasId)
+                ->where('tahun_ajaran_id', $taAktif?->id)
+                ->where('semester', $semester))
             ->whereBetween('tanggal', ["{$bulan}-01", date('Y-m-t', strtotime("{$bulan}-01"))])
             ->get()->groupBy('siswa_id');
 
@@ -248,15 +257,24 @@ class ExportController extends Controller
     {
         $kelasId = $request->input('kelas_id');
         $bulan = $request->input('bulan', date('Y-m'));
+        $semester = $request->input('semester', Pengaturan::getValue('semester_aktif', '1'));
+        $taAktif = TahunAjaran::getAktif();
 
         $kelas = Kelas::findOrFail($kelasId);
         $siswaList = Siswa::with('user')->where('kelas_id', $kelasId)->where('status', 'aktif')->orderBy('nis')->get();
 
-        $tanggalList = Absensi::whereHas('siswa', fn($q) => $q->where('kelas_id', $kelasId))
+        $tanggalList = Absensi::whereHas('kelasMapel', fn($q) => $q
+                ->where('kelas_id', $kelasId)
+                ->where('tahun_ajaran_id', $taAktif?->id)
+                ->where('semester', $semester))
             ->whereBetween('tanggal', ["{$bulan}-01", date('Y-m-t', strtotime("{$bulan}-01"))])
             ->orderBy('tanggal')->pluck('tanggal')->unique()->map(fn($d) => $d->format('Y-m-d'))->values();
 
         $absensiData = Absensi::whereIn('siswa_id', $siswaList->pluck('id'))
+            ->whereHas('kelasMapel', fn($q) => $q
+                ->where('kelas_id', $kelasId)
+                ->where('tahun_ajaran_id', $taAktif?->id)
+                ->where('semester', $semester))
             ->whereBetween('tanggal', ["{$bulan}-01", date('Y-m-t', strtotime("{$bulan}-01"))])
             ->get()->groupBy('siswa_id');
 
@@ -276,7 +294,8 @@ class ExportController extends Controller
         $bulanIndo = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
         $namaBulan = $bulanIndo[(int) substr($bulan, 5, 2)] . ' ' . substr($bulan, 0, 4);
 
-        $pdf = Pdf::loadView('exports.pdf.absensi', compact('rekap', 'tanggalList', 'kelas', 'namaBulan'));
+        $labelSemester = $semester == '1' ? 'Ganjil' : 'Genap';
+        $pdf = Pdf::loadView('exports.pdf.absensi', compact('rekap', 'tanggalList', 'kelas', 'namaBulan', 'labelSemester', 'taAktif'));
         $pdf->setPaper('A4', 'landscape');
 
         return $pdf->download("rekap_absensi_{$kelas->tingkat}_{$kelas->nama_kelas}_{$bulan}.pdf");

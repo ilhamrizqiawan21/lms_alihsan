@@ -27,11 +27,18 @@ $statusIcon = ['hadir'=>'<span class="badge badge-hadir">H</span>','sakit'=>'<sp
                 <label class="form-label">Bulan</label>
                 <input type="month" name="bulan" class="form-control" value="{{ $bulan }}" onchange="this.form.submit()">
             </div>
+            <div class="col-md-2">
+                <label class="form-label">Semester</label>
+                <select name="semester" class="form-select" onchange="this.form.submit()">
+                    <option value="1" {{ $semester == '1' ? 'selected' : '' }}>Ganjil</option>
+                    <option value="2" {{ $semester == '2' ? 'selected' : '' }}>Genap</option>
+                </select>
+            </div>
             <div class="col-md-3">
                 <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1"></i> Tampilkan</button>
                 @if($kelasId && count($rekap) > 0)
-                <a href="{{ route('admin.export.absensi.excel', request()->only(['kelas_id', 'bulan'])) }}" class="btn btn-outline-success"><i class="bi bi-file-earmark-excel me-1"></i> Excel</a>
-                <a href="{{ route('admin.export.absensi.pdf', request()->only(['kelas_id', 'bulan'])) }}" class="btn btn-outline-danger"><i class="bi bi-file-earmark-pdf me-1"></i> PDF</a>
+                <a href="{{ route('admin.export.absensi.excel', request()->only(['kelas_id', 'bulan', 'semester'])) }}" class="btn btn-outline-success"><i class="bi bi-file-earmark-excel me-1"></i> Excel</a>
+                <a href="{{ route('admin.export.absensi.pdf', request()->only(['kelas_id', 'bulan', 'semester'])) }}" class="btn btn-outline-danger"><i class="bi bi-file-earmark-pdf me-1"></i> PDF</a>
                 <a href="#" class="btn btn-outline-secondary" onclick="window.print();return false;"><i class="bi bi-printer me-1"></i> Cetak</a>
                 @endif
             </div>
@@ -42,7 +49,7 @@ $statusIcon = ['hadir'=>'<span class="badge badge-hadir">H</span>','sakit'=>'<sp
 @if($kelasId && count($rekap) > 0)
 <div class="card">
     <div class="card-header">
-        <i class="bi bi-table me-2"></i> Kelas {{ $kelasNama }} — {{ $bulanIndo[(int)substr($bulan,5,2)] }} {{ substr($bulan,0,4) }}
+        <i class="bi bi-table me-2"></i> Kelas {{ $kelasNama }} — {{ $bulanIndo[(int)substr($bulan,5,2)] }} {{ substr($bulan,0,4) }} — Semester {{ $semester == '1' ? 'Ganjil' : 'Genap' }} {{ $taAktif?->tahun }}
         <span class="ms-3">
             <span class="badge badge-hadir">H = Hadir</span>
             <span class="badge badge-sakit ms-1">S = Sakit</span>

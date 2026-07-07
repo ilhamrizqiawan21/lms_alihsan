@@ -26,7 +26,7 @@ class NilaiController extends Controller
     {
         $kelasMapel = KelasMapel::with(['kelas', 'mataPelajaran'])
             ->where('guru_id', Auth::id())
-            ->whereHas('tahunAjaran', fn($q) => $q->where('is_active', true))
+            ->aktif()
             ->get();
 
         return view('guru.nilai.index', compact('kelasMapel'));
@@ -137,7 +137,7 @@ class NilaiController extends Controller
     {
         $kelasMapel = KelasMapel::with(['kelas', 'mataPelajaran'])
             ->where('guru_id', Auth::id())
-            ->whereHas('tahunAjaran', fn($q) => $q->where('is_active', true))
+            ->aktif()
             ->get();
 
         $tahunAjaran = TahunAjaran::getAktif();
@@ -146,7 +146,7 @@ class NilaiController extends Controller
         $query = NilaiAkhir::with(['siswa.user', 'siswa.kelas', 'kelasMapel.mataPelajaran'])
             ->where('tahun_ajaran_id', $tahunAjaran?->id)
             ->where('semester', $semester)
-            ->whereHas('kelasMapel', fn($q) => $q->where('guru_id', Auth::id()));
+            ->whereHas('kelasMapel', fn($q) => $q->where('guru_id', Auth::id())->aktif($semester));
 
         if ($request->filled('kelas_mapel_id')) {
             $query->where('kelas_mapel_id', $request->kelas_mapel_id);

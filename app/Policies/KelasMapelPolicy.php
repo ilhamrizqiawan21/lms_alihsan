@@ -12,6 +12,8 @@ class KelasMapelPolicy
      */
     public function mengajar(User $user, KelasMapel $kelasMapel): bool
     {
-        return $user->isGuru() && $kelasMapel->guru_id === $user->id;
+        return $user->isGuru()
+            && $kelasMapel->guru_id === $user->id
+            && $kelasMapel->isAktif();
     }
 }

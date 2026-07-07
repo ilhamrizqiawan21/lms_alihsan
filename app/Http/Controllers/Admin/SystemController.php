@@ -7,6 +7,7 @@ use App\Models\BlockedIp;
 use App\Models\LogLogin;
 use App\Models\Pengaturan;
 use App\Models\SystemError;
+use App\Models\TahunAjaran;
 use Illuminate\Http\Request;
 
 class SystemController extends Controller
@@ -43,7 +44,9 @@ class SystemController extends Controller
     public function pengaturan()
     {
         $settings = Pengaturan::pluck('value', 'key')->toArray();
-        return view('admin.pengaturan', compact('settings'));
+        $tahunAjaranAktif = TahunAjaran::getAktif();
+
+        return view('admin.pengaturan', compact('settings', 'tahunAjaranAktif'));
     }
     //Simpan pengaturan sistem
     public function savePengaturan(Request $request)
@@ -52,7 +55,6 @@ class SystemController extends Controller
             'nama_sekolah' => 'nullable|string|max:100',
             'warna_tema' => 'nullable|in:hijau,biru-azure,biru-aqua',
             'semester_aktif' => 'nullable|in:1,2',
-            'tahun_ajaran_aktif' => 'nullable|string|max:9',
             'mode_kenaikan' => 'nullable|in:manual,auto',
         ]);
 

@@ -29,11 +29,9 @@ class TugasController extends Controller
         $tugas = Tugas::with(['kelasMapel.mataPelajaran', 'pengumpulan' => function ($q) use ($siswa) {
             $q->where('siswa_id', $siswa->id);
         }])
-            ->whereHas('kelasMapel', function ($q) use ($siswa, $taAktif) {
+            ->whereHas('kelasMapel', function ($q) use ($siswa) {
                 $q->where('kelas_id', $siswa->kelas_id);
-                if ($taAktif) {
-                    $q->where('tahun_ajaran_id', $taAktif->id);
-                }
+                $q->aktif();
             })
             ->orderBy('batas_waktu', 'desc')
             ->get();
@@ -61,9 +59,6 @@ class TugasController extends Controller
     {
         $user = Auth::user();
         $siswa = $user->siswa;
-        $tugas->loadMissing('kelasMapel.tahunAjaran');
-
-        $this->ensureTugasAktifUntukSiswa($tugas, $siswa);
 
         $validated = $request->validate([
             'files' => 'nullable|array',
@@ -71,6 +66,10 @@ class TugasController extends Controller
             'files.*' => 'nullable|file|mimes:png,jpg,jpeg,pdf|max:20480',
             'teks_jawaban' => 'nullable|string|max:5000',
         ]);
+
+        $tugas->loadMissing('kelasMapel.tahunAjaran');
+
+        $this->ensureTugasAktifUntukSiswa($tugas, $siswa);
 
         $hasTextJawaban = filled($validated['teks_jawaban'] ?? null);
         $hasSingleFile = $request->hasFile('file_upload');
@@ -172,15 +171,11 @@ class TugasController extends Controller
 
     private function ensureTugasAktifUntukSiswa(Tugas $tugas, ?Siswa $siswa): void
     {
-        $kelasMapelAktif = $tugas->kelasMapel?->exists
-            ? (bool) $tugas->kelasMapel->tahunAjaran?->is_active
-            : true;
-
         abort_unless(
             $siswa
             && $tugas->kelasMapel
             && (int) $siswa->kelas_id === (int) $tugas->kelasMapel->kelas_id
-            && $kelasMapelAktif,
+            && $tugas->kelasMapel->isAktif(),
             403,
             'Anda tidak memiliki akses ke tugas ini.'
         );

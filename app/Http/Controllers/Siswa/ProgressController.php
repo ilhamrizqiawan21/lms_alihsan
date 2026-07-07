@@ -34,6 +34,7 @@ class ProgressController extends Controller
         // Kehadiran bulan ini
         $bulanIni = date('Y-m');
         $absenData = Absensi::where('siswa_id', $siswa->id)
+            ->whereHas('kelasMapel', fn($q) => $q->aktif($semester))
             ->whereBetween('tanggal', [date('Y-m-01'), date('Y-m-t')])
             ->get();
         $hadir = $absenData->where('status', 'hadir')->count();

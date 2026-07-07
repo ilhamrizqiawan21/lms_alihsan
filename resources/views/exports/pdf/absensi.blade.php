@@ -25,7 +25,8 @@
     <h2>REKAP ABSENSI</h2>
     <h4>Kelas {{ $kelas->tingkat }} {{ $kelas->nama_kelas }}</h4>
     <div class="header-info">
-        Bulan {{ $namaBulan }}
+        Bulan {{ $namaBulan }}<br>
+        Semester {{ $labelSemester ?? '-' }} Tahun Ajaran {{ $taAktif?->tahun ?? '-' }}
     </div>
 
     <table>

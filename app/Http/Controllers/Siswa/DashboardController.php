@@ -36,7 +36,7 @@ class DashboardController extends Controller
 
         $kelasMapel = KelasMapel::with(['mataPelajaran', 'guru', 'tahunAjaran'])
             ->where('kelas_id', $siswa->kelas_id)
-            ->whereHas('tahunAjaran', fn($q) => $q->where('is_active', true))
+            ->aktif()
             ->get();
 
         $kelasMapelIds = $kelasMapel->pluck('id');
@@ -75,6 +75,7 @@ class DashboardController extends Controller
 
         $absensiTerbaru = Absensi::with('kelasMapel.mataPelajaran')
             ->where('siswa_id', $siswa->id)
+            ->whereHas('kelasMapel', fn($q) => $q->aktif())
             ->orderBy('tanggal', 'desc')
             ->take(5)
             ->get();

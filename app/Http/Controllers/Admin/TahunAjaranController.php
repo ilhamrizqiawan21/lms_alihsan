@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Pengaturan;
+use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TahunAjaranController extends Controller
 {
@@ -21,11 +24,13 @@ class TahunAjaranController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        if ($request->boolean('is_active')) {
-            TahunAjaran::where('is_active', true)->update(['is_active' => false]);
-        }
+        DB::transaction(function () use ($request, $validated) {
+            $tahunAjaran = TahunAjaran::create($validated);
 
-        TahunAjaran::create($validated);
+            if ($request->boolean('is_active')) {
+                $this->aktifkanTahunAjaran($tahunAjaran);
+            }
+        });
 
         return redirect()->route('admin.tahun-ajaran.index')
             ->with('success', 'Tahun ajaran berhasil ditambahkan.');
@@ -38,12 +43,14 @@ class TahunAjaranController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        if ($request->boolean('is_active')) {
-            TahunAjaran::where('is_active', true)->where('id', '!=', $tahunAjaran->id)
-                ->update(['is_active' => false]);
-        }
+        DB::transaction(function () use ($request, $tahunAjaran, $validated) {
+            $wasActive = $tahunAjaran->is_active;
+            $tahunAjaran->update($validated);
 
-        $tahunAjaran->update($validated);
+            if ($request->boolean('is_active') && !$wasActive) {
+                $this->aktifkanTahunAjaran($tahunAjaran);
+            }
+        });
 
         return redirect()->route('admin.tahun-ajaran.index')
             ->with('success', 'Tahun ajaran berhasil diperbarui.');
@@ -66,9 +73,22 @@ class TahunAjaranController extends Controller
     //Set Tahun Ajaran Aktif
     public function setAktif(TahunAjaran $tahunAjaran)
     {
-        TahunAjaran::where('is_active', true)->update(['is_active' => false]);
-        $tahunAjaran->update(['is_active' => true]);
+        DB::transaction(function () use ($tahunAjaran) {
+            $this->aktifkanTahunAjaran($tahunAjaran);
+        });
 
         return back()->with('success', "Tahun ajaran {$tahunAjaran->tahun} sekarang aktif.");
+    }
+
+    private function aktifkanTahunAjaran(TahunAjaran $tahunAjaran): void
+    {
+        TahunAjaran::where('is_active', true)
+            ->where('id', '!=', $tahunAjaran->id)
+            ->update(['is_active' => false]);
+
+        $tahunAjaran->update(['is_active' => true]);
+        Pengaturan::setValue('semester_aktif', '1');
+
+        Siswa::where('status', 'aktif')->update(['kelas_id' => null]);
     }
 }

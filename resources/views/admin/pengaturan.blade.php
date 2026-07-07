@@ -44,11 +44,8 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Tahun Ajaran Aktif</label>
-                        <select name="tahun_ajaran_aktif" class="form-select">
-                            @foreach(['2024/2025','2025/2026','2026/2027','2027/2028'] as $ta)
-                            <option value="{{ $ta }}" {{ ($settings['tahun_ajaran_aktif'] ?? '') == $ta ? 'selected' : '' }}>{{ $ta }}</option>
-                            @endforeach
-                        </select>
+                        <input type="text" class="form-control" value="{{ $tahunAjaranAktif?->tahun ?? 'Belum diatur' }}" readonly>
+                        <div class="form-text">Ganti tahun ajaran melalui menu Tahun Ajaran agar arsip lama tetap tersimpan dan kelas siswa aktif dikosongkan.</div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Mode Kenaikan Kelas</label>

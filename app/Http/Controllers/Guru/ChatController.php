@@ -16,7 +16,7 @@ class ChatController extends Controller
     {
         $kelasMapel = KelasMapel::with(['kelas', 'mataPelajaran'])
             ->where('guru_id', Auth::id())
-            ->whereHas('tahunAjaran', fn($q) => $q->where('is_active', true))
+            ->aktif()
             ->get();
 
         return view('guru.chat.index', compact('kelasMapel'));

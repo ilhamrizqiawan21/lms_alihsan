@@ -26,7 +26,7 @@ class DashboardController extends Controller
 
         $kelasMapel = KelasMapel::with(['kelas', 'mataPelajaran', 'tahunAjaran'])
             ->where('guru_id', $guruId)
-            ->whereHas('tahunAjaran', fn($q) => $q->where('is_active', true))
+            ->aktif()
             ->get();
 
         $pengumuman = Pengumuman::with('creator')

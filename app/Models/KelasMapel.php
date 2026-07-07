@@ -19,6 +19,23 @@ class KelasMapel extends Model
         'semester',
     ];
 
+    public function scopeAktif($query, ?string $semester = null)
+    {
+        $semester ??= \App\Models\Pengaturan::getValue('semester_aktif', '1');
+
+        return $query
+            ->where('semester', $semester)
+            ->whereHas('tahunAjaran', fn($q) => $q->where('is_active', true));
+    }
+
+    public function isAktif(): bool
+    {
+        $semesterAktif = \App\Models\Pengaturan::getValue('semester_aktif', '1');
+
+        return (string) $this->semester === (string) $semesterAktif
+            && $this->tahunAjaran()->where('is_active', true)->exists();
+    }
+
     public function kelas(): BelongsTo
     {
         return $this->belongsTo(Kelas::class, 'kelas_id');

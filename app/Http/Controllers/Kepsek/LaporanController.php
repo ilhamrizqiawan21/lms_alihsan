@@ -8,9 +8,11 @@ use App\Models\Kelas;
 use App\Models\KelasMapel;
 use App\Models\MataPelajaran;
 use App\Models\NilaiAkhir;
+use App\Models\Pengaturan;
 use App\Models\PengumpulanTugas;
 use App\Models\SikapSosial;
 use App\Models\SikapSpiritual;
+use App\Models\TahunAjaran;
 use App\Models\Tugas;
 use App\Services\AbsensiService;
 use Illuminate\Http\Request;
@@ -29,10 +31,11 @@ class LaporanController extends Controller
     {
         $kelas = Kelas::all();
         $kelasMapel = KelasMapel::with(['kelas', 'mataPelajaran', 'guru'])
-            ->whereHas('tahunAjaran', fn($q) => $q->where('is_active', true))
+            ->aktif()
             ->get();
 
-        $query = Absensi::with(['siswa.user', 'kelasMapel.kelas', 'kelasMapel.mataPelajaran']);
+        $query = Absensi::with(['siswa.user', 'kelasMapel.kelas', 'kelasMapel.mataPelajaran'])
+            ->whereHas('kelasMapel', fn($q) => $q->aktif());
 
         if ($request->filled('kelas_mapel_id')) {
             $query->where('kelas_mapel_id', $request->kelas_mapel_id);
@@ -56,8 +59,12 @@ class LaporanController extends Controller
     {
         $kelas = Kelas::all();
         $mapel = MataPelajaran::orderBy('urutan')->get();
+        $taAktif = TahunAjaran::getAktif();
+        $semester = $request->input('semester', Pengaturan::getValue('semester_aktif', '1'));
 
-        $query = NilaiAkhir::with(['siswa.user', 'kelasMapel.kelas', 'kelasMapel.mataPelajaran', 'tahunAjaran']);
+        $query = NilaiAkhir::with(['siswa.user', 'kelasMapel.kelas', 'kelasMapel.mataPelajaran', 'tahunAjaran'])
+            ->where('tahun_ajaran_id', $taAktif?->id)
+            ->where('semester', $semester);
 
         if ($request->filled('kelas_id')) {
             $query->whereHas('kelasMapel', fn($q) => $q->where('kelas_id', $request->kelas_id));
@@ -65,13 +72,9 @@ class LaporanController extends Controller
         if ($request->filled('mapel_id')) {
             $query->whereHas('kelasMapel', fn($q) => $q->where('mapel_id', $request->mapel_id));
         }
-        if ($request->filled('semester')) {
-            $query->where('semester', $request->semester);
-        }
-
         $nilai = $query->orderBy('rata_akhir', 'desc')->paginate(30);
 
-        return view('kepsek.laporan.nilai', compact('nilai', 'kelas', 'mapel'));
+        return view('kepsek.laporan.nilai', compact('nilai', 'kelas', 'mapel', 'semester', 'taAktif'));
     }
 
     public function rekapAbsensi()
@@ -80,9 +83,9 @@ class LaporanController extends Controller
         $rekap = [];
 
         foreach ($kelas as $k) {
-            $total = Absensi::whereHas('kelasMapel', fn($q) => $q->where('kelas_id', $k->id))
+            $total = Absensi::whereHas('kelasMapel', fn($q) => $q->where('kelas_id', $k->id)->aktif())
                 ->count();
-            $hadir = Absensi::whereHas('kelasMapel', fn($q) => $q->where('kelas_id', $k->id))
+            $hadir = Absensi::whereHas('kelasMapel', fn($q) => $q->where('kelas_id', $k->id)->aktif())
                 ->where('status', 'hadir')
                 ->count();
 
@@ -106,7 +109,7 @@ class LaporanController extends Controller
             'kelasMapel.mataPelajaran',
             'kelasMapel.guru',
             'pengumpulan.siswa.user',
-        ])->whereHas('kelasMapel.tahunAjaran', fn($q) => $q->where('is_active', true));
+        ])->whereHas('kelasMapel', fn($q) => $q->aktif());
 
         if ($request->filled('kelas_id')) {
             $query->whereHas('kelasMapel', fn($q) => $q->where('kelas_id', $request->kelas_id));
@@ -134,10 +137,13 @@ class LaporanController extends Controller
         $kelas = Kelas::orderBy('tingkat')->orderBy('nama_kelas')->get();
 
         $kelasId = $request->input('kelas_id');
+        $taAktif = TahunAjaran::getAktif();
+        $semester = Pengaturan::getValue('semester_aktif', '1');
 
         // Sikap Sosial
         $sosialQuery = SikapSosial::with(['siswa.user', 'siswa.kelas', 'kelasMapel.mataPelajaran'])
-            ->whereHas('tahunAjaran', fn($q) => $q->where('is_active', true));
+            ->where('tahun_ajaran_id', $taAktif?->id)
+            ->where('semester', $semester);
 
         if ($kelasId) {
             $sosialQuery->whereHas('siswa', fn($q) => $q->where('kelas_id', $kelasId));
@@ -158,7 +164,8 @@ class LaporanController extends Controller
 
         // Sikap Spiritual
         $spiritualQuery = SikapSpiritual::with(['siswa.user', 'siswa.kelas', 'kelasMapel.mataPelajaran'])
-            ->whereHas('tahunAjaran', fn($q) => $q->where('is_active', true));
+            ->where('tahun_ajaran_id', $taAktif?->id)
+            ->where('semester', $semester);
 
         if ($kelasId) {
             $spiritualQuery->whereHas('siswa', fn($q) => $q->where('kelas_id', $kelasId));
@@ -178,6 +185,6 @@ class LaporanController extends Controller
             ];
         })->values();
 
-        return view('kepsek.laporan.rekap-sikap', compact('sikapSosial', 'sikapSpiritual', 'kelas', 'kelasId'));
+        return view('kepsek.laporan.rekap-sikap', compact('sikapSosial', 'sikapSpiritual', 'kelas', 'kelasId', 'semester', 'taAktif'));
     }
 }

@@ -25,7 +25,7 @@ class TugasController extends Controller
     {
         $kelasMapel = KelasMapel::with(['kelas', 'mataPelajaran', 'tahunAjaran'])
             ->where('guru_id', Auth::id())
-            ->whereHas('tahunAjaran', fn($q) => $q->where('is_active', true))
+            ->aktif()
             ->get();
 
         return view('guru.tugas.index', compact('kelasMapel'));
