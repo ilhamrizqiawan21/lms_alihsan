@@ -2,6 +2,8 @@
 @section('title', 'Rekap Nilai')
 
 @section('content')
+@include('components.print-school-header')
+
 <div class="page-header"><h4><i class="bi bi-bar-chart-fill me-2"></i> Rekap Nilai</h4></div>
 
 <div class="card mb-3">

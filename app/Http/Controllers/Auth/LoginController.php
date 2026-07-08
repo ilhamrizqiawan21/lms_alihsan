@@ -41,8 +41,10 @@ class LoginController extends Controller
             return back()->with('error', "Terlalu banyak percobaan login. Silakan coba lagi dalam {$seconds} detik.");
         }
 
+        $loginField = filter_var($username, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
         // Attempt login
-        if (Auth::attempt(['username' => $username, 'password' => $request->password], $request->filled('remember'))) {
+        if (Auth::attempt([$loginField => $username, 'password' => $request->password], $request->filled('remember'))) {
             $user = Auth::user();
 
             // Cek user aktif

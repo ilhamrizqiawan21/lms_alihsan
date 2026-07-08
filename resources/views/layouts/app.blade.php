@@ -1,10 +1,24 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    @php
+        $layoutSchoolName = school_setting('school_name', 'Nama Sekolah');
+        $layoutSchoolShortName = school_setting('school_short_name', 'LMS');
+        $layoutAppName = 'LMS Sekolah';
+        $layoutLogoUrl = school_logo_url();
+        $layoutFaviconUrl = school_favicon_url();
+        $layoutPrimaryColor = school_setting('primary_color', '#198754');
+        $layoutSecondaryColor = school_setting('secondary_color', '#0d6efd');
+        $layoutSidebarColor = school_setting('sidebar_color') ?: $layoutPrimaryColor;
+        $layoutNavbarColor = school_setting('navbar_color') ?: $layoutPrimaryColor;
+    @endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'LMS MTs. Al-Ihsan Batujajar')</title>
+    <meta name="application-name" content="{{ $layoutAppName }}">
+    <meta name="theme-color" content="{{ $layoutPrimaryColor }}">
+    <title>@yield('title', $layoutAppName . ' - ' . $layoutSchoolName)</title>
+    <link rel="icon" href="{{ $layoutFaviconUrl }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -18,49 +32,23 @@
         <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
     @endif
     <style>
-        @php
-            $warna = \App\Models\Pengaturan::getValue('warna_tema', 'hijau');
-            $themes = [
-                'hijau' => [
-                    'p500' => '#22c55e', 'p600' => '#16a34a', 'p700' => '#15803d', 'p800' => '#166534',
-                    'p100' => '#dcfce7', 'p50' => '#f0fdf4',
-                    'bg' => '#f1f5f0',
-                    'shadow' => 'rgba(22,163,74,0.20)',
-                    'toast' => 'linear-gradient(135deg, #16a34a, #15803d)',
-                ],
-                'biru-azure' => [
-                    'p500' => '#3b82f6', 'p600' => '#2563eb', 'p700' => '#1d4ed8', 'p800' => '#1e40af',
-                    'p100' => '#dbeafe', 'p50' => '#eff6ff',
-                    'bg' => '#f0f4f8',
-                    'shadow' => 'rgba(37,99,235,0.20)',
-                    'toast' => 'linear-gradient(135deg, #2563eb, #1d4ed8)',
-                ],
-                'biru-aqua' => [
-                    'p500' => '#14b8a6', 'p600' => '#0d9488', 'p700' => '#0f766e', 'p800' => '#115e59',
-                    'p100' => '#ccfbf1', 'p50' => '#f0fdfa',
-                    'bg' => '#f0faf8',
-                    'shadow' => 'rgba(13,148,136,0.20)',
-                    'toast' => 'linear-gradient(135deg, #0d9488, #0f766e)',
-                ],
-            ];
-            $t = $themes[$warna] ?? $themes['hijau'];
-        @endphp
         :root {
-            --app-primary: #16a34a;
-            --app-primary-dark: #15803d;
-            --app-accent: #f59e0b;
-            --app-bg: #f1f5f0;
+            --app-primary: {{ $layoutPrimaryColor }};
+            --app-primary-dark: {{ $layoutSidebarColor }};
+            --app-accent: {{ $layoutSecondaryColor }};
+            --app-bg: #f8fafc;
             --app-radius: 0.875rem;
             --app-shadow: 0 4px 12px rgba(0,0,0,.08);
-            --primary-500: {{ $t['p500'] }};
-            --primary-600: {{ $t['p600'] }};
-            --primary-700: {{ $t['p700'] }};
-            --primary-800: {{ $t['p800'] }};
-            --primary-100: {{ $t['p100'] }};
-            --primary-50: {{ $t['p50'] }};
-            --primary-300: {{ $t['p500'] }};
-            --app-bg: {{ $t['bg'] }};
-            --toast-success-bg: {{ $t['toast'] }};
+            --primary-500: {{ $layoutPrimaryColor }};
+            --primary-600: {{ $layoutPrimaryColor }};
+            --primary-700: {{ $layoutSidebarColor }};
+            --primary-800: {{ $layoutSidebarColor }};
+            --primary-100: color-mix(in srgb, {{ $layoutPrimaryColor }} 18%, white);
+            --primary-50: color-mix(in srgb, {{ $layoutPrimaryColor }} 8%, white);
+            --primary-300: color-mix(in srgb, {{ $layoutPrimaryColor }} 70%, white);
+            --sidebar-bg: {{ $layoutSidebarColor }};
+            --navbar-bg: {{ $layoutNavbarColor }};
+            --toast-success-bg: linear-gradient(135deg, {{ $layoutPrimaryColor }}, {{ $layoutSidebarColor }});
             --gold-400: #fbbf24;
             --gold-500: #f59e0b;
             --gold-600: #d97706;
@@ -86,13 +74,16 @@
             --shadow-sm: 0 2px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
             --shadow-md: var(--app-shadow), 0 2px 4px rgba(0,0,0,0.04);
             --shadow-lg: 0 10px 24px rgba(0,0,0,0.10), 0 4px 8px rgba(0,0,0,0.06);
-            --shadow-green: 0 4px 16px {{ $t['shadow'] }};
+            --shadow-green: 0 4px 16px color-mix(in srgb, {{ $layoutPrimaryColor }} 24%, transparent);
             --bs-primary: var(--app-primary);
-            --bs-primary-rgb: 22, 163, 74;
             --bs-success: var(--app-primary);
-            --bs-success-rgb: 22, 163, 74;
             --bs-warning: var(--app-accent);
-            --bs-warning-rgb: 245, 158, 11;
+        }
+        .topbar {
+            background:linear-gradient(135deg, var(--navbar-bg), var(--primary-700));
+        }
+        .sidebar {
+            background:linear-gradient(165deg, var(--sidebar-bg) 0%, var(--primary-700) 45%, var(--primary-800) 100%);
         }
     </style>
     <link rel="stylesheet" href="{{ asset('css/lms-app.css') }}">
@@ -110,11 +101,11 @@
         </button>
         <div class="topbar-brand">
             <div class="topbar-logo-icon">
-            <img src="{{ asset('logo-sekolah.png') }}" alt="Logo MTs Al-Ihsan" class="app-logo-sm">
+                <img src="{{ $layoutLogoUrl }}" alt="Logo {{ $layoutSchoolName }}" class="app-logo-sm">
             </div>
             <div class="topbar-title">
-                <span class="topbar-title-main">Digitalisasi Pembelajaran</span>
-                <span class="topbar-title-sub">MTs. Al-Ihsan Batujajar — Kurikulum Merdeka</span>
+                <span class="topbar-title-main">{{ $layoutAppName }}</span>
+                <span class="topbar-title-sub">{{ $layoutSchoolName }}</span>
             </div>
         </div>
         <div class="topbar-actions">
@@ -195,11 +186,11 @@
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="sidebar-logo-icon">
-                <img src="{{ asset('logo-sekolah.png') }}" alt="Logo MTs Al-Ihsan" class="app-logo-md">
+                <img src="{{ $layoutLogoUrl }}" alt="Logo {{ $layoutSchoolName }}" class="app-logo-md">
             </div>
             <div class="sidebar-logo-text">
-                <span class="sidebar-logo-title">LMS Al-Ihsan</span>
-                <span class="sidebar-logo-sub">MTs. Al-Ihsan Batujajar</span>
+                <span class="sidebar-logo-title">{{ $layoutAppName }}</span>
+                <span class="sidebar-logo-sub">{{ $layoutSchoolName }}</span>
             </div>
         </div>
         <div class="sidebar-user">
@@ -256,7 +247,7 @@
             @yield('content')
         </div>
         <footer>
-            &copy; {{ date('Y') }} MTs. Al-Ihsan Batujajar — LMS v2.0 &middot; Ilham Rizqiawan, S.Pd.
+            &copy; {{ date('Y') }} {{ $layoutSchoolName }} — {{ $layoutAppName }}
         </footer>
     </div>
 

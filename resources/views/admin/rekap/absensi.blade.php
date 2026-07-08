@@ -7,6 +7,8 @@ $statusIcon = ['hadir'=>'<span class="badge badge-hadir">H</span>','sakit'=>'<sp
 @endphp
 
 @section('content')
+@include('components.print-school-header')
+
 <div class="page-header">
     <h4><i class="bi bi-clipboard-check-fill me-2"></i> Rekap Absensi</h4>
 </div>

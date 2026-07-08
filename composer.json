@@ -1,9 +1,9 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "lms-sekolah/single-school-lms",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "Single-school Learning Management System built with Laravel.",
+    "keywords": ["lms", "school", "laravel", "education"],
     "license": "MIT",
     "require": {
         "php": "^8.3",
@@ -22,6 +22,9 @@
         "phpunit/phpunit": "^12.5.12"
     },
     "autoload": {
+        "files": [
+            "app/Helpers/SchoolSettingHelper.php"
+        ],
         "psr-4": {
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",

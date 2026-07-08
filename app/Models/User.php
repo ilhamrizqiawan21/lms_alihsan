@@ -24,6 +24,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'username',
+        'email',
         'password',
         'nama_lengkap',
         'nip_nis',
@@ -127,4 +128,3 @@ class User extends Authenticatable
         return $this->hasMany(CalendarEvent::class, 'user_id');
     }
 }
-

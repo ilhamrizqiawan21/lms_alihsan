@@ -19,14 +19,25 @@
         .total-a { background-color: #fee2e2; }
         .header-info { text-align: center; margin-bottom: 10px; font-size: 9pt; color: #555; }
         .legend { font-size: 7pt; margin-top: 5px; }
+        .school-header { width: 100%; display: table; margin-bottom: 6px; }
+        .school-logo { display: table-cell; width: 70px; vertical-align: middle; text-align: center; }
+        .school-logo img { max-width: 56px; max-height: 56px; }
+        .school-identity { display: table-cell; vertical-align: middle; text-align: center; padding-right: 70px; }
+        .school-name { font-size: 15pt; font-weight: bold; text-transform: uppercase; }
+        .school-address { font-size: 9pt; margin-top: 2px; }
+        .school-contact { font-size: 8pt; color: #555; margin-top: 2px; }
+        .header-line { border-top: 2px solid #111; border-bottom: 1px solid #111; height: 2px; margin-bottom: 10px; }
+        .signature { width: 240px; margin-left: auto; margin-top: 24px; font-size: 8pt; text-align: left; }
+        .signature-space { height: 42px; }
     </style>
 </head>
 <body>
+    @include('exports.pdf._school-header')
     <h2>REKAP ABSENSI</h2>
     <h4>Kelas {{ $kelas->tingkat }} {{ $kelas->nama_kelas }}</h4>
     <div class="header-info">
         Bulan {{ $namaBulan }}<br>
-        Semester {{ $labelSemester ?? '-' }} Tahun Ajaran {{ $taAktif?->tahun ?? '-' }}
+        Semester {{ $reportSchool['semester'] ?? ($labelSemester ?? '-') }} Tahun Ajaran {{ $reportSchool['school_year'] ?? ($taAktif?->tahun ?? '-') }}
     </div>
 
     <table>
@@ -76,6 +87,16 @@
 
     <div style="margin-top:20px; font-size:8pt; text-align:right;">
         Dicetak pada: {{ date('d/m/Y H:i') }}
+    </div>
+    <div class="signature">
+        Kepala Sekolah,
+        <div class="signature-space"></div>
+        <strong>{{ $reportSchool['principal_name'] }}</strong><br>
+        @if($reportSchool['principal_nip'])
+            NIP. {{ $reportSchool['principal_nip'] }}
+        @elseif($reportSchool['principal_nuptk'])
+            NUPTK. {{ $reportSchool['principal_nuptk'] }}
+        @endif
     </div>
 </body>
 </html>

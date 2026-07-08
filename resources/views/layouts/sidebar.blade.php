@@ -45,6 +45,9 @@
     <i class="bi bi-journal-check"></i> Rekap Tugas
 </a>
 <li class="nav-section">Sistem</li>
+<a href="{{ route('admin.school-settings.index') }}" class="nav-link {{ request()->routeIs('admin.school-settings.*') ? 'active' : '' }}">
+    <i class="bi bi-buildings-fill"></i> Pengaturan Sekolah
+</a>
 <a href="{{ route('admin.log-login') }}" class="nav-link {{ request()->routeIs('admin.log-login') ? 'active' : '' }}">
     <i class="bi bi-clock-history"></i> Log Login
 </a>

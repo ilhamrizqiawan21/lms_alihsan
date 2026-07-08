@@ -13,7 +13,7 @@
                     @csrf
                     <div class="mb-3">
                         <label class="form-label">Nama Sekolah</label>
-                        <input type="text" name="nama_sekolah" class="form-control" value="{{ $settings['nama_sekolah'] ?? 'MTs. Al-Ihsan Batujajar' }}">
+                        <input type="text" name="nama_sekolah" class="form-control" value="{{ $settings['nama_sekolah'] ?? school_setting('school_name', 'Nama Sekolah') }}">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Warna Tema</label>

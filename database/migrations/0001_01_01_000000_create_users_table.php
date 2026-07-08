@@ -17,11 +17,12 @@ return new class extends Migration
         });
 
         // =============================================
-        // TABEL USERS — sesuai struktur lms_alihsan_btr
+        // TABEL USERS — struktur utama pengguna LMS
         // =============================================
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('username', 50)->unique();
+            $table->string('email')->nullable()->unique();
             $table->string('password');
             $table->tinyInteger('role_id');
             $table->string('nama_lengkap', 100);

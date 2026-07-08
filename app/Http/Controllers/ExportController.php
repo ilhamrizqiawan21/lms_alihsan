@@ -15,6 +15,7 @@ use App\Models\Tugas;
 use App\Models\Pengaturan;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use OpenSpout\Writer\XLSX\Writer;
 use OpenSpout\Common\Entity\Row;
 
@@ -47,7 +48,11 @@ class ExportController extends Controller
 
         $writer->openToFile($filePath);
 
-        // Header
+        $reportSchool = $this->reportSchool($taAktif, $semester);
+        foreach ($this->excelReportHeader('REKAP NILAI', $reportSchool, "Kelas {$kelas->tingkat} {$kelas->nama_kelas}") as $header) {
+            $writer->addRow(Row::fromValues($header));
+        }
+
         $headerRow = Row::fromValues(array_merge(
             ['No', 'NIS', 'Nama'],
             $mapelList->pluck('nama_mapel')->toArray(),
@@ -117,7 +122,11 @@ class ExportController extends Controller
 
         $writer->openToFile($filePath);
 
-        // Header
+        $reportSchool = $this->reportSchool($taAktif, $semester);
+        foreach ($this->excelReportHeader('REKAP ABSENSI', $reportSchool, "Kelas {$kelas->tingkat} {$kelas->nama_kelas} - Bulan {$bulan}") as $header) {
+            $writer->addRow(Row::fromValues($header));
+        }
+
         $headerRow = Row::fromValues(array_merge(
             ['No', 'NIS', 'Nama'],
             $tanggalList->map(fn($t) => date('d', strtotime($t)))->toArray(),
@@ -187,7 +196,11 @@ class ExportController extends Controller
 
         $writer->openToFile($filePath);
 
-        // Header
+        $reportSchool = $this->reportSchool($taAktif, $semester);
+        foreach ($this->excelReportHeader('REKAP TUGAS', $reportSchool, "Kelas {$kelas->tingkat} {$kelas->nama_kelas}") as $header) {
+            $writer->addRow(Row::fromValues($header));
+        }
+
         $headerRow = Row::fromValues(['No', 'Judul Tugas', 'Mata Pelajaran', 'Guru', 'Deadline', 'Kategori', 'Sudah Kumpul', 'Total Siswa', 'Persentase']);
         $writer->addRow($headerRow);
 
@@ -244,7 +257,8 @@ class ExportController extends Controller
         }
 
         $labelSemester = $semester == '1' ? 'Ganjil' : 'Genap';
-        $pdf = Pdf::loadView('exports.pdf.nilai', compact('rekap', 'mapelList', 'kelas', 'labelSemester', 'taAktif'));
+        $reportSchool = $this->reportSchool($taAktif, $semester);
+        $pdf = Pdf::loadView('exports.pdf.nilai', compact('rekap', 'mapelList', 'kelas', 'labelSemester', 'taAktif', 'reportSchool'));
         $pdf->setPaper('A4', 'landscape');
 
         return $pdf->download("rekap_nilai_{$kelas->tingkat}_{$kelas->nama_kelas}_semester_{$semester}.pdf");
@@ -295,7 +309,8 @@ class ExportController extends Controller
         $namaBulan = $bulanIndo[(int) substr($bulan, 5, 2)] . ' ' . substr($bulan, 0, 4);
 
         $labelSemester = $semester == '1' ? 'Ganjil' : 'Genap';
-        $pdf = Pdf::loadView('exports.pdf.absensi', compact('rekap', 'tanggalList', 'kelas', 'namaBulan', 'labelSemester', 'taAktif'));
+        $reportSchool = $this->reportSchool($taAktif, $semester);
+        $pdf = Pdf::loadView('exports.pdf.absensi', compact('rekap', 'tanggalList', 'kelas', 'namaBulan', 'labelSemester', 'taAktif', 'reportSchool'));
         $pdf->setPaper('A4', 'landscape');
 
         return $pdf->download("rekap_absensi_{$kelas->tingkat}_{$kelas->nama_kelas}_{$bulan}.pdf");
@@ -320,7 +335,8 @@ class ExportController extends Controller
             ->get();
 
         $labelSemester = $semester == '1' ? 'Ganjil' : 'Genap';
-        $pdf = Pdf::loadView('exports.pdf.tugas', compact('tugasList', 'kelas', 'labelSemester', 'taAktif', 'totalSiswa'));
+        $reportSchool = $this->reportSchool($taAktif, $semester);
+        $pdf = Pdf::loadView('exports.pdf.tugas', compact('tugasList', 'kelas', 'labelSemester', 'taAktif', 'totalSiswa', 'reportSchool'));
         $pdf->setPaper('A4', 'landscape');
 
         return $pdf->download("rekap_tugas_{$kelas->tingkat}_{$kelas->nama_kelas}_semester_{$semester}.pdf");
@@ -344,5 +360,54 @@ class ExportController extends Controller
                     'nama_mapel' => $kelasMapel->mataPelajaran?->nama_mapel ?? '-',
                 ];
             });
+    }
+
+    private function reportSchool(?TahunAjaran $tahunAjaran, string $semester): array
+    {
+        $labelSemester = $semester === '1' ? 'Ganjil' : ($semester === '2' ? 'Genap' : $semester);
+        $logoPath = school_setting('logo_path');
+
+        return [
+            'name' => school_setting('school_name', 'Nama Sekolah'),
+            'short_name' => school_setting('school_short_name', 'LMS'),
+            'address' => school_setting('address', 'Alamat sekolah belum diatur'),
+            'phone' => school_setting('phone'),
+            'email' => school_setting('email'),
+            'website' => school_setting('website'),
+            'principal_name' => school_setting('principal_name', 'Nama Kepala Sekolah'),
+            'principal_nip' => school_setting('principal_nip'),
+            'principal_nuptk' => school_setting('principal_nuptk'),
+            'school_year' => school_setting('school_year', $tahunAjaran?->tahun ?? '-'),
+            'semester' => school_setting('semester', $labelSemester),
+            'logo' => $this->logoDataUri($logoPath),
+        ];
+    }
+
+    private function logoDataUri(?string $path): string
+    {
+        if (! $path || ! Storage::disk('public')->exists($path)) {
+            return school_logo_url();
+        }
+
+        $fullPath = Storage::disk('public')->path($path);
+        $contents = file_get_contents($fullPath);
+        $mime = mime_content_type($fullPath) ?: 'image/png';
+
+        return 'data:' . $mime . ';base64,' . base64_encode($contents);
+    }
+
+    private function excelReportHeader(string $title, array $school, string $context): array
+    {
+        $principalId = $school['principal_nip'] ?: $school['principal_nuptk'];
+
+        return [
+            [$school['name']],
+            [$school['address']],
+            [$title],
+            [$context],
+            ['Tahun Ajaran', $school['school_year'], 'Semester', $school['semester']],
+            ['Kepala Sekolah', $school['principal_name'], 'NIP/NUPTK', $principalId ?: '-'],
+            [],
+        ];
     }
 }

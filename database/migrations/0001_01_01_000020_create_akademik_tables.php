@@ -80,7 +80,7 @@ return new class extends Migration
             $table->decimal('sas', 5, 2)->nullable();   // Sumatif Akhir Semester
             $table->decimal('sat', 5, 2)->nullable();   // Sumatif Akhir Tahun
             // rata_akhir is Generated Column — defined via raw SQL below
-            $table->unique(['siswa_id', 'kelas_mapel_id', 'tahun_ajaran_id', 'semester']);
+            $table->unique(['siswa_id', 'kelas_mapel_id', 'tahun_ajaran_id', 'semester'], 'nilai_akhir_unique_scope');
         });
 
         // sikap_spiritual (KI-1)

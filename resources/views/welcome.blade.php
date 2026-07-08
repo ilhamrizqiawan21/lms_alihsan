@@ -1,9 +1,15 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    @php
+        $schoolName = school_setting('school_name', 'Nama Sekolah');
+        $schoolShortName = school_setting('school_short_name', 'LMS');
+        $faviconUrl = school_favicon_url();
+    @endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LMS MTs. Al-Ihsan Batujajar</title>
+    <title>{{ $schoolShortName }} {{ $schoolName }}</title>
+    <link rel="icon" href="{{ $faviconUrl }}">
     <style>
         body {
             margin: 0;
@@ -36,14 +42,13 @@
 </head>
 <body>
     <div class="welcome-box">
-        <h1>LMS Al-Ihsan</h1>
-        <p>Learning Management System<br>MTs. Al-Ihsan Batujajar</p>
+        <h1>{{ $schoolShortName }}</h1>
+        <p>Learning Management System<br>{{ $schoolName }}</p>
         <a href="{{ route('login') }}" class="btn-login">
             Masuk
         </a>
         <br><br>
-        <small>&copy; {{ date('Y') }} MTs. Al-Ihsan Batujajar</small>
+        <small>&copy; {{ date('Y') }} {{ $schoolName }}</small>
     </div>
 </body>
 </html>
-

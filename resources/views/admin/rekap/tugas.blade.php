@@ -2,6 +2,8 @@
 @section('title', 'Rekap Tugas')
 
 @section('content')
+@include('components.print-school-header')
+
 <div class="page-header"><h4><i class="bi bi-journal-check me-2"></i> Rekap Tugas</h4></div>
 
 <div class="card mb-3">
@@ -28,6 +30,7 @@
                 @if($kelasId && count($tugasList) > 0)
                 <a href="{{ route('admin.export.tugas.excel', request()->only(['kelas_id', 'semester'])) }}" class="btn btn-outline-success"><i class="bi bi-file-earmark-excel me-1"></i> Excel</a>
                 <a href="{{ route('admin.export.tugas.pdf', request()->only(['kelas_id', 'semester'])) }}" class="btn btn-outline-danger"><i class="bi bi-file-earmark-pdf me-1"></i> PDF</a>
+                <a href="#" class="btn btn-outline-secondary" onclick="window.print();return false;"><i class="bi bi-printer me-1"></i> Cetak</a>
                 @endif
             </div>
         </form>

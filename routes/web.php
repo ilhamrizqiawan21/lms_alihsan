@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\KelasMapelController;
 use App\Http\Controllers\Admin\KelasSiswaController;
 use App\Http\Controllers\Admin\KalenderController;
 use App\Http\Controllers\Admin\RekapController;
+use App\Http\Controllers\Admin\SchoolSettingController;
 use App\Http\Controllers\Admin\SystemController;
 use App\Http\Controllers\Guru\DashboardController as GuruDashboardController;
 use App\Http\Controllers\Guru\AbsensiController;
@@ -112,6 +113,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/export/tugas/pdf', [ExportController::class, 'pdfTugas'])->name('export.tugas.pdf');
 
     // Sistem
+    Route::get('/school-settings', [SchoolSettingController::class, 'index'])->name('school-settings.index');
+    Route::put('/school-settings', [SchoolSettingController::class, 'update'])->name('school-settings.update');
     Route::get('/log-login', [SystemController::class, 'logLogin'])->name('log-login');
     Route::get('/log-error', [SystemController::class, 'logError'])->name('log-error');
     Route::get('/pengaturan', [SystemController::class, 'pengaturan'])->name('pengaturan');

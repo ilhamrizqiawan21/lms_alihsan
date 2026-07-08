@@ -2,6 +2,8 @@
 @section('title', 'Rekap Sikap')
 
 @section('content')
+@include('components.print-school-header')
+
 <div class="page-header"><h4><i class="bi bi-heart-fill me-2"></i> Rekap Sikap</h4></div>
 
 <div class="card mb-3">
@@ -25,6 +27,9 @@
             </div>
             <div class="col-md-3">
                 <button class="btn btn-primary"><i class="bi bi-search me-1"></i> Tampilkan</button>
+                @if($kelasId && count($rekap) > 0)
+                <a href="#" class="btn btn-outline-secondary" onclick="window.print();return false;"><i class="bi bi-printer me-1"></i> Cetak</a>
+                @endif
             </div>
         </form>
     </div>

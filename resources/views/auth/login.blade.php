@@ -1,10 +1,19 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    @php
+        $schoolName = school_setting('school_name', 'Nama Sekolah');
+        $schoolShortName = school_setting('school_short_name', 'LMS');
+        $schoolMotto = school_setting('motto', 'Learning Management System');
+        $schoolAddress = school_setting('address', 'Alamat sekolah belum diatur');
+        $logoUrl = school_logo_url();
+        $faviconUrl = school_favicon_url();
+    @endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Login — LMS MTs. Al-Ihsan Batujajar</title>
+    <title>Login — {{ $schoolShortName }} {{ $schoolName }}</title>
+    <link rel="icon" href="{{ $faviconUrl }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -39,6 +48,21 @@
         }
         .login-header h3 { font-weight:800; font-size:1.4rem; margin-bottom:4px; }
         .login-header p { opacity:0.75; font-size:0.85rem; }
+        .login-header .product-name {
+            display:inline-flex; align-items:center; justify-content:center;
+            padding:4px 10px; margin-bottom:8px;
+            background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.18);
+            border-radius:999px; color:rgba(255,255,255,0.9);
+            font-weight:700; font-size:0.74rem; letter-spacing:0.02em;
+        }
+        .login-header .school-motto {
+            max-width:360px; margin:0 auto 6px;
+            color:rgba(255,255,255,0.78); font-size:0.84rem; line-height:1.45;
+        }
+        .login-header .school-address {
+            max-width:360px; margin:0 auto;
+            color:rgba(255,255,255,0.62); font-size:0.74rem; line-height:1.4;
+        }
         .login-card {
             background:white; border-radius:18px; padding:35px 30px;
             box-shadow:0 20px 60px rgba(0,0,0,0.3);
@@ -89,9 +113,13 @@
 <body>
 <div class="login-wrapper">
     <div class="login-header">
-        <div class="logo-circle"><img src="{{ asset('logo-sekolah.png') }}" alt="Logo MTs Al-Ihsan" style="width:36px;height:36px;object-fit:contain;border-radius:50%;"></div>
-        <h3>MTs. Al-Ihsan Batujajar</h3>
-        <p>Learning Management System</p>
+        <div class="logo-circle">
+            <img src="{{ $logoUrl }}" alt="Logo {{ $schoolName }}" style="width:36px;height:36px;object-fit:contain;border-radius:50%;">
+        </div>
+        <h3>{{ $schoolName }}</h3>
+        <div class="product-name">{{ $schoolShortName }}</div>
+        <div class="school-motto">{{ $schoolMotto }}</div>
+        <div class="school-address">{{ $schoolAddress }}</div>
     </div>
 
     <div class="login-card">
@@ -109,11 +137,11 @@
         <form action="{{ route('login.post') }}" method="POST">
             @csrf
             <div class="mb-3">
-                <label class="form-label">Username</label>
+                <label class="form-label">Username atau Email</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
                     <input type="text" name="username" class="form-control @error('username') is-invalid @enderror"
-                           value="{{ old('username') }}" placeholder="Masukkan username" required autofocus>
+                           value="{{ old('username') }}" placeholder="Masukkan username atau email" required autofocus>
                 </div>
                 @error('username')<div class="text-danger" style="font-size:0.75rem;margin-top:4px;">{{ $message }}</div>@enderror
             </div>
@@ -142,8 +170,8 @@
     </div>
 
     <div class="login-footer">
-        &copy; {{ date('Y') }} MTs. Al-Ihsan Batujajar<br>
-        <span>Ilham Rizqiawan, S.Pd.</span>
+        &copy; {{ date('Y') }} {{ $schoolName }}<br>
+        <span>{{ $schoolShortName }}</span>
     </div>
 </div>
 </body>
