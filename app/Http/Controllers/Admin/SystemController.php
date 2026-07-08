@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BlockedIp;
 use App\Models\LogLogin;
 use App\Models\Pengaturan;
+use App\Models\SchoolSetting;
 use App\Models\SystemError;
 use App\Models\TahunAjaran;
 use Illuminate\Http\Request;
@@ -45,15 +46,16 @@ class SystemController extends Controller
     {
         $settings = Pengaturan::pluck('value', 'key')->toArray();
         $tahunAjaranAktif = TahunAjaran::getAktif();
+        $schoolSetting = SchoolSetting::query()->first() ?: new SchoolSetting(SchoolSetting::fallback());
 
-        return view('admin.pengaturan', compact('settings', 'tahunAjaranAktif'));
+        return view('admin.pengaturan', compact('settings', 'tahunAjaranAktif', 'schoolSetting'));
     }
     //Simpan pengaturan sistem
     public function savePengaturan(Request $request)
     {
         $data = $request->validate([
-            'nama_sekolah' => 'nullable|string|max:100',
             'warna_tema' => 'nullable|in:hijau,biru-azure,biru-aqua',
+            'warna_base' => ['nullable', 'string', 'max:20', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'semester_aktif' => 'nullable|in:1,2',
             'mode_kenaikan' => 'nullable|in:manual,auto',
         ]);

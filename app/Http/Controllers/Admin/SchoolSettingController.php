@@ -11,9 +11,7 @@ class SchoolSettingController extends Controller
 {
     public function index()
     {
-        $setting = SchoolSetting::query()->first() ?: new SchoolSetting(SchoolSetting::fallback());
-
-        return view('admin.school-settings.index', compact('setting'));
+        return redirect()->route('admin.pengaturan');
     }
 
     public function update(Request $request)
@@ -44,10 +42,6 @@ class SchoolSettingController extends Controller
             'vision' => 'nullable|string',
             'mission' => 'nullable|string',
             'motto' => 'nullable|string|max:255',
-            'primary_color' => ['required', 'string', 'max:20', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'secondary_color' => ['required', 'string', 'max:20', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'sidebar_color' => ['nullable', 'string', 'max:20', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'navbar_color' => ['nullable', 'string', 'max:20', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'logo' => 'nullable|file|mimes:jpg,jpeg,png,webp|extensions:jpg,jpeg,png,webp|max:2048',
             'favicon' => 'nullable|file|mimes:ico,png,jpg,jpeg,webp|extensions:ico,png,jpg,jpeg,webp|max:1024',
         ]);

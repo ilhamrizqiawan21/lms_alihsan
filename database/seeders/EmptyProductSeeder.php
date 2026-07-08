@@ -41,18 +41,26 @@ class EmptyProductSeeder extends Seeder
 
     private function seedAdmin(): void
     {
+        $username = env('DEFAULT_ADMIN_USERNAME') ?: 'admin';
+        $email = env('DEFAULT_ADMIN_EMAIL') ?: 'admin@demo.test';
+        $password = env('DEFAULT_ADMIN_PASSWORD') ?: 'password';
+
         User::updateOrCreate(
-            ['username' => 'admin'],
+            ['username' => $username],
             [
-                'email' => 'admin@demo.test',
-                'nama_lengkap' => 'Administrator',
+                'email' => $email,
+                'nama_lengkap' => env('DEFAULT_ADMIN_NAME') ?: 'Administrator',
                 'nip_nis' => 'ADM-DEFAULT-001',
                 'jenis_kelamin' => null,
-                'password' => Hash::make('password'),
+                'password' => Hash::make($password),
                 'role_id' => 1,
                 'is_active' => true,
             ]
         );
+
+        if ($password === 'password') {
+            $this->command?->warn('DEFAULT_ADMIN_PASSWORD belum diatur. Segera ubah password admin setelah login pertama.');
+        }
     }
 
     private function seedAcademicDefaults(): void

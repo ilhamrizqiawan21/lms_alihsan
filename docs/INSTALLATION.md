@@ -67,6 +67,11 @@ DB_PORT=3306
 DB_DATABASE=lms_school
 DB_USERNAME=root
 DB_PASSWORD=
+
+DEFAULT_ADMIN_USERNAME=admin
+DEFAULT_ADMIN_EMAIL=admin@example.test
+DEFAULT_ADMIN_PASSWORD=ganti-password-kuat
+DEFAULT_ADMIN_NAME="Administrator"
 ```
 
 Untuk production, gunakan:
@@ -131,11 +136,12 @@ Email: admin@demo.test
 Password: password
 ```
 
-Jika memakai `EmptyProductSeeder`, akun admin sama:
+Jika memakai `EmptyProductSeeder`, akun admin awal mengikuti nilai `DEFAULT_ADMIN_*` di `.env`:
 
 ```text
-Email: admin@demo.test
-Password: password
+Username: DEFAULT_ADMIN_USERNAME
+Email: DEFAULT_ADMIN_EMAIL
+Password: DEFAULT_ADMIN_PASSWORD
 ```
 
 Segera ubah password setelah login pertama.
@@ -144,7 +150,7 @@ Segera ubah password setelah login pertama.
 
 Setelah login admin:
 
-1. Buka menu `Pengaturan Sekolah`.
+1. Buka menu `Pengaturan`.
 2. Isi nama sekolah, alamat, kepala sekolah, tahun ajaran, semester, dan kontak.
 3. Upload logo dan favicon.
 4. Simpan pengaturan.
@@ -158,5 +164,5 @@ Setelah login admin:
 - Gunakan database dan user database khusus aplikasi
 - Jalankan `php artisan optimize`
 - Pastikan backup database aktif
-- Pastikan credential demo sudah diganti
+- Pastikan `DEFAULT_ADMIN_PASSWORD` sudah diganti dari nilai contoh sebelum menjalankan `EmptyProductSeeder`
 - Pastikan `.env` hanya ada di server produksi, bukan di repositori

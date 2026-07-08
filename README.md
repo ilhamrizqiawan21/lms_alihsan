@@ -97,14 +97,14 @@ Untuk instalasi produk kosong tanpa data guru, siswa, kelas, mapel, materi, tuga
 php artisan migrate:fresh --seeder=EmptyProductSeeder
 ```
 
-Mode kosong hanya membuat role default, akun admin, pengaturan sekolah default, tahun ajaran default, dan semester aktif.
+Mode kosong hanya membuat role default, akun admin, pengaturan sekolah default, tahun ajaran default, dan semester aktif. Akun admin awal mengikuti `DEFAULT_ADMIN_USERNAME`, `DEFAULT_ADMIN_EMAIL`, `DEFAULT_ADMIN_PASSWORD`, dan `DEFAULT_ADMIN_NAME` di `.env`.
 
 ## Custom Nama Sekolah dan Logo
 
 Login sebagai admin, lalu buka:
 
 ```text
-Admin > Pengaturan Sekolah
+Admin > Pengaturan
 ```
 
 Dari halaman tersebut admin dapat mengubah:

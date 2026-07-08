@@ -45,16 +45,13 @@
     <i class="bi bi-journal-check"></i> Rekap Tugas
 </a>
 <li class="nav-section">Sistem</li>
-<a href="{{ route('admin.school-settings.index') }}" class="nav-link {{ request()->routeIs('admin.school-settings.*') ? 'active' : '' }}">
-    <i class="bi bi-buildings-fill"></i> Pengaturan Sekolah
-</a>
 <a href="{{ route('admin.log-login') }}" class="nav-link {{ request()->routeIs('admin.log-login') ? 'active' : '' }}">
     <i class="bi bi-clock-history"></i> Log Login
 </a>
 <a href="{{ route('admin.log-error') }}" class="nav-link {{ request()->routeIs('admin.log-error') ? 'active' : '' }}">
     <i class="bi bi-bug-fill"></i> Log Error
 </a>
-<a href="{{ route('admin.pengaturan') }}" class="nav-link {{ request()->routeIs('admin.pengaturan') ? 'active' : '' }}">
+<a href="{{ route('admin.pengaturan') }}" class="nav-link {{ request()->routeIs('admin.pengaturan') || request()->routeIs('admin.school-settings.*') ? 'active' : '' }}">
     <i class="bi bi-gear-fill"></i> Pengaturan
 </a>
 <a href="{{ route('admin.blocked-ips') }}" class="nav-link {{ request()->routeIs('admin.blocked-ips') ? 'active' : '' }}">

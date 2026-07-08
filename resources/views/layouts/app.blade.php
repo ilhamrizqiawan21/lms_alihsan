@@ -7,10 +7,36 @@
         $layoutAppName = 'LMS Sekolah';
         $layoutLogoUrl = school_logo_url();
         $layoutFaviconUrl = school_favicon_url();
-        $layoutPrimaryColor = school_setting('primary_color', '#198754');
-        $layoutSecondaryColor = school_setting('secondary_color', '#0d6efd');
-        $layoutSidebarColor = school_setting('sidebar_color') ?: $layoutPrimaryColor;
-        $layoutNavbarColor = school_setting('navbar_color') ?: $layoutPrimaryColor;
+        $layoutTheme = \App\Models\Pengaturan::getValue('warna_tema', 'hijau');
+        $layoutThemeColors = [
+            'hijau' => [
+                'primary' => '#198754',
+                'secondary' => '#0d6efd',
+                'sidebar' => '#166534',
+                'navbar' => '#198754',
+            ],
+            'biru-azure' => [
+                'primary' => '#0d6efd',
+                'secondary' => '#22c55e',
+                'sidebar' => '#1d4ed8',
+                'navbar' => '#0d6efd',
+            ],
+            'biru-aqua' => [
+                'primary' => '#0891b2',
+                'secondary' => '#14b8a6',
+                'sidebar' => '#0e7490',
+                'navbar' => '#0891b2',
+            ],
+        ];
+        $layoutActiveTheme = $layoutThemeColors[$layoutTheme] ?? $layoutThemeColors['hijau'];
+        $layoutBaseColor = \App\Models\Pengaturan::getValue('warna_base');
+        $layoutBaseColor = is_string($layoutBaseColor) && preg_match('/^#[0-9A-Fa-f]{6}$/', $layoutBaseColor)
+            ? $layoutBaseColor
+            : null;
+        $layoutPrimaryColor = $layoutBaseColor ?: $layoutActiveTheme['primary'];
+        $layoutSecondaryColor = $layoutActiveTheme['secondary'];
+        $layoutSidebarColor = $layoutBaseColor ?: $layoutActiveTheme['sidebar'];
+        $layoutNavbarColor = $layoutBaseColor ?: $layoutActiveTheme['navbar'];
     @endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
