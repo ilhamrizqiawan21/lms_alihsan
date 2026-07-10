@@ -65,6 +65,7 @@ class NilaiController extends Controller
             'nilai.*.sum2' => 'nullable|numeric|min:0|max:100',
             'nilai.*.sum3' => 'nullable|numeric|min:0|max:100',
             'nilai.*.sum4' => 'nullable|numeric|min:0|max:100',
+            'nilai.*.nilai_harian' => 'nullable|numeric|min:0|max:100',
             'nilai.*.sts' => 'nullable|numeric|min:0|max:100',
             'nilai.*.sas' => 'nullable|numeric|min:0|max:100',
             'nilai.*.sat' => 'nullable|numeric|min:0|max:100',
@@ -91,7 +92,7 @@ class NilaiController extends Controller
             ]);
         }
 
-        $fields = ['sum1', 'sum2', 'sum3', 'sum4', 'sts', 'sas', 'sat'];
+        $fields = ['sum1', 'sum2', 'sum3', 'sum4', 'nilai_harian', 'sts', 'sas', 'sat'];
 
         foreach ($request->input('nilai', []) as $siswaId => $data) {
             $nilaiData = collect($fields)
@@ -135,6 +136,11 @@ class NilaiController extends Controller
     //Bahan untuk merekap nilai siswa per kelas dan mata pelajaran yang diampu oleh guru
     public function rekap(Request $request)
     {
+        $request->validate([
+            'semester' => 'nullable|in:1,2',
+            'kelas_mapel_id' => 'nullable|integer',
+        ]);
+
         $kelasMapel = KelasMapel::with(['kelas', 'mataPelajaran'])
             ->where('guru_id', Auth::id())
             ->aktif()

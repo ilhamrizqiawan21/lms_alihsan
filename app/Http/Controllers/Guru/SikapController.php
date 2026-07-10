@@ -126,6 +126,11 @@ class SikapController extends Controller
     //Bahan untuk merekap nilai sikap siswa per kelas dan mata pelajaran yang diampu oleh guru
     public function rekap(Request $request)
     {
+        $request->validate([
+            'semester' => 'nullable|in:1,2',
+            'kelas_mapel_id' => 'nullable|integer',
+        ]);
+
         $kelasMapel = KelasMapel::with(['kelas', 'mataPelajaran'])
             ->where('guru_id', Auth::id())
             ->aktif()

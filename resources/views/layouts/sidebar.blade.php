@@ -8,7 +8,7 @@
     <i class="bi bi-speedometer2"></i> Dashboard
 </a>
 <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
-    <i class="bi bi-people-fill"></i> Data User
+    <i class="bi bi-people-fill"></i> Guru & Staf
 </a>
 <a href="{{ route('admin.kelas.index') }}" class="nav-link {{ request()->routeIs('admin.kelas.*') ? 'active' : '' }}">
     <i class="bi bi-building"></i> Data Kelas

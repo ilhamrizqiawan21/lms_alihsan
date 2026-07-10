@@ -48,6 +48,7 @@
                         <th rowspan="2" class="d-none d-md-table-cell">Kelas</th>
                         <th rowspan="2">Mapel</th>
                         <th colspan="4" class="text-center bg-success bg-opacity-10">Sumatif</th>
+                        <th class="text-center bg-success bg-opacity-10">Harian</th>
                         <th class="text-center" style="background:#fef3c7;">STS</th>
                         <th class="text-center" style="background:#fef3c7;">SAS</th>
                         <th class="text-center" style="background:#fee2e2;">SAT</th>
@@ -56,7 +57,7 @@
                     </tr>
                     <tr class="table-light">
                         <th class="text-center">1</th><th class="text-center">2</th><th class="text-center">3</th><th class="text-center">4</th>
-                        <th class="text-center"></th><th class="text-center"></th><th class="text-center"></th>
+                        <th class="text-center"></th><th class="text-center"></th><th class="text-center"></th><th class="text-center"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -76,6 +77,7 @@
                         <td class="text-center">{{ $n->sum2 ?? '—' }}</td>
                         <td class="text-center">{{ $n->sum3 ?? '—' }}</td>
                         <td class="text-center">{{ $n->sum4 ?? '—' }}</td>
+                        <td class="text-center">{{ $n->nilai_harian ?? '—' }}</td>
                         <td class="text-center">{{ $n->sts ?? '—' }}</td>
                         <td class="text-center">{{ $n->sas ?? '—' }}</td>
                         <td class="text-center">{{ $n->sat ?? '—' }}</td>

@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Pengaturan;
-use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +19,7 @@ class TahunAjaranController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'tahun' => 'required|string|max:20|unique:tahun_ajaran,tahun',
+            'tahun' => ['required', 'string', 'max:9', 'regex:/^\\d{4}\\/\\d{4}$/', 'unique:tahun_ajaran,tahun'],
             'is_active' => 'boolean',
         ]);
 
@@ -39,9 +38,13 @@ class TahunAjaranController extends Controller
     public function update(Request $request, TahunAjaran $tahunAjaran)
     {
         $validated = $request->validate([
-            'tahun' => 'required|string|max:20|unique:tahun_ajaran,tahun,' . $tahunAjaran->id,
+            'tahun' => ['required', 'string', 'max:9', 'regex:/^\\d{4}\\/\\d{4}$/', 'unique:tahun_ajaran,tahun,' . $tahunAjaran->id],
             'is_active' => 'boolean',
         ]);
+
+        if ($tahunAjaran->is_active && !$request->boolean('is_active')) {
+            return back()->withInput()->with('error', 'Tahun ajaran aktif tidak dapat dinonaktifkan tanpa mengaktifkan tahun ajaran pengganti.');
+        }
 
         DB::transaction(function () use ($request, $tahunAjaran, $validated) {
             $wasActive = $tahunAjaran->is_active;
@@ -88,7 +91,5 @@ class TahunAjaranController extends Controller
 
         $tahunAjaran->update(['is_active' => true]);
         Pengaturan::setValue('semester_aktif', '1');
-
-        Siswa::where('status', 'aktif')->update(['kelas_id' => null]);
     }
 }

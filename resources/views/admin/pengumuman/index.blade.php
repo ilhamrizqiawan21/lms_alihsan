@@ -26,12 +26,24 @@
                     <div class="mb-3">
                         <label class="form-label">Target</label>
                         <select name="target" class="form-select @error('target') is-invalid @enderror">
-                            <option value="semua">Semua</option>
-                            <option value="guru">Guru</option>
-                            <option value="siswa">Siswa</option>
-                            <option value="kelas_mapel">Kelas Mapel Tertentu</option>
+                            <option value="semua" @selected(old('target', 'semua') === 'semua')>Semua</option>
+                            <option value="guru" @selected(old('target') === 'guru')>Guru</option>
+                            <option value="siswa" @selected(old('target') === 'siswa')>Siswa</option>
+                            <option value="kelas_mapel" @selected(old('target') === 'kelas_mapel')>Kelas Mapel Tertentu</option>
                         </select>
                         @error('target') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Kelas Mapel Tujuan <small class="text-muted">(wajib bila target kelas mapel)</small></label>
+                        <select name="kelas_mapel_id" class="form-select @error('kelas_mapel_id') is-invalid @enderror">
+                            <option value="">-- Pilih Kelas Mapel --</option>
+                            @foreach($kelasMapel as $km)
+                                <option value="{{ $km->id }}" @selected(old('kelas_mapel_id') == $km->id)>
+                                    {{ $km->kelas?->tingkat }} {{ $km->kelas?->nama_kelas }} — {{ $km->mataPelajaran?->nama_mapel }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('kelas_mapel_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <button type="submit" class="btn btn-success w-100"><i class="bi bi-send"></i> Kirim</button>
                 </form>
@@ -56,7 +68,12 @@
                             @forelse($pengumuman as $p)
                             <tr>
                                 <td>{{ $p->judul }}</td>
-                                <td><span class="badge bg-info">{{ $p->target }}</span></td>
+                                <td>
+                                    <span class="badge bg-info">{{ $p->target }}</span>
+                                    @if($p->target === 'kelas_mapel')
+                                        <div class="small text-muted mt-1">{{ $p->kelasMapel?->kelas?->nama_kelas ?? '-' }} — {{ $p->kelasMapel?->mataPelajaran?->nama_mapel ?? '-' }}</div>
+                                    @endif
+                                </td>
                                 <td>{{ $p->created_at ? \Carbon\Carbon::parse($p->created_at)->format('d/m/Y') : '-' }}</td>
                                 <td>
                                     @if(auth()->user()->isAdmin() || $p->created_by === auth()->id())

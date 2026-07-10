@@ -43,7 +43,7 @@ class DashboardController extends Controller
 
         $totalTugas = Tugas::whereIn('kelas_mapel_id', $kelasMapelIds)->count();
         $tugasSelesai = PengumpulanTugas::where('siswa_id', $siswa->id)
-            ->where('status', 'sudah')
+            ->whereIn('status', ['sudah', 'terlambat', 'dinilai'])
             ->whereHas('tugas', fn($q) => $q->whereIn('kelas_mapel_id', $kelasMapelIds))
             ->count();
         $tugasBelum = max($totalTugas - $tugasSelesai, 0);
@@ -59,9 +59,13 @@ class DashboardController extends Controller
             ->get();
 
         $pengumuman = Pengumuman::with('creator')
-            ->where(function ($q) {
+            ->where(function ($q) use ($kelasMapelIds) {
                 $q->where('target', 'semua')
-                  ->orWhere('target', 'siswa');
+                  ->orWhere('target', 'siswa')
+                  ->orWhere(function ($q) use ($kelasMapelIds) {
+                      $q->where('target', 'kelas_mapel')
+                        ->whereIn('kelas_mapel_id', $kelasMapelIds);
+                  });
             })
             ->orderBy('created_at', 'desc')
             ->take(5)

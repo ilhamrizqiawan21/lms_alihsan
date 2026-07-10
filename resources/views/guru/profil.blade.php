@@ -27,8 +27,13 @@
                     </div>
                     <hr>
                     <div class="mb-3">
+                        <label class="form-label">Password Saat Ini</label>
+                        <input type="password" name="current_password" class="form-control @error('current_password') is-invalid @enderror" placeholder="Wajib bila mengganti password" autocomplete="current-password">
+                        @error('current_password')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Password Baru</label>
-                        <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" placeholder="Kosongkan jika tidak ingin mengubah">
+                        <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" placeholder="Kosongkan jika tidak ingin mengubah" minlength="8" autocomplete="new-password">
                         @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="mb-3">

@@ -21,6 +21,12 @@ class RekapController extends Controller
 {
     public function absensi(Request $request)
     {
+        $request->validate([
+            'kelas_id' => 'nullable|exists:kelas,id',
+            'bulan' => 'nullable|date_format:Y-m',
+            'semester' => 'nullable|in:1,2',
+        ]);
+
         $kelasList = Kelas::orderBy('tingkat')->orderBy('nama_kelas')->get();
         $kelasId = $request->input('kelas_id');
         $bulan = $request->input('bulan', date('Y-m'));
@@ -70,6 +76,11 @@ class RekapController extends Controller
     //Mengambil nilai berdasarkan kelas
     public function nilai(Request $request)
     {
+        $request->validate([
+            'kelas_id' => 'nullable|exists:kelas,id',
+            'semester' => 'nullable|in:1,2',
+        ]);
+
         $kelasList = Kelas::orderBy('tingkat')->orderBy('nama_kelas')->get();
         $kelasId = $request->input('kelas_id');
         $taAktif = TahunAjaran::getAktif();
@@ -124,6 +135,11 @@ class RekapController extends Controller
     //Nilai Sikap
     public function sikap(Request $request)
     {
+        $request->validate([
+            'kelas_id' => 'nullable|exists:kelas,id',
+            'semester' => 'nullable|in:1,2',
+        ]);
+
         $kelasList = Kelas::orderBy('tingkat')->orderBy('nama_kelas')->get();
         $kelasId = $request->input('kelas_id');
         $taAktif = TahunAjaran::getAktif();
@@ -138,14 +154,32 @@ class RekapController extends Controller
             $kelasNama = $kelas ? "{$kelas->tingkat} {$kelas->nama_kelas}" : '';
 
             $siswaList = Siswa::with('user')->where('kelas_id', $kelasId)->where('status', 'aktif')->orderBy('nis')->get();
+            $kelasMapelIds = KelasMapel::where('kelas_id', $kelasId)
+                ->where('tahun_ajaran_id', $taAktif->id)
+                ->where('semester', $semester)
+                ->pluck('id');
 
             $spData = SikapSpiritual::whereIn('siswa_id', $siswaList->pluck('id'))
                 ->where('tahun_ajaran_id', $taAktif->id)->where('semester', $semester)
-                ->get()->keyBy('siswa_id');
+                ->whereIn('kelas_mapel_id', $kelasMapelIds)
+                ->get()
+                ->groupBy('siswa_id')
+                ->map(function ($records) use ($labelNilai) {
+                    return collect(['taqwa', 'kejujuran', 'disiplin', 'sabar', 'syukur', 'tawadhu'])
+                        ->mapWithKeys(fn ($field) => [$field => $labelNilai[(int) round($records->avg($field))] ?? '-'])
+                        ->all();
+                });
 
             $soData = SikapSosial::whereIn('siswa_id', $siswaList->pluck('id'))
                 ->where('tahun_ajaran_id', $taAktif->id)->where('semester', $semester)
-                ->get()->keyBy('siswa_id');
+                ->whereIn('kelas_mapel_id', $kelasMapelIds)
+                ->get()
+                ->groupBy('siswa_id')
+                ->map(function ($records) use ($labelNilai) {
+                    return collect(['empati', 'kerjasama', 'toleransi', 'percaya_diri', 'komunikasi'])
+                        ->mapWithKeys(fn ($field) => [$field => $labelNilai[(int) round($records->avg($field))] ?? '-'])
+                        ->all();
+                });
 
             foreach ($siswaList as $s) {
                 $sp = $spData->get($s->id);
@@ -153,21 +187,8 @@ class RekapController extends Controller
                 $rekap[] = [
                     'nis' => $s->nis,
                     'nama' => $s->user->nama_lengkap ?? '-',
-                    'spiritual' => $sp ? [
-                        'taqwa' => $labelNilai[$sp->taqwa] ?? '-',
-                        'kejujuran' => $labelNilai[$sp->kejujuran] ?? '-',
-                        'disiplin' => $labelNilai[$sp->disiplin] ?? '-',
-                        'sabar' => $labelNilai[$sp->sabar] ?? '-',
-                        'syukur' => $labelNilai[$sp->syukur] ?? '-',
-                        'tawadhu' => $labelNilai[$sp->tawadhu] ?? '-',
-                    ] : null,
-                    'sosial' => $so ? [
-                        'empati' => $labelNilai[$so->empati] ?? '-',
-                        'kerjasama' => $labelNilai[$so->kerjasama] ?? '-',
-                        'toleransi' => $labelNilai[$so->toleransi] ?? '-',
-                        'percaya_diri' => $labelNilai[$so->percaya_diri] ?? '-',
-                        'komunikasi' => $labelNilai[$so->komunikasi] ?? '-',
-                    ] : null,
+                    'spiritual' => $sp,
+                    'sosial' => $so,
                 ];
             }
         }
@@ -177,6 +198,11 @@ class RekapController extends Controller
     //Rekap Tugas Siswa
     public function tugas(Request $request)
     {
+        $request->validate([
+            'kelas_id' => 'nullable|exists:kelas,id',
+            'semester' => 'nullable|in:1,2',
+        ]);
+
         $kelasList = Kelas::orderBy('tingkat')->orderBy('nama_kelas')->get();
         $kelasId = $request->input('kelas_id');
         $taAktif = TahunAjaran::getAktif();
@@ -193,7 +219,9 @@ class RekapController extends Controller
 
             $tugasList = Tugas::with(['kelasMapel.mataPelajaran', 'kelasMapel.guru'])
                 ->whereHas('kelasMapel', fn($q) => $q->where('kelas_id', $kelasId)->where('tahun_ajaran_id', $taAktif->id)->where('semester', $semester))
-                ->withCount(['pengumpulan as sudah_kumpul' => fn($q) => $q->where('status', 'sudah')])
+                ->withCount(['pengumpulan as sudah_kumpul' => fn($q) => $q
+                    ->whereIn('status', ['sudah', 'terlambat', 'dinilai'])
+                    ->whereHas('siswa', fn($siswa) => $siswa->where('kelas_id', $kelasId)->where('status', 'aktif'))])
                 ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function ($t) use ($totalSiswa) {

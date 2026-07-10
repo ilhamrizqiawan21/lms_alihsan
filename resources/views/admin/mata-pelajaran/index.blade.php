@@ -53,6 +53,7 @@
                                 <td>{{ $m->nama_mapel }}</td>
                                 <td>{{ $m->urutan }}</td>
                                 <td>
+                                    <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editMapelModal{{ $m->id }}" title="Edit mata pelajaran"><i class="bi bi-pencil"></i></button>
                                     <form action="{{ route('admin.mata-pelajaran.destroy', $m) }}" method="POST" class="d-inline">
                                         @csrf @method('DELETE')
                                         <button class="btn btn-sm btn-danger" data-confirm="Hapus {{ $m->nama_mapel }}?">
@@ -71,4 +72,21 @@
         </div>
     </div>
 </div>
+
+@foreach($mapel as $m)
+<div class="modal fade" id="editMapelModal{{ $m->id }}" tabindex="-1" aria-labelledby="editMapelLabel{{ $m->id }}" aria-hidden="true">
+    <div class="modal-dialog"><div class="modal-content">
+        <form action="{{ route('admin.mata-pelajaran.update', $m) }}" method="POST">
+            @csrf @method('PUT')
+            <div class="modal-header"><h5 class="modal-title" id="editMapelLabel{{ $m->id }}">Edit Mata Pelajaran</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button></div>
+            <div class="modal-body">
+                <div class="mb-3"><label class="form-label" for="kode{{ $m->id }}">Kode</label><input type="text" name="kode" id="kode{{ $m->id }}" class="form-control" value="{{ $m->kode }}" maxlength="10" required></div>
+                <div class="mb-3"><label class="form-label" for="namaMapel{{ $m->id }}">Nama Mata Pelajaran</label><input type="text" name="nama_mapel" id="namaMapel{{ $m->id }}" class="form-control" value="{{ $m->nama_mapel }}" maxlength="100" required></div>
+                <div><label class="form-label" for="urutan{{ $m->id }}">Urutan</label><input type="number" name="urutan" id="urutan{{ $m->id }}" class="form-control" value="{{ $m->urutan }}" min="0"></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-primary">Simpan Perubahan</button></div>
+        </form>
+    </div></div>
+</div>
+@endforeach
 @endsection

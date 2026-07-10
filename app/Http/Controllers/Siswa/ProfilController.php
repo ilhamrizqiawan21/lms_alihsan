@@ -20,7 +20,8 @@ class ProfilController extends Controller
         $user = Auth::user();
 
         $validated = $request->validate([
-            'password' => 'required|string|min:6|confirmed',
+            'current_password' => 'required|current_password',
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
         $user->update(['password' => Hash::make($validated['password'])]);

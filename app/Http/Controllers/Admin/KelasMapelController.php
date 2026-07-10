@@ -27,6 +27,7 @@ class KelasMapelController extends Controller
         $kelas = Kelas::all();
         $mapel = MataPelajaran::orderBy('urutan')->get();
         $guru = User::whereHas('role', fn($q) => $q->where('nama_role', 'guru'))
+            ->where('is_active', true)
             ->orderBy('nama_lengkap')
             ->get();
         $tahunAjaran = TahunAjaran::orderBy('tahun', 'desc')->get();
@@ -42,6 +43,7 @@ class KelasMapelController extends Controller
         $kelas = Kelas::all();
         $mapel = MataPelajaran::orderBy('urutan')->get();
         $guru = User::whereHas('role', fn($q) => $q->where('nama_role', 'guru'))
+            ->where('is_active', true)
             ->orderBy('nama_lengkap')
             ->get();
         $tahunAjaran = TahunAjaran::orderBy('tahun', 'desc')->get();
@@ -64,11 +66,12 @@ class KelasMapelController extends Controller
 
         $isGuru = User::whereKey($validated['guru_id'])
             ->whereHas('role', fn($q) => $q->where('nama_role', 'guru'))
+            ->where('is_active', true)
             ->exists();
 
         if (!$isGuru) {
             throw ValidationException::withMessages([
-                'guru_id' => 'User yang dipilih bukan guru.',
+                'guru_id' => 'Guru yang dipilih tidak aktif atau tidak valid.',
             ]);
         }
 

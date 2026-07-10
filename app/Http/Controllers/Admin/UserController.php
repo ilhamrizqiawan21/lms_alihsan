@@ -4,14 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Role;
-use App\Models\Siswa;
 use App\Models\User;
 use App\Services\SiswaImportService;
 use App\Services\SiswaTemplateService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
@@ -21,7 +20,8 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::with('role');
+        $query = User::with('role')
+            ->whereHas('role', fn ($query) => $query->where('nama_role', '!=', 'siswa'));
 
         // Filter role
         if ($request->filled('role_id')) {
@@ -38,7 +38,7 @@ class UserController extends Controller
         }
 
         $users = $query->orderBy('created_at', 'desc')->paginate(20);
-        $roles = Role::all();
+        $roles = $this->staffRoles();
 
         return view('admin.users.index', compact('users', 'roles'));
     }
@@ -48,7 +48,7 @@ class UserController extends Controller
      */
     public function create()
     {
-        $roles = Role::all();
+        $roles = $this->staffRoles();
         return view('admin.users.create', compact('roles'));
     }
 
@@ -60,51 +60,23 @@ class UserController extends Controller
         $validated = $request->validate([
             'username' => 'required|string|max:50|unique:users,username',
             'nama_lengkap' => 'required|string|max:100',
-            'password' => 'required|string|min:6',
+            'password' => 'required|string|min:8',
             'role_id' => 'required|exists:roles,id',
             'nip_nis' => 'nullable|string|max:20|unique:users,nip_nis',
             'jenis_kelamin' => 'nullable|in:L,P',
             'is_active' => 'boolean',
-            'nis' => 'nullable|string|max:20|unique:siswa,nis',
-            'kelas_id' => 'nullable|exists:kelas,id',
         ]);
 
         $role = Role::findOrFail($validated['role_id']);
-        $isSiswa = $role->nama_role === 'siswa';
-
-        if ($isSiswa) {
-            $request->validate([
-                'nis' => 'nullable|string|max:20|unique:siswa,nis',
-                'kelas_id' => 'required|exists:kelas,id',
-            ]);
-        }
+        $this->ensureStaffRole($role);
 
         $validated['password'] = Hash::make($validated['password']);
         $validated['is_active'] = $request->boolean('is_active');
-        $nis = $request->filled('nis') ? $request->nis : $validated['username'];
 
-        if ($isSiswa && Siswa::where('nis', $nis)->exists()) {
-            throw ValidationException::withMessages([
-                'nis' => 'NIS sudah digunakan oleh siswa lain.',
-            ]);
-        }
-
-        unset($validated['nis'], $validated['kelas_id']);
-
-        $user = User::create($validated);
-
-        // Jika role siswa, buat juga data di tabel siswa
-        if ($isSiswa) {
-            Siswa::create([
-                'user_id' => $user->id,
-                'nis' => $nis,
-                'kelas_id' => $request->kelas_id,
-                'status' => 'aktif',
-            ]);
-        }
+        DB::transaction(fn () => User::create($validated));
 
         return redirect()->route('admin.users.index')
-            ->with('success', 'User berhasil ditambahkan.');
+            ->with('success', 'Akun guru/staf berhasil ditambahkan.');
     }
 
     /**
@@ -140,8 +112,8 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        $roles = Role::all();
-        $user->load('siswa');
+        $this->ensureNotSiswaUser($user);
+        $roles = $this->staffRoles();
         return view('admin.users.edit', compact('user', 'roles'));
     }
 
@@ -150,63 +122,51 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
+        $this->ensureNotSiswaUser($user);
+
         $validated = $request->validate([
             'username' => 'required|string|max:50|unique:users,username,' . $user->id,
             'nama_lengkap' => 'required|string|max:100',
             'role_id' => 'required|exists:roles,id',
             'nip_nis' => 'nullable|string|max:20|unique:users,nip_nis,' . $user->id,
             'jenis_kelamin' => 'nullable|in:L,P',
+            'password' => 'nullable|string|min:8',
             'is_active' => 'boolean',
-            'nis' => [
-                'nullable',
-                'string',
-                'max:20',
-                Rule::unique('siswa', 'nis')->ignore($user->siswa?->id),
-            ],
-            'kelas_id' => 'nullable|exists:kelas,id',
-            'status_siswa' => 'nullable|in:aktif,lulus,keluar',
         ]);
 
         $role = Role::findOrFail($validated['role_id']);
-        $isSiswa = $role->nama_role === 'siswa';
+        $this->ensureStaffRole($role);
 
-        if ($isSiswa) {
-            $request->validate([
-                'kelas_id' => 'required|exists:kelas,id',
-                'status_siswa' => 'nullable|in:aktif,lulus,keluar',
+        if ((int) $user->id === (int) Auth::id()
+            && (!$request->boolean('is_active') || (int) $validated['role_id'] !== (int) $user->role_id)) {
+            throw ValidationException::withMessages([
+                'role_id' => 'Anda tidak dapat menonaktifkan atau mengubah role akun sendiri.',
+            ]);
+        }
+
+        if ((int) $validated['role_id'] !== (int) $user->role_id
+            && $user->kelasMapel()->exists()) {
+            throw ValidationException::withMessages([
+                'role_id' => 'Role tidak dapat diubah karena user ini sudah memiliki data siswa atau penugasan mengajar. Buat akun baru agar riwayat data tetap aman.',
+            ]);
+        }
+
+        if ($this->isLastActiveAdmin($user)
+            && (!$request->boolean('is_active') || $role->nama_role !== 'admin')) {
+            throw ValidationException::withMessages([
+                'role_id' => 'Sistem harus memiliki setidaknya satu admin aktif.',
             ]);
         }
 
         if ($request->filled('password')) {
             $validated['password'] = Hash::make($request->password);
+        } else {
+            unset($validated['password']);
         }
 
         $validated['is_active'] = $request->boolean('is_active');
-        $nis = $request->filled('nis') ? $request->nis : $validated['username'];
 
-        if ($isSiswa && Siswa::where('nis', $nis)->where('user_id', '!=', $user->id)->exists()) {
-            throw ValidationException::withMessages([
-                'nis' => 'NIS sudah digunakan oleh siswa lain.',
-            ]);
-        }
-
-        unset($validated['nis'], $validated['kelas_id'], $validated['status_siswa']);
-
-        $user->update($validated);
-
-        // Update data siswa jika role siswa
-        if ($isSiswa) {
-            Siswa::updateOrCreate(
-                ['user_id' => $user->id],
-                [
-                    'nis' => $nis,
-                    'kelas_id' => $request->kelas_id,
-                    'status' => $request->status_siswa ?? 'aktif',
-                ]
-            );
-        } elseif ($user->siswa) {
-            $user->siswa()->delete();
-        }
+        DB::transaction(fn () => $user->update($validated));
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User berhasil diperbarui.');
@@ -217,8 +177,18 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
+        $this->ensureNotSiswaUser($user);
+
         if ($user->id === Auth::id()) {
             return back()->with('error', 'Anda tidak dapat menghapus akun sendiri.');
+        }
+
+        if ($this->isLastActiveAdmin($user)) {
+            return back()->with('error', 'User tidak dapat dihapus karena merupakan admin aktif terakhir.');
+        }
+
+        if ($user->kelasMapel()->exists()) {
+            return back()->with('error', 'User tidak dapat dihapus karena masih memiliki penugasan mengajar.');
         }
 
         $user->delete();
@@ -231,7 +201,47 @@ class UserController extends Controller
      */
     public function toggleActive(User $user)
     {
+        $this->ensureNotSiswaUser($user);
+
+        if ($user->id === Auth::id()) {
+            return back()->with('error', 'Anda tidak dapat menonaktifkan akun sendiri.');
+        }
+
+        if ($user->is_active && $this->isLastActiveAdmin($user)) {
+            return back()->with('error', 'Sistem harus memiliki setidaknya satu admin aktif.');
+        }
+
         $user->update(['is_active' => !$user->is_active]);
         return back()->with('success', 'Status user berhasil diubah.');
+    }
+
+    private function isLastActiveAdmin(User $user): bool
+    {
+        return $user->is_active
+            && $user->hasRole('admin')
+            && User::where('is_active', true)
+                ->whereHas('role', fn ($query) => $query->where('nama_role', 'admin'))
+                ->count() <= 1;
+    }
+
+    private function staffRoles()
+    {
+        return Role::where('nama_role', '!=', 'siswa')->orderBy('nama_role')->get();
+    }
+
+    private function ensureStaffRole(Role $role): void
+    {
+        if ($role->nama_role === 'siswa') {
+            throw ValidationException::withMessages([
+                'role_id' => 'Akun siswa hanya dapat dibuat melalui menu Kelas & Siswa.',
+            ]);
+        }
+    }
+
+    private function ensureNotSiswaUser(User $user): void
+    {
+        if ($user->isSiswa()) {
+            abort(404);
+        }
     }
 }

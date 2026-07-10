@@ -49,7 +49,7 @@
                             <th style="min-width:150px;">Nama</th>
                             @for($w = 1; $w <= $mingguCount; $w++)
                             <th style="text-align:center;width:55px;">
-                                Minggu {{ $w }}<br><small style="font-size:0.6rem;">{{ $tanggalMinggu[$w] ? date('d/m', strtotime($tanggalMinggu[$w])) : '-' }}</small>
+                                Minggu {{ $w }}<br><small style="font-size:0.6rem;">{{ ($tanggalMinggu[$w] ?? null) ? date('d/m', strtotime($tanggalMinggu[$w])) : '-' }}</small>
                             </th>
                             @endfor
                             <th style="text-align:center;width:28px;background:#dcfce7;color:#166534;">H</th>

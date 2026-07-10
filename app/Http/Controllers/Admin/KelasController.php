@@ -58,8 +58,12 @@ class KelasController extends Controller
      */
     public function destroy(Kelas $kelas)
     {
-        if ($kelas->siswa()->where('status', 'aktif')->count() > 0) {
-            return back()->with('error', 'Tidak dapat menghapus kelas yang masih memiliki siswa aktif.');
+        if ($kelas->siswa()->exists()) {
+            return back()->with('error', 'Tidak dapat menghapus kelas yang masih memiliki data siswa. Pindahkan atau arsipkan siswa terlebih dahulu.');
+        }
+
+        if ($kelas->kelasMapel()->exists()) {
+            return back()->with('error', 'Tidak dapat menghapus kelas yang masih memiliki pengaturan pengajaran. Hapus pengaturan pengajarannya terlebih dahulu.');
         }
 
         $kelas->delete();

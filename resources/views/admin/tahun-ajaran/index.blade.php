@@ -48,10 +48,13 @@
                                     @endif
                                 </td>
                                 <td>
+                                    <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editTahunAjaranModal{{ $ta->id }}" title="Edit tahun ajaran">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
                                     @if(!$ta->is_active)
                                         <form action="{{ route('admin.tahun-ajaran.set-aktif', $ta) }}" method="POST" class="d-inline">
                                             @csrf
-                                            <button class="btn btn-sm btn-primary" data-confirm="Aktifkan tahun ajaran ini? Semester aktif akan kembali ke Semester 1 dan kelas semua siswa aktif akan dikosongkan. Data lama tetap tersimpan sebagai arsip.">
+                                            <button class="btn btn-sm btn-primary" data-confirm="Aktifkan tahun ajaran ini? Semester aktif akan kembali ke Semester 1. Pastikan penugasan kelas dan pengajaran tahun baru sudah disiapkan.">
                                                 <i class="bi bi-check-circle-fill"></i> Aktifkan
                                             </button>
                                         </form>
@@ -74,4 +77,25 @@
         </div>
     </div>
 </div>
+
+@foreach($tahunAjaran as $ta)
+<div class="modal fade" id="editTahunAjaranModal{{ $ta->id }}" tabindex="-1" aria-labelledby="editTahunAjaranLabel{{ $ta->id }}" aria-hidden="true">
+    <div class="modal-dialog"><div class="modal-content">
+        <form action="{{ route('admin.tahun-ajaran.update', $ta) }}" method="POST">
+            @csrf @method('PUT')
+            <div class="modal-header"><h5 class="modal-title" id="editTahunAjaranLabel{{ $ta->id }}">Edit Tahun Ajaran</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button></div>
+            <div class="modal-body">
+                <label class="form-label" for="tahun{{ $ta->id }}">Tahun Ajaran</label>
+                <input type="text" name="tahun" id="tahun{{ $ta->id }}" class="form-control" value="{{ $ta->tahun }}" placeholder="2026/2027" maxlength="9" pattern="[0-9]{4}/[0-9]{4}" required>
+                <div class="form-check mt-3">
+                    <input type="hidden" name="is_active" value="0">
+                    <input type="checkbox" name="is_active" value="1" class="form-check-input" id="aktif{{ $ta->id }}" @checked($ta->is_active)>
+                    <label class="form-check-label" for="aktif{{ $ta->id }}">Jadikan aktif</label>
+                </div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-primary">Simpan Perubahan</button></div>
+        </form>
+    </div></div>
+</div>
+@endforeach
 @endsection

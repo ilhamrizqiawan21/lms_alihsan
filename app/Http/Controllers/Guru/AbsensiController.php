@@ -15,6 +15,11 @@ class AbsensiController extends Controller
 {
     public function index(Request $request)
     {
+        $request->validate([
+            'bulan' => 'nullable|date_format:Y-m',
+            'kelas_mapel_id' => 'nullable|integer',
+        ]);
+
         $guruId = Auth::id();
         $bulan = $request->input('bulan', date('Y-m'));
         $bulanNum = (int) substr($bulan, 5, 2);
@@ -49,7 +54,7 @@ class AbsensiController extends Controller
                 $daysInMonth = $firstDay->daysInMonth;
                 $startDow = $firstDay->dayOfWeek;
 
-                $tanggalMinggu = [];
+                $tanggalMinggu = array_fill(1, 5, null);
                 $minggu = 1;
                 // Minggu 1: Senin pertama
                 $seninPertama = $firstDay->copy();
@@ -86,6 +91,14 @@ class AbsensiController extends Controller
             'bulan', 'bulanNum', 'tahun', 'bulanIndo'
         ));
     }
+
+    public function create(KelasMapel $kelasMapel)
+    {
+        $this->authorize('mengajar', $kelasMapel);
+
+        return redirect()->route('guru.absensi.index', ['kelas_mapel_id' => $kelasMapel->id]);
+    }
+
     //Simpan Absensi
     public function store(Request $request, KelasMapel $kelasMapel)
     {
@@ -110,27 +123,34 @@ class AbsensiController extends Controller
             ]);
         }
 
+        $bulan = $validated['bulan'];
+        $monthNumber = (int) substr($bulan, 5, 2);
+        $firstDay = \Carbon\Carbon::create((int) substr($bulan, 0, 4), $monthNumber, 1);
+        $startDow = $firstDay->dayOfWeek;
+        $seninPertama = $firstDay->copy();
+        if ($startDow != 1) {
+            $seninPertama->addDays((8 - $startDow) % 7);
+        }
+
         if ($absensiInput) {
             foreach ($absensiInput as $siswaId => $mingguData) {
                 foreach ($mingguData as $minggu => $status) {
-                    if (!$status) continue;
-                    // Reconstruct tanggal dari minggu
-                    $bulan = $validated['bulan'];
-                    $firstDay = \Carbon\Carbon::create((int) substr($bulan, 0, 4), (int) substr($bulan, 5, 2), 1);
-                    $startDow = $firstDay->dayOfWeek;
-                    $seninPertama = $firstDay->copy();
-                    if ($startDow != 1) {
-                        $seninPertama->addDays((8 - $startDow) % 7);
-                    }
                     $tgl = $seninPertama->copy()->addDays(((int) $minggu - 1) * 7);
 
-                    if ((int) $tgl->format('m') === (int) substr($bulan, 5, 2)) {
+                    if ((int) $tgl->format('m') === $monthNumber) {
+                        $scope = [
+                            'siswa_id' => (int) $siswaId,
+                            'kelas_mapel_id' => $kelasMapel->id,
+                            'tanggal' => $tgl->format('Y-m-d'),
+                        ];
+
+                        if (!$status) {
+                            Absensi::where($scope)->delete();
+                            continue;
+                        }
+
                         Absensi::updateOrCreate(
-                            [
-                                'siswa_id' => (int) $siswaId,
-                                'kelas_mapel_id' => $kelasMapel->id,
-                                'tanggal' => $tgl->format('Y-m-d'),
-                            ],
+                            $scope,
                             ['status' => $status]
                         );
                     }
@@ -172,5 +192,12 @@ class AbsensiController extends Controller
         }
 
         return back()->with('success', 'Absensi berhasil disimpan.');
+    }
+
+    public function rekap(KelasMapel $kelasMapel)
+    {
+        $this->authorize('mengajar', $kelasMapel);
+
+        return redirect()->route('guru.absensi.index', ['kelas_mapel_id' => $kelasMapel->id]);
     }
 }

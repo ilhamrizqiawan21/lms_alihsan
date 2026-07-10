@@ -16,7 +16,7 @@
                         <select name="kelas_id" class="form-select select2 @error('kelas_id') is-invalid @enderror" required>
                             <option value="">-- Pilih Kelas --</option>
                             @foreach($kelas as $k)
-                                <option value="{{ $k->id }}">{{ $k->nama_kelas }}</option>
+                                    <option value="{{ $k->id }}" @selected(old('kelas_id') == $k->id)>{{ $k->tingkat }} {{ $k->nama_kelas }}</option>
                             @endforeach
                         </select>
                         @error('kelas_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -26,7 +26,7 @@
                         <select name="mapel_id" class="form-select select2 @error('mapel_id') is-invalid @enderror" required>
                             <option value="">-- Pilih Mapel --</option>
                             @foreach($mapel as $m)
-                                <option value="{{ $m->id }}">{{ $m->kode }} - {{ $m->nama_mapel }}</option>
+                                    <option value="{{ $m->id }}" @selected(old('mapel_id') == $m->id)>{{ $m->kode }} - {{ $m->nama_mapel }}</option>
                             @endforeach
                         </select>
                         @error('mapel_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -36,7 +36,7 @@
                         <select name="guru_id" class="form-select select2 @error('guru_id') is-invalid @enderror" required>
                             <option value="">-- Pilih Guru --</option>
                             @foreach($guru as $g)
-                                <option value="{{ $g->id }}">{{ $g->nama_lengkap }}</option>
+                                    <option value="{{ $g->id }}" @selected(old('guru_id') == $g->id)>{{ $g->nama_lengkap }}</option>
                             @endforeach
                         </select>
                         @error('guru_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -47,7 +47,7 @@
                             <select name="tahun_ajaran_id" class="form-select @error('tahun_ajaran_id') is-invalid @enderror" required>
                                 <option value="">-- Pilih --</option>
                                 @foreach($tahunAjaran as $ta)
-                                    <option value="{{ $ta->id }}">{{ $ta->tahun }}</option>
+                                    <option value="{{ $ta->id }}" @selected(old('tahun_ajaran_id') == $ta->id)>{{ $ta->tahun }}</option>
                                 @endforeach
                             </select>
                             @error('tahun_ajaran_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -56,8 +56,8 @@
                             <label class="form-label">Semester <span class="text-danger">*</span></label>
                             <select name="semester" class="form-select @error('semester') is-invalid @enderror" required>
                                 <option value="">-- Pilih --</option>
-                                <option value="1">Semester 1 (Ganjil)</option>
-                                <option value="2">Semester 2 (Genap)</option>
+                                <option value="1" @selected(old('semester') === '1')>Semester 1 (Ganjil)</option>
+                                <option value="2" @selected(old('semester') === '2')>Semester 2 (Genap)</option>
                             </select>
                             @error('semester') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
@@ -90,7 +90,7 @@
                                 <td>{{ $km->mataPelajaran?->nama_mapel ?? '-' }}</td>
                                 <td>{{ $km->guru?->nama_lengkap ?? '-' }}</td>
                                 <td><span class="badge bg-info">Semester {{ $km->semester }}</span></td>
-                                <td>{{ $km->tahunAjaran?->nama ?? '-' }}</td>
+                                <td>{{ $km->tahunAjaran?->tahun ?? '-' }}</td>
                                 <td>
                                     <form action="{{ route('admin.kelas-mapel.destroy', $km) }}" method="POST" class="d-inline">
                                         @csrf @method('DELETE')

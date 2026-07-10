@@ -8,7 +8,7 @@ class NilaiService
 {
     /**
      * Hitung rata-rata akhir berdasarkan komponen nilai Kurikulum Merdeka.
-     * Rumus: (sum1 + sum2 + sum3 + sum4 + sts + sas + sat) / 7
+     * Rumus: rata-rata semua komponen yang telah diisi.
      * NOTE: Kolom rata_akhir di MySQL adalah GENERATED ALWAYS AS STORED,
      * jadi MySQL akan menghitungnya otomatis. Service ini digunakan untuk
      * kebutuhan display/logika saja.
@@ -20,6 +20,7 @@ class NilaiService
             $nilai->sum2,
             $nilai->sum3,
             $nilai->sum4,
+            $nilai->nilai_harian,
             $nilai->sts,
             $nilai->sas,
             $nilai->sat,

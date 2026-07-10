@@ -36,8 +36,11 @@ class TugasController extends Controller
         $this->authorize('mengajar', $kelasMapel);
 
         $tugas = Tugas::where('kelas_mapel_id', $kelasMapel->id)
-            ->withCount(['pengumpulan as sudah_mengumpulkan' => function ($q) {
-                $q->where('status', 'sudah');
+            ->withCount(['pengumpulan as sudah_mengumpulkan' => function ($q) use ($kelasMapel) {
+                $q->whereIn('status', ['sudah', 'terlambat', 'dinilai'])
+                    ->whereHas('siswa', fn ($siswa) => $siswa
+                        ->where('kelas_id', $kelasMapel->kelas_id)
+                        ->where('status', 'aktif'));
             }])
             ->orderBy('created_at', 'desc')
             ->get();
@@ -104,6 +107,7 @@ class TugasController extends Controller
         $pengumpulan->update([
             'nilai' => $validated['nilai'],
             'catatan' => $validated['catatan'] ?? null,
+            'status' => 'dinilai',
         ]);
 
         return back()->with('success', 'Nilai berhasil diberikan.');
@@ -134,20 +138,8 @@ class TugasController extends Controller
         $kelasMapel = $tugas->kelasMapel;
         $this->authorize('mengajar', $kelasMapel);
 
-        // Hapus semua pengumpulan terkait beserta file
-        $pengumpulanList = PengumpulanTugas::with('files')
-            ->where('tugas_id', $tugas->id)
-            ->get();
-        foreach ($pengumpulanList as $p) {
-            if ($p->file_upload) {
-                $this->deletePengumpulanPath($p->file_upload);
-            }
-            // Hapus file di pengumpulan_files
-            foreach ($p->files as $file) {
-                $this->deletePengumpulanPath($file->file_path);
-                $file->delete();
-            }
-            $p->delete();
+        if ($tugas->pengumpulan()->exists()) {
+            return back()->with('error', 'Tugas tidak dapat dihapus karena sudah memiliki pengumpulan siswa.');
         }
 
         $tugas->delete();

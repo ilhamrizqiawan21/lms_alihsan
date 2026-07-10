@@ -124,7 +124,7 @@ class LaporanController extends Controller
         // Hitung statistik per tugas
         foreach ($tugas as $t) {
             $t->total_siswa = $t->pengumpulan->count();
-            $t->sudah_kumpul = $t->pengumpulan->where('status', 'sudah')->count();
+            $t->sudah_kumpul = $t->pengumpulan->whereIn('status', ['sudah', 'terlambat', 'dinilai'])->count();
             $t->belum_kumpul = $t->pengumpulan->where('status', 'belum')->count();
             $t->rata_nilai = $t->pengumpulan->whereNotNull('nilai')->avg('nilai');
         }

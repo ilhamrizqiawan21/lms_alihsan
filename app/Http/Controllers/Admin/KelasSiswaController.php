@@ -93,25 +93,29 @@ class KelasSiswaController extends Controller
     //Edit Siswa
     public function updateSiswa(Request $request, Siswa $siswa)
     {
+        $userId = $siswa->user_id;
+
         $validated = $request->validate([
-            'nis' => 'required|string|max:20|unique:siswa,nis,' . $siswa->id,
+            'nis' => 'required|string|max:20|unique:siswa,nis,' . $siswa->id . '|unique:users,username,' . $userId,
             'nama_lengkap' => 'required|string|max:100',
             'kelas_id' => 'required|exists:kelas,id',
             'jenis_kelamin' => 'required|in:L,P',
             'tinggal_kelas' => 'boolean',
         ]);
 
-        $siswa->update([
-            'nis' => $validated['nis'],
-            'kelas_id' => $validated['kelas_id'],
-            'tinggal_kelas' => $validated['tinggal_kelas'] ?? false,
-        ]);
+        DB::transaction(function () use ($siswa, $validated) {
+            $siswa->update([
+                'nis' => $validated['nis'],
+                'kelas_id' => $validated['kelas_id'],
+                'tinggal_kelas' => $validated['tinggal_kelas'] ?? false,
+            ]);
 
-        $siswa->user->update([
-            'username' => $validated['nis'],
-            'nama_lengkap' => $validated['nama_lengkap'],
-            'jenis_kelamin' => $validated['jenis_kelamin'],
-        ]);
+            $siswa->user->update([
+                'username' => $validated['nis'],
+                'nama_lengkap' => $validated['nama_lengkap'],
+                'jenis_kelamin' => $validated['jenis_kelamin'],
+            ]);
+        });
 
         return back()->with('success', 'Data siswa berhasil diperbarui.');
     }

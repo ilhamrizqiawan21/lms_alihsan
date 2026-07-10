@@ -174,7 +174,9 @@ class ExportController extends Controller
 
         $tugasList = Tugas::with(['kelasMapel.mataPelajaran', 'kelasMapel.guru'])
             ->whereHas('kelasMapel', fn($q) => $q->where('kelas_id', $kelasId)->where('tahun_ajaran_id', $taAktif?->id)->where('semester', $semester))
-            ->withCount(['pengumpulan as sudah_kumpul' => fn($q) => $q->where('status', 'sudah')])
+            ->withCount(['pengumpulan as sudah_kumpul' => fn($q) => $q
+                ->whereIn('status', ['sudah', 'terlambat', 'dinilai'])
+                ->whereHas('siswa', fn($siswa) => $siswa->where('kelas_id', $kelasId)->where('status', 'aktif'))])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -318,7 +320,9 @@ class ExportController extends Controller
 
         $tugasList = Tugas::with(['kelasMapel.mataPelajaran', 'kelasMapel.guru'])
             ->whereHas('kelasMapel', fn($q) => $q->where('kelas_id', $kelasId)->where('tahun_ajaran_id', $taAktif?->id)->where('semester', $semester))
-            ->withCount(['pengumpulan as sudah_kumpul' => fn($q) => $q->where('status', 'sudah')])
+            ->withCount(['pengumpulan as sudah_kumpul' => fn($q) => $q
+                ->whereIn('status', ['sudah', 'terlambat', 'dinilai'])
+                ->whereHas('siswa', fn($siswa) => $siswa->where('kelas_id', $kelasId)->where('status', 'aktif'))])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -365,8 +369,8 @@ class ExportController extends Controller
             'principal_name' => school_setting('principal_name', 'Nama Kepala Sekolah'),
             'principal_nip' => school_setting('principal_nip'),
             'principal_nuptk' => school_setting('principal_nuptk'),
-            'school_year' => school_setting('school_year', $tahunAjaran?->tahun ?? '-'),
-            'semester' => school_setting('semester', $labelSemester),
+            'school_year' => $tahunAjaran?->tahun ?? school_setting('school_year', '-'),
+            'semester' => $labelSemester,
             'logo' => $this->logoDataUri($logoPath),
         ];
     }

@@ -29,6 +29,7 @@
                         <th class="min-w-nis">NIS</th>
                         <th class="min-w-student">Nama Siswa</th>
                         <th colspan="4" class="text-center bg-soft-success">Sumatif Harian</th>
+                        <th class="text-center bg-soft-success">Nilai Harian</th>
                         <th class="text-center bg-soft-warning">STS</th>
                         <th class="text-center bg-soft-warning">SAS</th>
                         <th class="text-center bg-soft-danger">SAT</th>
@@ -45,13 +46,12 @@
                         <th class="text-center w-score">Nilai</th>
                         <th class="text-center w-score">Nilai</th>
                         <th class="text-center w-score">Nilai</th>
+                        <th class="text-center w-score">Nilai</th>
                         <th class="text-center w-score-total">Auto</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @php
-                        $fields = ['sum1','sum2','sum3','sum4','sts','sas','sat'];
-                    @endphp
+                    @php($fields = ['sum1','sum2','sum3','sum4','sts','sas','sat'])
 
                     @forelse($siswa as $i => $s)
                         @php

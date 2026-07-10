@@ -81,6 +81,18 @@ class TugasController extends Controller
                 ->withErrors(['file_upload' => 'Upload file atau isi jawaban teks terlebih dahulu.']);
         }
 
+        $existingPengumpulan = PengumpulanTugas::where('tugas_id', $tugas->id)
+            ->where('siswa_id', $siswa->id)
+            ->first();
+
+        if ($existingPengumpulan && $existingPengumpulan->status !== 'belum') {
+            return back()->with('error', 'Tugas ini sudah dikumpulkan dan tidak dapat diubah.');
+        }
+
+        $statusPengumpulan = $tugas->batas_waktu && now()->gt($tugas->batas_waktu)
+            ? 'terlambat'
+            : 'sudah';
+
         // Simpan atau update pengumpulan
         $pengumpulan = PengumpulanTugas::updateOrCreate(
             [
@@ -88,7 +100,7 @@ class TugasController extends Controller
                 'siswa_id' => $siswa->id,
             ],
             [
-                'status' => 'sudah',
+                'status' => $statusPengumpulan,
                 'file_upload' => null, // akan diisi path pertama jika ada
                 'teks_jawaban' => $validated['teks_jawaban'] ?? null,
                 'tanggal_kumpul' => now(),

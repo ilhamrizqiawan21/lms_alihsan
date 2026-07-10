@@ -16,6 +16,8 @@ class CheckActive
     {
         if (Auth::check() && !Auth::user()->is_active) {
             Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
             return redirect()->route('login')->with('error', 'Akun Anda telah dinonaktifkan.');
         }
 

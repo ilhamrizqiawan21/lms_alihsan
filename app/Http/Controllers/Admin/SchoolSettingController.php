@@ -49,20 +49,28 @@ class SchoolSettingController extends Controller
         unset($data['logo'], $data['favicon']);
 
         $setting = SchoolSetting::query()->firstOrNew(['singleton_key' => SchoolSetting::SINGLETON_ID]);
+        $oldLogoPath = $setting->logo_path;
+        $oldFaviconPath = $setting->favicon_path;
 
         if ($request->hasFile('logo')) {
-            $this->deletePublicFile($setting->logo_path);
             $data['logo_path'] = $request->file('logo')->store('school', 'public');
         }
 
         if ($request->hasFile('favicon')) {
-            $this->deletePublicFile($setting->favicon_path);
             $data['favicon_path'] = $request->file('favicon')->store('school', 'public');
         }
 
         $setting->fill($data);
         $setting->singleton_key = SchoolSetting::SINGLETON_ID;
         $setting->save();
+
+        if (isset($data['logo_path']) && $oldLogoPath !== $data['logo_path']) {
+            $this->deletePublicFile($oldLogoPath);
+        }
+
+        if (isset($data['favicon_path']) && $oldFaviconPath !== $data['favicon_path']) {
+            $this->deletePublicFile($oldFaviconPath);
+        }
 
         clear_school_setting_cache();
 

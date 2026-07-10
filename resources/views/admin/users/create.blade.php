@@ -1,12 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Tambah User')
-@section('page_title', 'Tambah User Baru')
+@section('title', 'Tambah Guru & Staf')
+@section('page_title', 'Tambah Guru & Staf')
 
 @section('content')
-@php($siswaRoleId = $roles->firstWhere('nama_role', 'siswa')?->id)
 <div class="card">
-    <div class="card-header"><i class="bi bi-plus-circle me-1"></i> Form Tambah User</div>
+    <div class="card-header"><i class="bi bi-plus-circle me-1"></i> Form Tambah Guru & Staf</div>
     <div class="card-body">
         <form action="{{ route('admin.users.store') }}" method="POST">
             @csrf
@@ -43,7 +42,7 @@
                     @error('role_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-3 mb-3">
-                    <label class="form-label">NIP/NIS</label>
+                    <label class="form-label">NIP/ID Staf</label>
                     <input type="text" name="nip_nis" class="form-control" value="{{ old('nip_nis') }}">
                 </div>
             </div>
@@ -51,25 +50,6 @@
                 <div class="form-check form-switch">
                     <input type="checkbox" name="is_active" class="form-check-input" value="1" checked id="is_active">
                     <label class="form-check-label" for="is_active">Akun Aktif</label>
-                </div>
-            </div>
-            <hr>
-            <h6 class="text-muted mb-3">Data Tambahan (khusus role Siswa)</h6>
-            <div id="siswaFields" style="display:none;">
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label">NIS</label>
-                        <input type="text" name="nis" class="form-control" value="{{ old('nis') }}">
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label">Kelas</label>
-                        <select name="kelas_id" class="form-select">
-                            <option value="">-- Pilih Kelas --</option>
-                            @foreach(\App\Models\Kelas::all() as $kelas)
-                                <option value="{{ $kelas->id }}">{{ $kelas->nama_kelas }}</option>
-                            @endforeach
-                        </select>
-                    </div>
                 </div>
             </div>
             <div class="d-flex gap-2">
@@ -80,15 +60,4 @@
     </div>
 </div>
 
-@push('scripts')
-<script>
-    $(document).ready(function() {
-        var siswaRoleId = @json((string) $siswaRoleId);
-        $('select[name="role_id"]').change(function() {
-            $('#siswaFields').toggle($(this).val() == siswaRoleId);
-        });
-        $('#siswaFields').toggle($('select[name="role_id"]').val() == siswaRoleId);
-    });
-</script>
-@endpush
 @endsection

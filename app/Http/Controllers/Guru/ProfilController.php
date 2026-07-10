@@ -22,7 +22,8 @@ class ProfilController extends Controller
             'nama_lengkap' => 'required|string|max:100',
             'username' => 'required|string|max:50|unique:users,username,' . $user->id,
             'nip_nis' => 'nullable|string|max:50',
-            'password' => 'nullable|string|min:6|confirmed',
+            'current_password' => 'required_with:password|current_password',
+            'password' => 'nullable|string|min:8|confirmed',
         ]);
 
         $data = [

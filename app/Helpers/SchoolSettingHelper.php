@@ -9,7 +9,7 @@ if (! function_exists('school_setting')) {
     {
         $resolveSettings = function (): array {
             try {
-                $setting = SchoolSetting::query()->first();
+                $setting = SchoolSetting::query()->where('singleton_key', SchoolSetting::SINGLETON_ID)->first();
 
                 return array_merge(
                     SchoolSetting::fallback(),
@@ -50,7 +50,7 @@ if (! function_exists('school_logo_url')) {
     {
         $path = school_setting('logo_path');
 
-        if ($path) {
+        if ($path && Storage::disk('public')->exists($path)) {
             return Storage::url($path);
         }
 
@@ -63,7 +63,7 @@ if (! function_exists('school_favicon_url')) {
     {
         $path = school_setting('favicon_path');
 
-        if ($path) {
+        if ($path && Storage::disk('public')->exists($path)) {
             return Storage::url($path);
         }
 

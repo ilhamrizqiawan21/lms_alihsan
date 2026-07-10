@@ -1,12 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Edit User')
-@section('page_title', 'Edit User')
+@section('title', 'Edit Guru & Staf')
+@section('page_title', 'Edit Guru & Staf')
 
 @section('content')
-@php($siswaRoleId = $roles->firstWhere('nama_role', 'siswa')?->id)
 <div class="card">
-    <div class="card-header"><i class="bi bi-pencil-square me-1"></i> Form Edit User</div>
+    <div class="card-header"><i class="bi bi-pencil-square me-1"></i> Form Edit Guru & Staf</div>
     <div class="card-body">
         <form action="{{ route('admin.users.update', $user) }}" method="POST">
             @csrf @method('PUT')
@@ -42,7 +41,7 @@
                     @error('role_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-3 mb-3">
-                    <label class="form-label">NIP/NIS</label>
+                    <label class="form-label">NIP/ID Staf</label>
                     <input type="text" name="nip_nis" class="form-control @error('nip_nis') is-invalid @enderror"
                            value="{{ old('nip_nis', $user->nip_nis) }}">
                     @error('nip_nis') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -55,35 +54,6 @@
                     <label class="form-check-label" for="is_active">Aktif</label>
                 </div>
             </div>
-            <div id="siswaFields" style="{{ old('role_id', $user->role_id) == $siswaRoleId ? '' : 'display:none;' }}">
-            <hr>
-            <h6 class="text-muted mb-3">Data Siswa</h6>
-            <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">NIS</label>
-                    <input type="text" name="nis" class="form-control" value="{{ old('nis', $user->siswa?->nis ?? '') }}">
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">Kelas</label>
-                    <select name="kelas_id" class="form-select">
-                        <option value="">-- Pilih Kelas --</option>
-                        @foreach(\App\Models\Kelas::all() as $kelas)
-                            <option value="{{ $kelas->id }}" {{ old('kelas_id', $user->siswa?->kelas_id) == $kelas->id ? 'selected' : '' }}>
-                                {{ $kelas->nama_kelas }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">Status</label>
-                    <select name="status_siswa" class="form-select">
-                        <option value="aktif" {{ $user->siswa?->status == 'aktif' ? 'selected' : '' }}>Aktif</option>
-                        <option value="lulus" {{ $user->siswa?->status == 'lulus' ? 'selected' : '' }}>Lulus</option>
-                        <option value="keluar" {{ $user->siswa?->status == 'keluar' ? 'selected' : '' }}>Keluar</option>
-                    </select>
-                </div>
-            </div>
-            </div>
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> Simpan</button>
                 <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">Batal</a>
@@ -91,14 +61,4 @@
         </form>
     </div>
 </div>
-@push('scripts')
-<script>
-    $(document).ready(function() {
-        var siswaRoleId = @json((string) $siswaRoleId);
-        $('select[name="role_id"]').change(function() {
-            $('#siswaFields').toggle($(this).val() == siswaRoleId);
-        });
-    });
-</script>
-@endpush
 @endsection

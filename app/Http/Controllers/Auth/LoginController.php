@@ -50,8 +50,13 @@ class LoginController extends Controller
             // Cek user aktif
             if (!$user->is_active) {
                 Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
                 return back()->with('error', 'Akun Anda telah dinonaktifkan. Silakan hubungi administrator.');
             }
+
+            // Ganti ID sesi setelah autentikasi untuk mencegah session fixation.
+            $request->session()->regenerate();
 
             // Catat log login
             LogLogin::create([

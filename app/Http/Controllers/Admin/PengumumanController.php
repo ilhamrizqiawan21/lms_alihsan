@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\KelasMapel;
 use App\Models\Pengumuman;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,12 +15,25 @@ class PengumumanController extends Controller
      */
     public function index()
     {
-        $pengumuman = Pengumuman::with('creator')
+        $query = Pengumuman::with(['creator', 'kelasMapel.kelas', 'kelasMapel.mataPelajaran'])
             ->orderBy('created_at', 'desc')
-            ->paginate(15);
+            ;
+
+        if (Auth::user()->isGuru()) {
+            $query->where(function ($query) {
+                $query->whereIn('target', ['semua', 'guru'])
+                    ->orWhere('created_by', Auth::id());
+            });
+        }
+
+        $pengumuman = $query->paginate(15);
+        $kelasMapel = KelasMapel::with(['kelas', 'mataPelajaran'])
+            ->when(Auth::user()->isGuru(), fn ($query) => $query->where('guru_id', Auth::id()))
+            ->orderBy('kelas_id')
+            ->get();
         $routePrefix = $this->routePrefix();
 
-        return view('admin.pengumuman.index', compact('pengumuman', 'routePrefix'));
+        return view('admin.pengumuman.index', compact('pengumuman', 'kelasMapel', 'routePrefix'));
     }
 
     /**
@@ -40,8 +54,20 @@ class PengumumanController extends Controller
             'isi' => 'required|string',
             'target' => 'required|in:semua,guru,siswa,kelas_mapel',
             'target_kelas' => 'nullable|string',
-            'kelas_mapel_id' => 'nullable|exists:kelas_mapel,id',
+            'kelas_mapel_id' => 'nullable|required_if:target,kelas_mapel|exists:kelas_mapel,id',
         ]);
+
+        if ($validated['target'] === 'kelas_mapel') {
+            $kelasMapelQuery = KelasMapel::whereKey($validated['kelas_mapel_id']);
+            if (Auth::user()->isGuru()) {
+                $kelasMapelQuery->where('guru_id', Auth::id());
+            }
+
+            abort_unless($kelasMapelQuery->exists(), 403);
+        } else {
+            $validated['kelas_mapel_id'] = null;
+            $validated['target_kelas'] = null;
+        }
 
         $validated['created_by'] = Auth::id();
 
