@@ -4,35 +4,17 @@
 @section('page_title', 'Dashboard Kepala Sekolah')
 
 @section('content')
-<div class="row mb-4">
-    <div class="col-md-3 mb-3">
-        <div class="stat-card bg-green">
-            <div class="icon"><i class="bi bi-people-fill"></i></div>
-            <div class="stat-number">{{ $statistik['total_siswa'] ?? 0 }}</div>
-            <div class="stat-label">Total Siswa</div>
-        </div>
-    </div>
-    <div class="col-md-3 mb-3">
-        <div class="stat-card bg-blue">
-            <div class="icon"><i class="bi bi-person-workspace"></i></div>
-            <div class="stat-number">{{ $statistik['total_guru'] ?? 0 }}</div>
-            <div class="stat-label">Total Guru</div>
-        </div>
-    </div>
-    <div class="col-md-3 mb-3">
-        <div class="stat-card bg-orange">
-            <div class="icon"><i class="bi bi-building"></i></div>
-            <div class="stat-number">{{ $statistik['total_kelas'] ?? 0 }}</div>
-            <div class="stat-label">Total Kelas</div>
-        </div>
-    </div>
-    <div class="col-md-3 mb-3">
-        <div class="stat-card bg-purple">
-            <div class="icon"><i class="bi bi-book-fill"></i></div>
-            <div class="stat-number">{{ $statistik['total_mapel'] ?? 0 }}</div>
-            <div class="stat-label">Mata Pelajaran</div>
-        </div>
-    </div>
+<x-page-header
+    title="Dashboard Kepala Sekolah"
+    icon="bi-speedometer2"
+    subtitle="Pantau ringkasan sekolah, absensi, dan pengumuman terbaru."
+/>
+
+<div class="stats-grid">
+    <x-stat-card label="Total Siswa" :value="$statistik['total_siswa'] ?? 0" icon="bi-people-fill" />
+    <x-stat-card label="Total Guru" :value="$statistik['total_guru'] ?? 0" icon="bi-person-workspace" />
+    <x-stat-card label="Total Kelas" :value="$statistik['total_kelas'] ?? 0" icon="bi-building" />
+    <x-stat-card label="Mata Pelajaran" :value="$statistik['total_mapel'] ?? 0" icon="bi-book-fill" />
 </div>
 
 <div class="row">
@@ -60,7 +42,7 @@
                                 <td>{{ $p->created_at ? \Carbon\Carbon::parse($p->created_at)->format('d/m/Y') : '-' }}</td>
                             </tr>
                             @empty
-                            <tr><td colspan="2" class="text-center text-muted py-3">Tidak ada</td></tr>
+                            <tr><td colspan="2" class="text-center text-muted py-3">Belum ada pengumuman</td></tr>
                             @endforelse
                         </tbody>
                     </table>

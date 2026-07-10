@@ -33,6 +33,20 @@
         $layoutSecondaryColor = $layoutActiveTheme['secondary'];
         $layoutSidebarColor = $layoutActiveTheme['sidebar'];
         $layoutNavbarColor = $layoutActiveTheme['navbar'];
+        $layoutPageTitle = trim($__env->yieldContent('page_title')) ?: trim($__env->yieldContent('title')) ?: $layoutAppName;
+        $layoutRole = auth()->check() ? auth()->user()->role?->nama_role : null;
+        $layoutRoleLabel = match($layoutRole) {
+            'admin' => 'Admin',
+            'guru' => 'Guru',
+            'siswa' => 'Siswa',
+            'kepala_sekolah' => 'Kepala Sekolah',
+            default => $layoutRole,
+        };
+        $layoutProfileRoute = match($layoutRole) {
+            'guru' => route('guru.profil'),
+            'siswa' => route('siswa.profil'),
+            default => null,
+        };
     @endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -164,7 +178,7 @@
 
     <!-- Topbar -->
     <div class="topbar">
-        <button class="topbar-toggle-btn" onclick="var s=document.getElementById('sidebar');var o=document.getElementById('sidebarOverlay');s.classList.toggle('sidebar-open');o.classList.toggle('show')">
+        <button class="topbar-toggle-btn" type="button" aria-label="Buka menu" onclick="var s=document.getElementById('sidebar');var o=document.getElementById('sidebarOverlay');s.classList.toggle('sidebar-open');o.classList.toggle('show')">
             <i class="bi bi-list"></i>
         </button>
         <div class="topbar-brand">
@@ -175,6 +189,10 @@
                 <span class="topbar-title-main">{{ $layoutAppName }}</span>
                 <span class="topbar-title-sub">{{ $layoutSchoolName }}</span>
             </div>
+        </div>
+        <div class="topbar-context">
+            <span class="topbar-context-label">{{ $layoutRoleLabel }}</span>
+            <span class="topbar-context-title">{{ $layoutPageTitle }}</span>
         </div>
         <div class="topbar-actions">
             @php
@@ -192,7 +210,7 @@
             @endphp
             @if($topbarNotifRoute && in_array($topbarRole, ['guru', 'siswa']))
             <div class="dropdown">
-                <button class="btn btn-sm position-relative topbar-icon-btn" data-bs-toggle="dropdown" title="Notifikasi">
+                <button class="btn btn-sm position-relative topbar-icon-btn" type="button" data-bs-toggle="dropdown" title="Notifikasi" aria-label="Notifikasi">
                     <i class="bi bi-bell-fill"></i>
                     @if($topbarUnread > 0)
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-count">
@@ -230,15 +248,18 @@
                 </ul>
             </div>
             @endif
-            <span class="d-none d-md-inline me-2 topbar-user-name">{{ auth()->user()->nama_lengkap }}</span>
+            <span class="d-none d-lg-inline me-2 topbar-user-name">{{ auth()->user()->nama_lengkap }}</span>
             <div class="dropdown">
-                <button class="btn btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                <button class="btn btn-sm dropdown-toggle topbar-account-btn" type="button" data-bs-toggle="dropdown" aria-label="Menu akun">
                     <i class="bi bi-person-circle me-1"></i>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li><span class="dropdown-item-text fw-bold">{{ auth()->user()->nama_lengkap }}</span></li>
-                    <li><span class="dropdown-item-text text-muted small">{{ auth()->user()->username }} — {{ auth()->user()->role?->nama_role }}</span></li>
+                    <li><span class="dropdown-item-text text-muted small">{{ auth()->user()->username }} - {{ $layoutRoleLabel }}</span></li>
                     <li><hr class="dropdown-divider"></li>
+                    @if($layoutProfileRoute)
+                    <li><a href="{{ $layoutProfileRoute }}" class="dropdown-item"><i class="bi bi-person-gear me-1"></i> Profil</a></li>
+                    @endif
                     <li>
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
@@ -265,7 +286,7 @@
             <div class="sidebar-user-avatar"><i class="bi bi-person-fill"></i></div>
             <div>
                 <div class="sidebar-user-name">{{ auth()->user()->nama_lengkap }}</div>
-                <div class="sidebar-user-role">{{ auth()->user()->role?->nama_role }}</div>
+                <div class="sidebar-user-role">{{ $layoutRoleLabel }}</div>
             </div>
         </div>
         <nav class="sidebar-nav">
@@ -284,10 +305,8 @@
             </ul>
         </nav>
         <div class="sidebar-footer">
-            <form action="{{ route('logout') }}" method="POST">
-                @csrf
-                <button type="submit" class="sidebar-logout-btn"><i class="bi bi-box-arrow-right"></i><span>Logout</span></button>
-            </form>
+            <div class="sidebar-footer-title">{{ $layoutSchoolShortName }}</div>
+            <div class="sidebar-footer-sub">Tahun {{ date('Y') }}</div>
         </div>
     </div>
 

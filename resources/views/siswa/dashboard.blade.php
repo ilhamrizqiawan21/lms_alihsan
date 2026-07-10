@@ -4,35 +4,17 @@
 @section('page_title', 'Dashboard Siswa')
 
 @section('content')
-<div class="row mb-4">
-    <div class="col-md-3 mb-3">
-        <div class="stat-card bg-green">
-            <div class="icon"><i class="bi bi-journal-fill"></i></div>
-            <div class="stat-number">{{ $totalTugas ?? 0 }}</div>
-            <div class="stat-label">Total Tugas</div>
-        </div>
-    </div>
-    <div class="col-md-3 mb-3">
-        <div class="stat-card bg-blue">
-            <div class="icon"><i class="bi bi-check-circle-fill"></i></div>
-            <div class="stat-number">{{ $tugasSelesai ?? 0 }}</div>
-            <div class="stat-label">Tugas Selesai</div>
-        </div>
-    </div>
-    <div class="col-md-3 mb-3">
-        <div class="stat-card bg-orange">
-            <div class="icon"><i class="bi bi-exclamation-circle-fill"></i></div>
-            <div class="stat-number">{{ $tugasBelum ?? 0 }}</div>
-            <div class="stat-label">Belum Dikerjakan</div>
-        </div>
-    </div>
-    <div class="col-md-3 mb-3">
-        <div class="stat-card bg-purple">
-            <div class="icon"><i class="bi bi-file-earmark-text-fill"></i></div>
-            <div class="stat-number">{{ $totalMateri ?? 0 }}</div>
-            <div class="stat-label">Total Materi</div>
-        </div>
-    </div>
+<x-page-header
+    title="Dashboard Siswa"
+    icon="bi-speedometer2"
+    subtitle="Ringkasan tugas, materi, dan kabar kelas terbaru."
+/>
+
+<div class="stats-grid">
+    <x-stat-card label="Total Tugas" :value="$totalTugas ?? 0" icon="bi-journal-fill" />
+    <x-stat-card label="Tugas Selesai" :value="$tugasSelesai ?? 0" icon="bi-check-circle-fill" />
+    <x-stat-card label="Belum Dikerjakan" :value="$tugasBelum ?? 0" icon="bi-exclamation-circle-fill" />
+    <x-stat-card label="Total Materi" :value="$totalMateri ?? 0" icon="bi-file-earmark-text-fill" />
 </div>
 
 <div class="row">
