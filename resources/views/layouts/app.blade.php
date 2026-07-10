@@ -29,14 +29,10 @@
             ],
         ];
         $layoutActiveTheme = $layoutThemeColors[$layoutTheme] ?? $layoutThemeColors['hijau'];
-        $layoutBaseColor = \App\Models\Pengaturan::getValue('warna_base');
-        $layoutBaseColor = is_string($layoutBaseColor) && preg_match('/^#[0-9A-Fa-f]{6}$/', $layoutBaseColor)
-            ? $layoutBaseColor
-            : null;
-        $layoutPrimaryColor = $layoutBaseColor ?: $layoutActiveTheme['primary'];
+        $layoutPrimaryColor = $layoutActiveTheme['primary'];
         $layoutSecondaryColor = $layoutActiveTheme['secondary'];
-        $layoutSidebarColor = $layoutBaseColor ?: $layoutActiveTheme['sidebar'];
-        $layoutNavbarColor = $layoutBaseColor ?: $layoutActiveTheme['navbar'];
+        $layoutSidebarColor = $layoutActiveTheme['sidebar'];
+        $layoutNavbarColor = $layoutActiveTheme['navbar'];
     @endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

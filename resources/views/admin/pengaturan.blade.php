@@ -2,15 +2,6 @@
 @section('title', 'Pengaturan Sistem')
 
 @section('content')
-@php
-    $themeBaseColors = [
-        'hijau' => '#198754',
-        'biru-azure' => '#0d6efd',
-        'biru-aqua' => '#0891b2',
-    ];
-    $selectedTheme = $settings['warna_tema'] ?? 'hijau';
-    $baseColor = $settings['warna_base'] ?? ($themeBaseColors[$selectedTheme] ?? $themeBaseColors['hijau']);
-@endphp
 <div class="page-header"><h4><i class="bi bi-gear-fill me-2"></i> Konfigurasi Sistem</h4></div>
 
 @if($errors->any())
@@ -48,11 +39,6 @@
                             <option value="biru-azure" {{ ($settings['warna_tema'] ?? '') === 'biru-azure' ? 'selected' : '' }}>🔵 Biru Azure</option>
                             <option value="biru-aqua" {{ ($settings['warna_tema'] ?? '') === 'biru-aqua' ? 'selected' : '' }}>🌊 Biru Aqua</option>
                         </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Warna Base</label>
-                        <input type="color" name="warna_base" class="form-control form-control-color @error('warna_base') is-invalid @enderror" value="{{ old('warna_base', $baseColor) }}">
-                        @error('warna_base') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                     </div>
                     <button class="btn btn-success"><i class="bi bi-save me-1"></i> Simpan</button>
                 </form>

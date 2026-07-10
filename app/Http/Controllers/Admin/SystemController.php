@@ -55,7 +55,6 @@ class SystemController extends Controller
     {
         $data = $request->validate([
             'warna_tema' => 'nullable|in:hijau,biru-azure,biru-aqua',
-            'warna_base' => ['nullable', 'string', 'max:20', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'semester_aktif' => 'nullable|in:1,2',
             'mode_kenaikan' => 'nullable|in:manual,auto',
         ]);
