@@ -49,7 +49,9 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @php($fields = ['sum1','sum2','sum3','sum4','sts','sas','sat'])
+                    @php
+                        $fields = ['sum1','sum2','sum3','sum4','sts','sas','sat'];
+                    @endphp
 
                     @forelse($siswa as $i => $s)
                         @php

@@ -40,11 +40,7 @@ class ExportController extends Controller
 
         $writer = new Writer();
         $filename = "rekap_nilai_{$kelas->tingkat}_{$kelas->nama_kelas}_semester_{$semester}.xlsx";
-        $filePath = storage_path("app/temp/{$filename}");
-
-        if (!is_dir(storage_path('app/temp'))) {
-            mkdir(storage_path('app/temp'), 0775, true);
-        }
+        $filePath = $this->temporaryExcelPath('rekap_nilai_');
 
         $writer->openToFile($filePath);
 
@@ -114,11 +110,7 @@ class ExportController extends Controller
 
         $writer = new Writer();
         $filename = "rekap_absensi_{$kelas->tingkat}_{$kelas->nama_kelas}_{$bulan}.xlsx";
-        $filePath = storage_path("app/temp/{$filename}");
-
-        if (!is_dir(storage_path('app/temp'))) {
-            mkdir(storage_path('app/temp'), 0775, true);
-        }
+        $filePath = $this->temporaryExcelPath('rekap_absensi_');
 
         $writer->openToFile($filePath);
 
@@ -188,11 +180,7 @@ class ExportController extends Controller
 
         $writer = new Writer();
         $filename = "rekap_tugas_{$kelas->tingkat}_{$kelas->nama_kelas}_semester_{$semester}.xlsx";
-        $filePath = storage_path("app/temp/{$filename}");
-
-        if (!is_dir(storage_path('app/temp'))) {
-            mkdir(storage_path('app/temp'), 0775, true);
-        }
+        $filePath = $this->temporaryExcelPath('rekap_tugas_');
 
         $writer->openToFile($filePath);
 
@@ -409,5 +397,10 @@ class ExportController extends Controller
             ['Kepala Sekolah', $school['principal_name'], 'NIP/NUPTK', $principalId ?: '-'],
             [],
         ];
+    }
+
+    private function temporaryExcelPath(string $prefix): string
+    {
+        return tempnam(sys_get_temp_dir(), $prefix);
     }
 }

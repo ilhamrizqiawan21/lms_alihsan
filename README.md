@@ -11,12 +11,13 @@ Status produk: single-school LMS, bukan SaaS dan bukan multi-school.
 - MySQL 8.0 / MariaDB 10.6+
 - Blade, Bootstrap 5, Vite
 - DomPDF untuk PDF
-- OpenSpout untuk export Excel
+- OpenSpout untuk import/export Excel
 
 ## Fitur Utama
 
 - Dashboard untuk admin, kepala sekolah, guru, dan siswa
 - Manajemen pengguna, role, kelas, siswa, mata pelajaran, dan guru pengampu
+- Import siswa massal dari Excel dengan template yang disediakan admin
 - Tahun ajaran dan semester aktif
 - Absensi siswa per kelas-mapel
 - Materi pembelajaran dan upload file
@@ -122,6 +123,9 @@ Perubahan branding digunakan oleh login, layout aplikasi, favicon, laporan cetak
 ## Dokumentasi
 
 - [Installation Guide](docs/INSTALLATION.md)
+- [Architecture Guide](docs/ARCHITECTURE.md)
+- [Import Siswa Excel](docs/IMPORT_SISWA.md)
+- [Code Audit](docs/CODE_AUDIT.md)
 - [Custom Branding](docs/CUSTOM_BRANDING.md)
 - [Security Check Result](docs/SECURITY_CHECK_RESULT.md)
 - [Commercial Readiness Checklist](docs/COMMERCIAL_READY_CHECKLIST.md)

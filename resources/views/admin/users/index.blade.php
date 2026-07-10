@@ -7,11 +7,51 @@
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <span><i class="bi bi-people-fill me-1"></i> Daftar User</span>
-        <a href="{{ route('admin.users.create') }}" class="btn btn-sm btn-success">
-            <i class="bi bi-plus-lg"></i> Tambah User
-        </a>
+        <div class="d-flex gap-2">
+            <a href="{{ route('admin.users.import-siswa.template') }}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-download"></i> Template Siswa
+            </a>
+            <a href="{{ route('admin.users.create') }}" class="btn btn-sm btn-success">
+                <i class="bi bi-plus-lg"></i> Tambah User
+            </a>
+        </div>
     </div>
     <div class="card-body">
+        @if(session('import_errors'))
+            <div class="alert alert-danger">
+                <strong>Import siswa gagal.</strong>
+                <ul class="mb-0 mt-2">
+                    @foreach(session('import_errors') as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <form class="row g-2 align-items-end mb-3 p-3 border rounded bg-light" method="POST"
+              action="{{ route('admin.users.import-siswa') }}" enctype="multipart/form-data">
+            @csrf
+            <div class="col-md-6">
+                <label for="file_siswa" class="form-label small fw-semibold mb-1">Import Siswa dari Excel</label>
+                <input type="file" name="file_siswa" id="file_siswa"
+                       class="form-control form-control-sm @error('file_siswa') is-invalid @enderror"
+                       accept=".xlsx" required>
+                @error('file_siswa')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-sm btn-primary w-100" type="submit">
+                    <i class="bi bi-upload"></i> Upload Excel
+                </button>
+            </div>
+            <div class="col-md-3">
+                <a href="{{ route('admin.users.import-siswa.template') }}" class="btn btn-sm btn-outline-secondary w-100">
+                    <i class="bi bi-file-earmark-spreadsheet"></i> Unduh Template
+                </a>
+            </div>
+        </form>
+
         <form class="row g-3 mb-3" method="GET">
             <div class="col-md-4">
                 <input type="text" name="search" class="form-control form-control-sm"

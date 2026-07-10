@@ -54,6 +54,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     // Users
+    Route::get('/users/import-siswa/template', [UserController::class, 'downloadSiswaTemplate'])->name('users.import-siswa.template');
+    Route::post('/users/import-siswa', [UserController::class, 'importSiswa'])->name('users.import-siswa');
     Route::resource('users', UserController::class)->except(['show']);
     Route::post('/users/{user}/toggle-active', [UserController::class, 'toggleActive'])->name('users.toggle-active');
 

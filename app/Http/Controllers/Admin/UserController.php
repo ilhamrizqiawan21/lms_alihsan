@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\Siswa;
 use App\Models\User;
+use App\Services\SiswaImportService;
+use App\Services\SiswaTemplateService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -103,6 +105,34 @@ class UserController extends Controller
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User berhasil ditambahkan.');
+    }
+
+    /**
+     * Unduh template import siswa.
+     */
+    public function downloadSiswaTemplate(SiswaTemplateService $templateService)
+    {
+        return response()
+            ->download($templateService->createTemplateFile(), SiswaTemplateService::FILENAME)
+            ->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Import banyak siswa dari file Excel.
+     */
+    public function importSiswa(Request $request, SiswaImportService $importService)
+    {
+        $request->validate([
+            'file_siswa' => 'required|file|mimes:xlsx|max:5120',
+        ]);
+
+        $result = $importService->import($request->file('file_siswa')->getRealPath());
+
+        if ($result['errors'] !== []) {
+            return back()->with('import_errors', $result['errors']);
+        }
+
+        return back()->with('success', $result['imported'] . ' siswa berhasil diimport.');
     }
 
     /**
