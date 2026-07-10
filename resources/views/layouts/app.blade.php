@@ -66,9 +66,9 @@
             --app-radius: 0.875rem;
             --app-shadow: 0 4px 12px rgba(0,0,0,.08);
             --primary-500: {{ $layoutPrimaryColor }};
-            --primary-600: {{ $layoutPrimaryColor }};
-            --primary-700: {{ $layoutSidebarColor }};
-            --primary-800: {{ $layoutSidebarColor }};
+            --primary-600: color-mix(in srgb, {{ $layoutPrimaryColor }} 88%, black);
+            --primary-700: color-mix(in srgb, {{ $layoutSidebarColor }} 78%, black);
+            --primary-800: color-mix(in srgb, {{ $layoutSidebarColor }} 66%, black);
             --primary-100: color-mix(in srgb, {{ $layoutPrimaryColor }} 18%, white);
             --primary-50: color-mix(in srgb, {{ $layoutPrimaryColor }} 8%, white);
             --primary-300: color-mix(in srgb, {{ $layoutPrimaryColor }} 70%, white);
@@ -104,6 +104,52 @@
             --bs-primary: var(--app-primary);
             --bs-success: var(--app-primary);
             --bs-warning: var(--app-accent);
+            --bs-link-color: var(--primary-600);
+            --bs-link-hover-color: var(--primary-700);
+        }
+        .text-primary,
+        .text-success {
+            color: var(--primary-600) !important;
+        }
+        .bg-primary,
+        .bg-success {
+            background-color: var(--app-primary) !important;
+        }
+        .border-primary,
+        .border-success {
+            border-color: var(--app-primary) !important;
+        }
+        .btn-primary,
+        .btn-success {
+            background: linear-gradient(135deg, var(--primary-500), var(--primary-600)) !important;
+            border-color: var(--primary-600) !important;
+        }
+        .btn-primary:hover,
+        .btn-success:hover {
+            background: linear-gradient(135deg, var(--primary-600), var(--primary-700)) !important;
+            border-color: var(--primary-700) !important;
+        }
+        .btn-outline-primary,
+        .btn-outline-success {
+            color: var(--primary-600) !important;
+            border-color: var(--app-primary) !important;
+        }
+        .btn-outline-primary:hover,
+        .btn-outline-success:hover {
+            background: var(--app-primary) !important;
+            color: #fff !important;
+        }
+        .form-check-input:checked {
+            background-color: var(--app-primary) !important;
+            border-color: var(--app-primary) !important;
+        }
+        .page-link {
+            color: var(--primary-600);
+        }
+        .active > .page-link,
+        .page-link.active {
+            background-color: var(--app-primary);
+            border-color: var(--app-primary);
         }
         .topbar {
             background:linear-gradient(135deg, var(--navbar-bg), var(--primary-700));
