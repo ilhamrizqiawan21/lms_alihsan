@@ -6,12 +6,12 @@
 
 <div {{ $attributes->merge(['class' => 'page-header app-page-header']) }}>
     <div>
-        <h4>
+        <h1>
             @if($icon)
-                <i class="bi {{ $icon }} me-2"></i>
+                <i class="bi {{ $icon }} me-2" aria-hidden="true"></i>
             @endif
             {{ $title }}
-        </h4>
+        </h1>
         @if($subtitle)
             <p class="app-page-subtitle">{{ $subtitle }}</p>
         @endif

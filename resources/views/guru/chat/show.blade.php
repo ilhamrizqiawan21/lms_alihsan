@@ -23,7 +23,9 @@
         <form action="{{ route('guru.chat.send', $kelasMapel) }}" method="POST" class="d-flex gap-2">
             @csrf
             <input type="text" name="message" class="form-control" placeholder="Ketik pesan..." required maxlength="1000">
-            <button type="submit" class="btn btn-success"><i class="bi bi-send-fill"></i></button>
+            <button type="submit" class="btn btn-success" title="Kirim pesan" aria-label="Kirim pesan">
+                <i class="bi bi-send-fill" aria-hidden="true"></i>
+            </button>
         </form>
     </div>
 </div>

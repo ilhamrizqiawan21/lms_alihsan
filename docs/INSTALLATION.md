@@ -102,6 +102,8 @@ php artisan migrate:fresh --seeder=EmptyProductSeeder
 npm run build
 ```
 
+Untuk production, pastikan `public/build/manifest.json` terbentuk setelah command ini. Layout aplikasi akan memakai asset lokal dari Vite jika manifest tersedia; CDN hanya dipakai sebagai fallback saat build belum ada.
+
 ## Storage Link
 
 ```bash

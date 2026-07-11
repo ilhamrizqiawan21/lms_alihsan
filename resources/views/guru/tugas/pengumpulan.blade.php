@@ -78,8 +78,8 @@
                                            value="{{ $p->nilai }}" min="0" max="100" step="0.01" required>
                                     <input type="text" name="catatan" class="form-control form-control-sm" 
                                            placeholder="Catatan" value="{{ $p->catatan }}" style="display:none;">
-                                    <button class="btn btn-success btn-sm" type="submit" title="Simpan Nilai">
-                                        <i class="bi bi-check"></i>
+                                    <button class="btn btn-success btn-sm" type="submit" title="Simpan nilai {{ $p->siswa?->user?->nama_lengkap ?? 'siswa' }}" aria-label="Simpan nilai {{ $p->siswa?->user?->nama_lengkap ?? 'siswa' }}">
+                                        <i class="bi bi-check" aria-hidden="true"></i>
                                     </button>
                                 </div>
                             </form>

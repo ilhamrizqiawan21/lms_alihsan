@@ -10,27 +10,22 @@
 
 <div class="row">
     <div class="col-md-5 mb-4">
-        <div class="card">
-            <div class="card-header"><i class="bi bi-cloud-upload-fill me-2"></i> Upload Materi</div>
-            <div class="card-body">
+        <x-card title="Upload Materi" icon="bi-cloud-upload-fill">
                 <form action="{{ route('guru.materi.store', $kelasMapel) }}" method="POST" enctype="multipart/form-data">
                     @csrf
-                    <div class="mb-3">
-                        <label class="form-label">Judul</label>
-                        <input type="text" name="judul" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Deskripsi</label>
-                        <textarea name="deskripsi" class="form-control" rows="3"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">File (JPG, JPEG, PDF, max 20MB)</label>
-                        <input type="file" name="file_materi" class="form-control" accept=".jpg,.jpeg,.pdf,image/jpeg,application/pdf" required>
-                    </div>
-                    <button class="btn btn-success w-100"><i class="bi bi-upload me-1"></i> Upload</button>
+                    <x-form.input name="judul" label="Judul" required />
+                    <x-form.textarea name="deskripsi" label="Deskripsi" rows="3" />
+                    <x-form.file
+                        name="file_materi"
+                        label="File Materi"
+                        accept=".jpg,.jpeg,.pdf,image/jpeg,application/pdf"
+                        accept-label="JPG, JPEG, PDF"
+                        max-size="20MB"
+                        required
+                    />
+                    <x-button type="submit" color="success" size="" icon="bi-upload" class="w-100">Upload</x-button>
                 </form>
-            </div>
-        </div>
+        </x-card>
     </div>
     <div class="col-md-7 mb-4">
         <div class="card">
@@ -46,11 +41,15 @@
                             <td style="white-space:nowrap;font-size:0.82rem;">{{ $m->created_at ? \Carbon\Carbon::parse($m->created_at)->format('d M Y') : '-' }}</td>
                             <td>
                                 @if($m->file_path)
-                                <a href="{{ route('guru.materi.download', [$kelasMapel, $m]) }}" class="btn btn-sm btn-outline-primary" target="_blank"><i class="bi bi-download"></i></a>
+                                <a href="{{ route('guru.materi.download', [$kelasMapel, $m]) }}" class="btn btn-sm btn-outline-primary btn-icon" target="_blank" title="Download {{ $m->judul }}" aria-label="Download {{ $m->judul }}">
+                                    <i class="bi bi-download" aria-hidden="true"></i>
+                                </a>
                                 @endif
                                 <form action="{{ route('guru.materi.destroy', [$kelasMapel, $m]) }}" method="POST" class="d-inline">
                                     @csrf @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger" data-confirm="Hapus materi ini?"><i class="bi bi-trash"></i></button>
+                                    <button class="btn btn-sm btn-outline-danger btn-icon" data-confirm="Hapus materi ini?" title="Hapus {{ $m->judul }}" aria-label="Hapus {{ $m->judul }}">
+                                        <i class="bi bi-trash" aria-hidden="true"></i>
+                                    </button>
                                 </form>
                             </td>
                         </tr>

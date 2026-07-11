@@ -54,12 +54,10 @@
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    var ctx = document.getElementById('absensiChart');
-    if (ctx) {
+    window.addEventListener('load', () => {
         const absensiMingguan = @json($absensiMingguan);
-        new Chart(ctx, {
+        window.renderChart('absensiChart', {
             type: 'bar',
             data: {
                 labels: absensiMingguan.map(item => item.tanggal),
@@ -71,6 +69,6 @@
                 ]
             }
         });
-    }
+    });
 </script>
 @endpush

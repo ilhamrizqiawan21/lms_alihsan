@@ -45,10 +45,12 @@
                             <td style="white-space:nowrap;font-size:0.82rem;">{{ $t->batas_waktu ? \Carbon\Carbon::parse($t->batas_waktu)->format('d M Y H:i') : '-' }}</td>
                             <td>{{ $t->sudah_mengumpulkan ?? 0 }}/{{ $totalSiswa ?? 0 }}</td>
                             <td>
-                                <a href="{{ route('guru.tugas.pengumpulan', [$kelasMapel, $t]) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i> Nilai</a>
+                                <a href="{{ route('guru.tugas.pengumpulan', [$kelasMapel, $t]) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye" aria-hidden="true"></i> Nilai</a>
                                 <form action="{{ route('guru.tugas.destroy', $t) }}" method="POST" class="d-inline">
                                     @csrf @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger" data-confirm="Hapus tugas ini?"><i class="bi bi-trash"></i></button>
+                                    <button class="btn btn-sm btn-outline-danger btn-icon" data-confirm="Hapus tugas ini?" title="Hapus {{ $t->judul }}" aria-label="Hapus {{ $t->judul }}">
+                                        <i class="bi bi-trash" aria-hidden="true"></i>
+                                    </button>
                                 </form>
                             </td>
                         </tr>

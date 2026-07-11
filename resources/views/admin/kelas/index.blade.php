@@ -6,44 +6,29 @@
 @section('content')
 <div class="row">
     <div class="col-md-5 mb-4">
-        <div class="card">
-            <div class="card-header"><i class="bi bi-plus-circle me-1"></i> Tambah Kelas</div>
-            <div class="card-body">
+        <x-card title="Tambah Kelas" icon="bi-plus-circle">
                 <form action="{{ route('admin.kelas.store') }}" method="POST">
                     @csrf
-                    <div class="mb-3">
-                        <label class="form-label">Tingkat</label>
-                        <select name="tingkat" class="form-select @error('tingkat') is-invalid @enderror" required>
-                            <option value="">-- Pilih --</option>
-                            <option value="VII">VII</option>
-                            <option value="VIII">VIII</option>
-                            <option value="IX">IX</option>
-                        </select>
-                        @error('tingkat') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Nama Kelas</label>
-                        <input type="text" name="nama_kelas" class="form-control @error('nama_kelas') is-invalid @enderror"
-                               placeholder="Contoh: VII-A" value="{{ old('nama_kelas') }}" required>
-                        @error('nama_kelas') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-                    <button type="submit" class="btn btn-success w-100"><i class="bi bi-save"></i> Simpan</button>
+                    <x-form.select name="tingkat" label="Tingkat" placeholder="-- Pilih --" required>
+                        <option value="VII" @selected(old('tingkat') === 'VII')>VII</option>
+                        <option value="VIII" @selected(old('tingkat') === 'VIII')>VIII</option>
+                        <option value="IX" @selected(old('tingkat') === 'IX')>IX</option>
+                    </x-form.select>
+                    <x-form.input name="nama_kelas" label="Nama Kelas" placeholder="Contoh: VII-A" required />
+                    <x-button type="submit" color="success" size="" icon="bi-save" class="w-100">Simpan</x-button>
                 </form>
-            </div>
-        </div>
+        </x-card>
     </div>
     <div class="col-md-7 mb-4">
-        <div class="card">
-            <div class="card-header"><i class="bi bi-building me-1"></i> Daftar Kelas</div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
+        <x-card title="Daftar Kelas" icon="bi-building" body-class="p-0">
+                <x-table-wrapper>
+                    <table class="table table-hover app-table mb-0">
                         <thead>
                             <tr>
                                 <th>Tingkat</th>
                                 <th>Nama Kelas</th>
                                 <th>Jumlah Siswa</th>
-                                <th>Aksi</th>
+                                <th class="table-action-column">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -52,26 +37,27 @@
                                 <td><span class="badge bg-secondary">{{ $k->tingkat }}</span></td>
                                 <td><strong>{{ $k->nama_kelas }}</strong></td>
                                 <td>{{ $k->siswa_count ?? 0 }} siswa</td>
-                                <td>
-                                    <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editKelasModal{{ $k->id }}" title="Edit kelas">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <form action="{{ route('admin.kelas.destroy', $k) }}" method="POST" class="d-inline">
-                                        @csrf @method('DELETE')
-                                        <button class="btn btn-sm btn-danger" data-confirm="Hapus kelas {{ $k->nama_kelas }}?">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
+                                <td class="table-action-column">
+                                    <x-action-buttons
+                                        edit-target="#editKelasModal{{ $k->id }}"
+                                        edit-label="Edit kelas {{ $k->nama_kelas }}"
+                                        :delete-action="route('admin.kelas.destroy', $k)"
+                                        delete-confirm="Hapus kelas {{ $k->nama_kelas }}?"
+                                        delete-label="Hapus kelas {{ $k->nama_kelas }}"
+                                    />
                                 </td>
                             </tr>
                             @empty
-                            <tr><td colspan="4" class="text-center text-muted py-3">Belum ada kelas</td></tr>
+                            <tr>
+                                <td colspan="4">
+                                    <x-empty-state title="Belum ada kelas" icon="bi-building" />
+                                </td>
+                            </tr>
                             @endforelse
                         </tbody>
                     </table>
-                </div>
-            </div>
-        </div>
+                </x-table-wrapper>
+        </x-card>
     </div>
 </div>
 

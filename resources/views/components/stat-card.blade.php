@@ -5,7 +5,7 @@
 ])
 
 <div {{ $attributes->merge(['class' => 'stat-card']) }}>
-    <div class="stat-icon"><i class="bi {{ $icon }}"></i></div>
+    <div class="stat-icon"><i class="bi {{ $icon }}" aria-hidden="true"></i></div>
     <div>
         <div class="stat-number">{{ $value }}</div>
         <div class="stat-label">{{ $label }}</div>

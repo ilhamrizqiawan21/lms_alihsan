@@ -3,126 +3,170 @@
 @section('title', 'Absensi')
 
 @section('content')
-<div class="page-header"><h4><i class="bi bi-clipboard-check-fill me-2"></i> Absensi</h4></div>
+<x-page-header title="Absensi" icon="bi-clipboard-check-fill" />
 
-@if($kelasMapel->count() == 0)
-<div class="card"><div class="card-body text-center text-muted py-5">Anda belum memiliki penugasan mengajar semester ini.</div></div>
-@else
-<div class="card">
-    <div class="card-body">
-        <form method="GET" class="row g-3 align-items-end">
-            <div class="col-md-5">
-                <label class="form-label">Kelas & Mata Pelajaran</label>
-                <select name="kelas_mapel_id" class="form-select" onchange="this.form.submit()">
-                    <option value="">-- Pilih --</option>
-                    @foreach($kelasMapel as $km)
-                    <option value="{{ $km->id }}" {{ request('kelas_mapel_id') == $km->id ? 'selected' : '' }}>
-                        {{ $km->kelas?->nama_kelas }} - {{ $km->mataPelajaran?->nama_mapel }}
-                    </option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">Bulan</label>
-                <input type="month" name="bulan" class="form-control" value="{{ $bulan }}" onchange="this.form.submit()">
-            </div>
-        </form>
-    </div>
-</div>
-
-@if($kelasMapelId && $kmData)
-<div class="card mt-3">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-table me-2"></i> {{ $kmData->kelas?->nama_kelas }} — {{ $kmData->mataPelajaran?->nama_mapel }} ({{ $bulanIndo[(int)$bulanNum] }} {{ $tahun }})</span>
-        <span><span class="badge badge-hadir me-1">H=Hadir</span><span class="badge badge-sakit me-1">S=Sakit</span><span class="badge badge-izin me-1">I=Izin</span><span class="badge badge-alpha">A=Alpha</span></span>
-    </div>
-    <div class="card-body p-0">
-        <form action="{{ route('guru.absensi.store', $kmData) }}" method="POST">
-            @csrf
-            <input type="hidden" name="bulan" value="{{ $bulan }}">
-            <div class="table-responsive">
-                <table class="table table-bordered mb-0" style="font-size:0.75rem;">
-                    <thead>
-                        <tr style="background:var(--primary-700);color:white;">
-                            <th style="width:30px;">No</th>
-                            <th style="width:60px;">NIS</th>
-                            <th style="min-width:150px;">Nama</th>
-                            @for($w = 1; $w <= $mingguCount; $w++)
-                            <th style="text-align:center;width:55px;">
-                                Minggu {{ $w }}<br><small style="font-size:0.6rem;">{{ ($tanggalMinggu[$w] ?? null) ? date('d/m', strtotime($tanggalMinggu[$w])) : '-' }}</small>
-                            </th>
-                            @endfor
-                            <th style="text-align:center;width:28px;background:#dcfce7;color:#166534;">H</th>
-                            <th style="text-align:center;width:28px;background:#fef3c7;color:#92400e;">S</th>
-                            <th style="text-align:center;width:28px;background:#dbeafe;color:#1e40af;">I</th>
-                            <th style="text-align:center;width:28px;background:#fee2e2;color:#991b1b;">A</th>
-                        </tr>
-                        <tr style="background:var(--gray-100);">
-                            <td colspan="3"></td>
-                            @for($w = 1; $w <= $mingguCount; $w++)
-                            <td class="text-center" style="padding:2px;">
-                                <select onchange="fillColumn(this, {{ $w }})" style="font-size:0.6rem;width:100%;padding:1px;">
-                                    <option value="">-</option>
-                                    <option value="hadir">H</option>
-                                    <option value="sakit">S</option>
-                                    <option value="izin">I</option>
-                                    <option value="alpha">A</option>
-                                </select>
-                            </td>
-                            @endfor
-                            <td colspan="4"></td>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($siswaList as $i => $s)
-                        <tr>
-                            <td class="text-center">{{ $i+1 }}</td>
-                            <td>{{ $s->nis }}</td>
-                            <td><strong>{{ $s->user->nama_lengkap ?? '-' }}</strong></td>
-                            @php $h=0; $sa=0; $iz=0; $al=0; @endphp
-                            @for($w = 1; $w <= $mingguCount; $w++)
-                            @php
-                                $tgl = $tanggalMinggu[$w] ?? null;
-                                $st = $absensiData[$s->id][$tgl] ?? null;
-                                if($st === 'hadir') $h++;
-                                elseif($st === 'sakit') $sa++;
-                                elseif($st === 'izin') $iz++;
-                                elseif($st === 'alpha') $al++;
-                            @endphp
-                            <td class="text-center p-0">
-                                @if($tgl)
-                                <select name="absensi[{{ $s->id }}][{{ $w }}]" style="font-size:0.65rem;width:100%;border:none;padding:4px;text-align:center;
-                                    background:{{ $st === 'hadir' ? '#dcfce7' : ($st === 'sakit' ? '#fef3c7' : ($st === 'izin' ? '#dbeafe' : ($st === 'alpha' ? '#fee2e2' : 'white'))) }};
-                                    color:{{ $st === 'hadir' ? '#166534' : ($st === 'sakit' ? '#92400e' : ($st === 'izin' ? '#1e40af' : ($st === 'alpha' ? '#991b1b' : '#6b7280'))) }};">
-                                    <option value="">-</option>
-                                    <option value="hadir" {{ $st === 'hadir' ? 'selected' : '' }}>H</option>
-                                    <option value="sakit" {{ $st === 'sakit' ? 'selected' : '' }}>S</option>
-                                    <option value="izin" {{ $st === 'izin' ? 'selected' : '' }}>I</option>
-                                    <option value="alpha" {{ $st === 'alpha' ? 'selected' : '' }}>A</option>
-                                </select>
-                                @else
-                                <span style="color:#d1d5db;">-</span>
-                                @endif
-                            </td>
-                            @endfor
-                            <td class="text-center fw-bold" style="color:#16a34a;">{{ $h }}</td>
-                            <td class="text-center" style="color:#d97706;">{{ $sa }}</td>
-                            <td class="text-center" style="color:#3b82f6;">{{ $iz }}</td>
-                            <td class="text-center fw-bold" style="color:#ef4444;">{{ $al }}</td>
-                        </tr>
+<div class="row gy-4">
+    <div class="col-12">
+        <x-card title="Filter Absensi" icon="bi-funnel-fill">
+            <form method="GET" class="row g-3 align-items-end">
+                <div class="col-md-6">
+                    <x-form.select
+                        name="kelas_mapel_id"
+                        label="Kelas & Mata Pelajaran"
+                        placeholder="-- Pilih --"
+                        :selected="$kelasMapelId"
+                        wrapper-class="mb-0"
+                    >
+                        @foreach($kelasMapel as $km)
+                            <option value="{{ $km->id }}" @selected(request('kelas_mapel_id') == $km->id)>
+                                {{ $km->kelas?->nama_kelas }} - {{ $km->mataPelajaran?->nama_mapel }}
+                            </option>
                         @endforeach
-                    </tbody>
-                </table>
-            </div>
-            <div class="p-3 text-end">
-                <button type="submit" class="btn btn-success" name="simpan_absensi" value="1"><i class="bi bi-save me-1"></i> Simpan Absensi</button>
-            </div>
-        </form>
+                    </x-form.select>
+                </div>
+                <div class="col-md-3">
+                    <x-form.input
+                        type="month"
+                        name="bulan"
+                        label="Bulan"
+                        :value="$bulan"
+                        use-old="false"
+                        wrapper-class="mb-0"
+                    />
+                </div>
+                <div class="col-md-3 d-grid">
+                    <x-button type="submit" color="primary" icon="bi-search">Tampilkan</x-button>
+                </div>
+            </form>
+        </x-card>
     </div>
+
+    @if($kelasMapel->count() == 0)
+        <div class="col-12">
+            <x-card>
+                <x-empty-state title="Belum ada penugasan mengajar" icon="bi-clipboard-check" message="Anda belum memiliki penugasan mengajar semester ini." />
+            </x-card>
+        </div>
+    @elseif($kelasMapelId && $kmData)
+        <div class="col-12">
+            <form action="{{ route('guru.absensi.store', $kmData) }}" method="POST">
+                @csrf
+                <input type="hidden" name="bulan" value="{{ $bulan }}">
+
+                <x-card title="Absensi {{ $kmData->kelas?->nama_kelas }} — {{ $kmData->mataPelajaran?->nama_mapel }}" icon="bi-table" body-class="p-0">
+                    <div class="p-3 attendance-legend d-flex flex-wrap gap-2 align-items-center">
+                        <span class="badge bg-success">H=Hadir</span>
+                        <span class="badge bg-warning text-dark">S=Sakit</span>
+                        <span class="badge bg-info text-dark">I=Izin</span>
+                        <span class="badge bg-danger">A=Alpha</span>
+                    </div>
+
+                    <x-table-wrapper>
+                        <table class="table table-bordered table-hover mb-0 attendance-table">
+                            <thead>
+                                <tr>
+                                    <th class="text-center" style="width:44px;">No</th>
+                                    <th class="text-center" style="width:70px;">NIS</th>
+                                    <th>Nama</th>
+                                    @for($w = 1; $w <= $mingguCount; $w++)
+                                        <th class="text-center" style="min-width:72px;">Minggu {{ $w }}<br><small class="text-muted">{{ ($tanggalMinggu[$w] ?? null) ? date('d/m', strtotime($tanggalMinggu[$w])) : '-' }}</small></th>
+                                    @endfor
+                                    <th class="text-center" style="width:42px;">H</th>
+                                    <th class="text-center" style="width:42px;">S</th>
+                                    <th class="text-center" style="width:42px;">I</th>
+                                    <th class="text-center" style="width:42px;">A</th>
+                                </tr>
+                                <tr>
+                                    <td colspan="3"></td>
+                                    @for($w = 1; $w <= $mingguCount; $w++)
+                                        <td class="text-center py-2">
+                                            <select class="form-select form-select-sm attendance-select" onchange="fillColumn(this, {{ $w }})">
+                                                <option value="">-</option>
+                                                <option value="hadir">H</option>
+                                                <option value="sakit">S</option>
+                                                <option value="izin">I</option>
+                                                <option value="alpha">A</option>
+                                            </select>
+                                        </td>
+                                    @endfor
+                                    <td colspan="4"></td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($siswaList as $i => $s)
+                                    @php $h = 0; $sa = 0; $iz = 0; $al = 0; @endphp
+                                    <tr>
+                                        <td class="text-center text-muted align-middle">{{ $i + 1 }}</td>
+                                        <td class="align-middle">{{ $s->nis }}</td>
+                                        <td class="align-middle"><strong>{{ $s->user->nama_lengkap ?? '-' }}</strong></td>
+                                        @for($w = 1; $w <= $mingguCount; $w++)
+                                            @php
+                                                $tgl = $tanggalMinggu[$w] ?? null;
+                                                $st = $absensiData[$s->id][$tgl] ?? null;
+                                                if ($st === 'hadir') $h++;
+                                                elseif ($st === 'sakit') $sa++;
+                                                elseif ($st === 'izin') $iz++;
+                                                elseif ($st === 'alpha') $al++;
+                                            @endphp
+                                            <td class="p-0 text-center align-middle">
+                                                @if($tgl)
+                                                    <select name="absensi[{{ $s->id }}][{{ $w }}]" class="form-select form-select-sm attendance-select attendance-{{ $st }}">
+                                                        <option value="">-</option>
+                                                        <option value="hadir" @selected($st === 'hadir')>H</option>
+                                                        <option value="sakit" @selected($st === 'sakit')>S</option>
+                                                        <option value="izin" @selected($st === 'izin')>I</option>
+                                                        <option value="alpha" @selected($st === 'alpha')>A</option>
+                                                    </select>
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
+                                        @endfor
+                                        <td class="text-center align-middle text-success fw-bold">{{ $h }}</td>
+                                        <td class="text-center align-middle text-warning">{{ $sa }}</td>
+                                        <td class="text-center align-middle text-info">{{ $iz }}</td>
+                                        <td class="text-center align-middle text-danger fw-bold">{{ $al }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </x-table-wrapper>
+
+                    <x-slot:footer>
+                        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
+                            <x-button :href="route('guru.absensi.index')" color="outline-secondary" icon="bi-arrow-left">Reset</x-button>
+                            <x-button type="submit" color="success" icon="bi-save">Simpan Absensi</x-button>
+                        </div>
+                    </x-slot:footer>
+                </x-card>
+            </form>
+        </div>
+    @else
+        <div class="col-12">
+            <x-card>
+                <x-empty-state title="Pilih filter absensi" icon="bi-info-circle" message="Pilih kelas dan bulan untuk menampilkan data absensi." />
+            </x-card>
+        </div>
+    @endif
 </div>
-@endif
-@endif
 @endsection
+
+@push('styles')
+<style>
+.attendance-select {
+    font-size:0.72rem;
+    min-width:70px;
+    padding:0.35rem 0.5rem;
+    text-align:center;
+}
+.attendance-select.hadir { background:#dcfce7; color:#166534; }
+.attendance-select.sakit { background:#fef3c7; color:#92400e; }
+.attendance-select.izin { background:#dbeafe; color:#1e40af; }
+.attendance-select.alpha { background:#fee2e2; color:#991b1b; }
+.attendance-legend .badge { font-size:0.78rem; }
+.attendance-table th { vertical-align: middle; }
+</style>
+@endpush
 
 @push('scripts')
 <script>
@@ -132,13 +176,13 @@ function fillColumn(select, minggu) {
     var table = select.closest('table');
     var rows = table.querySelectorAll('tbody tr');
     rows.forEach(function(row) {
-        var cell = row.querySelectorAll('td')[2 + minggu]; // offset: no, nis, nama
+        var cell = row.querySelectorAll('td')[2 + minggu];
         if (cell) {
             var sel = cell.querySelector('select');
             if (sel) sel.value = val;
         }
     });
-    select.value = ''; // reset bulk selector
+    select.value = '';
 }
 </script>
 @endpush

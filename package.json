@@ -12,8 +12,10 @@
         "vite": "^6.4.3"
     },
     "dependencies": {
+        "alpinejs": "^3.15.12",
         "bootstrap": "^5.3.8",
         "bootstrap-icons": "^1.13.1",
+        "chart.js": "^4.5.1",
         "datatables.net": "^1.13.11",
         "datatables.net-bs5": "^1.13.11",
         "jquery": "^3.7.1",

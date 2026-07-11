@@ -4,49 +4,40 @@
 @section('page_title', 'Edit Guru & Staf')
 
 @section('content')
-<div class="card">
-    <div class="card-header"><i class="bi bi-pencil-square me-1"></i> Form Edit Guru & Staf</div>
-    <div class="card-body">
+<x-card title="Form Edit Guru & Staf" icon="bi-pencil-square">
         <form action="{{ route('admin.users.update', $user) }}" method="POST">
             @csrf @method('PUT')
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Username <span class="text-danger">*</span></label>
-                    <input type="text" name="username" class="form-control @error('username') is-invalid @enderror"
-                           value="{{ old('username', $user->username) }}" required>
-                    @error('username') <div class="invalid-feedback">{{ $message }}</div> @enderror
+            <x-form.section title="Identitas Akun" icon="bi-person-badge" class="mb-3">
+                <div class="row">
+                    <div class="col-md-6">
+                        <x-form.input name="username" label="Username" :value="$user->username" required />
+                    </div>
+                    <div class="col-md-6">
+                        <x-form.input name="nama_lengkap" label="Nama Lengkap" :value="$user->nama_lengkap" required />
+                    </div>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
-                    <input type="text" name="nama_lengkap" class="form-control @error('nama_lengkap') is-invalid @enderror"
-                           value="{{ old('nama_lengkap', $user->nama_lengkap) }}" required>
-                    @error('nama_lengkap') <div class="invalid-feedback">{{ $message }}</div> @enderror
+            </x-form.section>
+
+            <x-form.section title="Akses & Role" icon="bi-shield-lock" class="mb-3">
+                <div class="row">
+                    <div class="col-md-6">
+                        <x-form.input name="password" type="password" label="Password" help="Kosongkan jika tidak ingin mengubah password." />
+                    </div>
+                    <div class="col-md-3">
+                        <x-form.select name="role_id" label="Role" :selected="$user->role_id" required>
+                            @foreach($roles as $role)
+                                <option value="{{ $role->id }}" @selected(old('role_id', $user->role_id) == $role->id)>
+                                    {{ ucwords($role->nama_role) }}
+                                </option>
+                            @endforeach
+                        </x-form.select>
+                    </div>
+                    <div class="col-md-3">
+                        <x-form.input name="nip_nis" label="NIP/ID Staf" :value="$user->nip_nis" />
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Password <small class="text-muted">(Kosongkan jika tidak diubah)</small></label>
-                    <input type="password" name="password" class="form-control @error('password') is-invalid @enderror">
-                    @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">Role <span class="text-danger">*</span></label>
-                    <select name="role_id" class="form-select @error('role_id') is-invalid @enderror" required>
-                        @foreach($roles as $role)
-                            <option value="{{ $role->id }}" {{ old('role_id', $user->role_id) == $role->id ? 'selected' : '' }}>
-                                {{ ucwords($role->nama_role) }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('role_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">NIP/ID Staf</label>
-                    <input type="text" name="nip_nis" class="form-control @error('nip_nis') is-invalid @enderror"
-                           value="{{ old('nip_nis', $user->nip_nis) }}">
-                    @error('nip_nis') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-            </div>
+            </x-form.section>
+
             <div class="mb-3">
                 <div class="form-check">
                     <input type="checkbox" name="is_active" class="form-check-input" value="1"
@@ -59,6 +50,5 @@
                 <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">Batal</a>
             </div>
         </form>
-    </div>
-</div>
+</x-card>
 @endsection

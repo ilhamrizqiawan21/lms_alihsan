@@ -4,9 +4,7 @@
 
 @section('content')
 
-<div class="page-header">
-    <h4><i class="bi bi-mortarboard-fill me-2"></i> Kelola Kelas & Siswa</h4>
-</div>
+<x-page-header title="Kelola Kelas & Siswa" icon="bi-mortarboard-fill" />
 
 @if(session('import_errors'))
 <div class="alert alert-danger mb-3" role="alert">
@@ -25,70 +23,65 @@
 </div>
 @enderror
 
-<div class="card mb-3">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-file-earmark-spreadsheet-fill me-2"></i> Import Siswa dari Excel</span>
-        <a href="{{ route('admin.kelas-siswa.import.template') }}" class="btn btn-sm btn-outline-success">
-            <i class="bi bi-download"></i> Download Template
-        </a>
-    </div>
-    <div class="card-body">
-        <form action="{{ route('admin.kelas-siswa.import') }}" method="POST" enctype="multipart/form-data" class="row g-3 align-items-end">
-            @csrf
-            <div class="col-md-8">
-                <label class="form-label">File Excel</label>
-                <input type="file" name="file_siswa" class="form-control @error('file_siswa') is-invalid @enderror" accept=".xlsx" required>
-                <div class="form-text">Gunakan template yang disediakan. Kolom kelas_id dapat dilihat di sheet Daftar Kelas.</div>
-            </div>
-            <div class="col-md-4">
-                <button class="btn btn-primary w-100">
-                    <i class="bi bi-upload"></i> Import Siswa
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
+<x-card title="Import Siswa dari Excel" icon="bi-file-earmark-spreadsheet-fill" class="mb-3">
+    <x-slot:actions>
+        <x-button :href="route('admin.kelas-siswa.import.template')" color="outline-success" icon="bi-download">
+            Download Template
+        </x-button>
+    </x-slot:actions>
 
-<div class="card mb-3">
-    <div class="card-header"><i class="bi bi-person-plus-fill me-2"></i> Tambah Siswa Baru</div>
-    <div class="card-body">
-        <form action="{{ route('admin.kelas-siswa.store-siswa') }}" method="POST" class="row g-3">
-            @csrf
-            <div class="col-md-3">
-                <label class="form-label">NIS</label>
-                <input type="text" name="nis" class="form-control" placeholder="NIS" required>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Nama Lengkap</label>
-                <input type="text" name="nama_lengkap" class="form-control" placeholder="Nama" required>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Kelas</label>
-                <select name="kelas_id" class="form-select" required>
-                    <option value="">-- Pilih Kelas --</option>
-                    @foreach ($kelasList as $kls)
-                    <option value="{{ $kls->id }}">{{ $kls->tingkat }} {{ $kls->nama_kelas }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">Jenis Kelamin</label>
-                <select name="jenis_kelamin" class="form-select" required>
-                    <option value="">--</option>
-                    <option value="L">Laki-laki</option>
-                    <option value="P">Perempuan</option>
-                </select>
-            </div>
-            <div class="col-md-1 d-flex align-items-end">
-                <button class="btn btn-success w-100"><i class="bi bi-plus-lg"></i></button>
-            </div>
-        </form>
-    </div>
-</div>
+    <form action="{{ route('admin.kelas-siswa.import') }}" method="POST" enctype="multipart/form-data" class="row g-3 align-items-end">
+        @csrf
+        <div class="col-md-8">
+            <x-form.file
+                name="file_siswa"
+                label="File Excel"
+                accept=".xlsx"
+                accept-label="Format .xlsx"
+                max-size="2MB"
+                required
+                wrapper-class="mb-0"
+                help="Gunakan template yang disediakan. Kolom kelas_id dapat dilihat di sheet Daftar Kelas."
+            />
+        </div>
+        <div class="col-md-4">
+            <x-button type="submit" color="primary" size="" icon="bi-upload" class="w-100">
+                Import Siswa
+            </x-button>
+        </div>
+    </form>
+</x-card>
 
-<div class="card mb-3">
-    <div class="card-header"><i class="bi bi-building me-2"></i> Daftar Kelas</div>
-    <div class="card-body p-0">
+<x-card title="Tambah Siswa Baru" icon="bi-person-plus-fill" class="mb-3">
+    <form action="{{ route('admin.kelas-siswa.store-siswa') }}" method="POST" class="row g-3">
+        @csrf
+        <div class="col-md-3">
+            <x-form.input name="nis" label="NIS" placeholder="NIS" required wrapper-class="mb-0" />
+        </div>
+        <div class="col-md-3">
+            <x-form.input name="nama_lengkap" label="Nama Lengkap" placeholder="Nama" required wrapper-class="mb-0" />
+        </div>
+        <div class="col-md-3">
+            <x-form.select name="kelas_id" label="Kelas" placeholder="-- Pilih Kelas --" required wrapper-class="mb-0">
+                @foreach ($kelasList as $kls)
+                    <option value="{{ $kls->id }}" @selected(old('kelas_id') == $kls->id)>{{ $kls->tingkat }} {{ $kls->nama_kelas }}</option>
+                @endforeach
+            </x-form.select>
+        </div>
+        <div class="col-md-2">
+            <x-form.select name="jenis_kelamin" label="Jenis Kelamin" placeholder="--" required wrapper-class="mb-0">
+                <option value="L" @selected(old('jenis_kelamin') === 'L')>Laki-laki</option>
+                <option value="P" @selected(old('jenis_kelamin') === 'P')>Perempuan</option>
+            </x-form.select>
+        </div>
+        <div class="col-md-1 d-flex align-items-end">
+            <x-button type="submit" color="success" size="" icon="bi-plus-lg" class="w-100" aria-label="Tambah siswa" />
+        </div>
+    </form>
+</x-card>
+
+<x-card title="Daftar Kelas" icon="bi-building" class="mb-3" body-class="p-0">
+        <x-table-wrapper>
         <table class="table table-hover mb-0">
             <thead>
                 <tr><th>Tingkat</th><th>Kelas</th><th class="text-center">Aksi</th></tr>
@@ -111,7 +104,7 @@
                         <form action="{{ route('admin.kelas.destroy', $kls) }}" method="POST" class="d-inline">
                             @csrf
                             @method('DELETE')
-                            <button class="btn btn-sm btn-outline-danger" data-confirm="Hapus kelas {{ $kls->nama_kelas }}?">
+                            <button class="btn btn-sm btn-outline-danger btn-icon" data-confirm="Hapus kelas {{ $kls->nama_kelas }}?" title="Hapus kelas {{ $kls->nama_kelas }}" aria-label="Hapus kelas {{ $kls->nama_kelas }}">
                                 <i class="bi bi-trash"></i>
                             </button>
                         </form>
@@ -119,16 +112,19 @@
                 </tr>
                 @endforeach
                 @else
-                <tr><td colspan="3" class="text-center text-muted py-3">Belum ada kelas</td></tr>
+                <tr>
+                    <td colspan="3">
+                        <x-empty-state title="Belum ada kelas" icon="bi-building" />
+                    </td>
+                </tr>
                 @endif
             </tbody>
         </table>
-    </div>
-</div>
+        </x-table-wrapper>
+</x-card>
 
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-people-fill me-2"></i> Daftar Siswa</span>
+<x-card title="Daftar Siswa" icon="bi-people-fill" body-class="p-0">
+    <x-slot:actions>
         <form method="GET" class="d-flex gap-2">
             <select name="kelas_id" class="form-select form-select-sm" onchange="this.form.submit()">
                 <option value="">Semua Kelas</option>
@@ -137,11 +133,11 @@
                 @endforeach
             </select>
             <input type="text" name="search" class="form-control form-control-sm" placeholder="Cari NIS/Nama..." value="{{ request('search') }}">
-            <button class="btn btn-sm btn-primary"><i class="bi bi-search"></i></button>
+            <button class="btn btn-sm btn-primary" type="submit" title="Cari siswa" aria-label="Cari siswa"><i class="bi bi-search" aria-hidden="true"></i></button>
         </form>
-    </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
+    </x-slot:actions>
+
+        <x-table-wrapper>
             <table class="table table-hover mb-0">
                 <thead>
                     <tr><th>NIS</th><th>Nama</th><th>JK</th><th>Kelas</th><th>Status</th><th>Aksi</th></tr>
@@ -167,36 +163,33 @@
                             @endif
                         </td>
                         <td>
-                            <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editModal{{ $s->id }}">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            <form action="{{ route('admin.kelas-siswa.reset-password', $s) }}" method="POST" class="d-inline">
-                                @csrf
-                                <button class="btn btn-sm btn-outline-secondary" data-confirm="Reset password siswa ke password acak baru?" title="Reset Password">
-                                    <i class="bi bi-key"></i>
-                                </button>
-                            </form>
-                            <form action="{{ route('admin.kelas-siswa.destroy-siswa', $s) }}" method="POST" class="d-inline">
-                                @csrf
-                                @method('DELETE')
-                                <button class="btn btn-sm btn-outline-danger" data-confirm="Hapus siswa {{ $s->user->nama_lengkap ?? $s->nis }}?">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
+                            <x-action-buttons
+                                edit-target="#editModal{{ $s->id }}"
+                                edit-label="Edit {{ $s->user->nama_lengkap ?? $s->nis }}"
+                                :reset-action="route('admin.kelas-siswa.reset-password', $s)"
+                                reset-confirm="Reset password siswa ke password acak baru?"
+                                reset-label="Reset password {{ $s->user->nama_lengkap ?? $s->nis }}"
+                                :delete-action="route('admin.kelas-siswa.destroy-siswa', $s)"
+                                delete-confirm="Hapus siswa {{ $s->user->nama_lengkap ?? $s->nis }}?"
+                                delete-label="Hapus {{ $s->user->nama_lengkap ?? $s->nis }}"
+                            />
                         </td>
                     </tr>
                     @endforeach
                     @else
-                    <tr><td colspan="6" class="text-center text-muted py-3">Tidak ada data siswa</td></tr>
+                    <tr>
+                        <td colspan="6">
+                            <x-empty-state title="Tidak ada data siswa" icon="bi-people" />
+                        </td>
+                    </tr>
                     @endif
                 </tbody>
             </table>
-        </div>
+        </x-table-wrapper>
         <div class="d-flex justify-content-end p-3">
             {{ $siswa->links() }}
         </div>
-    </div>
-</div>
+</x-card>
 
 @foreach ($siswa as $s)
 <div class="modal fade" id="editModal{{ $s->id }}" tabindex="-1">
@@ -210,36 +203,24 @@
                 @csrf
                 @method('PUT')
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">NIS</label>
-                        <input type="text" name="nis" class="form-control" value="{{ $s->nis }}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Nama Lengkap</label>
-                        <input type="text" name="nama_lengkap" class="form-control" value="{{ $s->user->nama_lengkap }}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Kelas</label>
-                        <select name="kelas_id" class="form-select" required>
-                            @foreach ($kelasList as $kls)
-                            <option value="{{ $kls->id }}" {{ $s->kelas_id == $kls->id ? 'selected' : '' }}>{{ $kls->tingkat }} {{ $kls->nama_kelas }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Jenis Kelamin</label>
-                        <select name="jenis_kelamin" class="form-select" required>
-                            <option value="L" {{ $s->user->jenis_kelamin === 'L' ? 'selected' : '' }}>Laki-laki</option>
-                            <option value="P" {{ $s->user->jenis_kelamin === 'P' ? 'selected' : '' }}>Perempuan</option>
-                        </select>
-                    </div>
+                    <x-form.input name="nis" label="NIS" :value="$s->nis" :use-old="false" required />
+                    <x-form.input name="nama_lengkap" label="Nama Lengkap" :value="$s->user->nama_lengkap" :use-old="false" required />
+                    <x-form.select name="kelas_id" label="Kelas" :selected="$s->kelas_id" required>
+                        @foreach ($kelasList as $kls)
+                            <option value="{{ $kls->id }}" @selected($s->kelas_id == $kls->id)>{{ $kls->tingkat }} {{ $kls->nama_kelas }}</option>
+                        @endforeach
+                    </x-form.select>
+                    <x-form.select name="jenis_kelamin" label="Jenis Kelamin" :selected="$s->user->jenis_kelamin" required>
+                        <option value="L" @selected($s->user->jenis_kelamin === 'L')>Laki-laki</option>
+                        <option value="P" @selected($s->user->jenis_kelamin === 'P')>Perempuan</option>
+                    </x-form.select>
                     <div class="form-check">
                         <input type="checkbox" name="tinggal_kelas" value="1" class="form-check-input" id="tinggal{{ $s->id }}" {{ $s->tinggal_kelas ? 'checked' : '' }}>
                         <label class="form-check-label" for="tinggal{{ $s->id }}">Tinggal Kelas</label>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Simpan</button>
+                    <x-button type="submit" color="primary" size="">Simpan</x-button>
                 </div>
             </form>
         </div>

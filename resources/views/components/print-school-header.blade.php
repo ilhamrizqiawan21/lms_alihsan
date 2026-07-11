@@ -35,7 +35,7 @@
 
 <div class="print-school-header">
     <div class="kop">
-        <img src="{{ school_logo_url() }}" alt="Logo {{ $printSchoolName }}">
+        <img src="{{ school_logo_url() }}" alt="Logo {{ $printSchoolName }}" width="58" height="58" decoding="async">
         <div class="identity">
             <div class="school-name">{{ $printSchoolName }}</div>
             <div class="school-address">{{ $printSchoolAddress }}</div>

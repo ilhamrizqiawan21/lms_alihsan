@@ -12,13 +12,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="application-name" content="{{ $schoolShortName }}">
     <title>Login — {{ $schoolShortName }} {{ $schoolName }}</title>
     <link rel="icon" href="{{ $faviconUrl }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    @if(file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @else
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    @endif
+
     <style>
         @keyframes fadeInUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
         @keyframes pulse { 0%,100% { box-shadow:0 0 0 0 rgba(34,197,94,0.3); } 50% { box-shadow:0 0 0 10px rgba(34,197,94,0); } }
@@ -36,9 +43,7 @@
             pointer-events:none; animation:pulse 4s ease-in-out infinite;
         }
         .login-wrapper { position:relative; width:100%; max-width:440px; animation:fadeInUp 0.5s ease; }
-        .login-header {
-            text-align:center; color:white; margin-bottom:20px;
-        }
+        .login-header { text-align:center; color:white; margin-bottom:20px; }
         .login-header .logo-circle {
             width:80px; height:80px; background:rgba(255,255,255,0.15);
             border-radius:50%; display:flex; align-items:center; justify-content:center;
@@ -55,14 +60,8 @@
             border-radius:999px; color:rgba(255,255,255,0.9);
             font-weight:700; font-size:0.74rem; letter-spacing:0.02em;
         }
-        .login-header .school-motto {
-            max-width:360px; margin:0 auto 6px;
-            color:rgba(255,255,255,0.78); font-size:0.84rem; line-height:1.45;
-        }
-        .login-header .school-address {
-            max-width:360px; margin:0 auto;
-            color:rgba(255,255,255,0.62); font-size:0.74rem; line-height:1.4;
-        }
+        .login-header .school-motto { max-width:360px; margin:0 auto 6px; color:rgba(255,255,255,0.78); font-size:0.84rem; line-height:1.45; }
+        .login-header .school-address { max-width:360px; margin:0 auto; color:rgba(255,255,255,0.62); font-size:0.74rem; line-height:1.4; }
         .login-card {
             background:white; border-radius:18px; padding:35px 30px;
             box-shadow:0 20px 60px rgba(0,0,0,0.3);
@@ -78,9 +77,7 @@
             transition:all 0.2s ease;
         }
         .login-card .input-group:focus-within .input-group-text { border-color:#22c55e; color:#22c55e; }
-        .login-card .form-control:focus {
-            box-shadow:none; border-color:#22c55e;
-        }
+        .login-card .form-control:focus { box-shadow:none; border-color:#22c55e; }
         .btn-login {
             width:100%; padding:14px; border-radius:12px; border:none;
             background:linear-gradient(135deg, #22c55e, #16a34a);
@@ -93,28 +90,20 @@
             box-shadow:0 8px 25px rgba(22,163,74,0.35);
             background:linear-gradient(135deg, #16a34a, #15803d);
         }
-        .alert {
-            border:none; border-radius:10px; font-size:0.85rem;
-            padding:12px 16px; margin-bottom:20px;
-        }
+        .alert { border:none; border-radius:10px; font-size:0.85rem; padding:12px 16px; margin-bottom:20px; }
         .alert-danger { background:#fee2e2; color:#991b1b; }
         .alert-success { background:#dcfce7; color:#166534; }
         .form-check-input:checked { background-color:#22c55e; border-color:#22c55e; }
-        .login-footer {
-            text-align:center; margin-top:20px; color:rgba(255,255,255,0.6);
-            font-size:0.78rem;
-        }
+        .login-footer { text-align:center; margin-top:20px; color:rgba(255,255,255,0.6); font-size:0.78rem; }
         .login-footer span { color:rgba(251,191,36,0.8); }
-        @media(max-width:480px) {
-            .login-card { padding:25px 20px; }
-        }
+        @media(max-width:480px) { .login-card { padding:25px 20px; } }
     </style>
 </head>
 <body>
 <div class="login-wrapper">
     <div class="login-header">
         <div class="logo-circle">
-            <img src="{{ $logoUrl }}" alt="Logo {{ $schoolName }}" style="width:36px;height:36px;object-fit:contain;border-radius:50%;">
+            <img src="{{ $logoUrl }}" alt="Logo {{ $schoolName }}" width="36" height="36" decoding="async" style="width:36px;height:36px;object-fit:contain;border-radius:50%;">
         </div>
         <h3>{{ $schoolName }}</h3>
         <div class="product-name">{{ $schoolShortName }}</div>

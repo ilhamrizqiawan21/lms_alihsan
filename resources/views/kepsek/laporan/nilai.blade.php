@@ -34,7 +34,7 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <button class="btn btn-sm btn-primary w-100" type="submit"><i class="bi bi-search"></i> Filter</button>
+                <button class="btn btn-sm btn-primary w-100" type="submit"><i class="bi bi-search" aria-hidden="true"></i> Filter</button>
             </div>
         </form>
 

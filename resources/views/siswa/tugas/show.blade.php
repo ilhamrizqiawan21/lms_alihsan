@@ -116,16 +116,21 @@
             <div class="card-body">
                 <form action="{{ route('siswa.tugas.kumpul', $tugas->id) }}" method="POST" enctype="multipart/form-data">
                     @csrf
-                    <div class="mb-3">
-                        <label class="form-label">Upload File <small class="text-muted">(PNG, JPG, JPEG, PDF — max 20MB)</small></label>
-                        <input type="file" name="file_upload" class="form-control @error('file_upload') is-invalid @enderror" accept=".png,.jpg,.jpeg,.pdf,image/png,image/jpeg,application/pdf">
-                        @error('file_upload') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Jawaban Teks <small class="text-muted">(opsional)</small></label>
-                        <textarea name="teks_jawaban" class="form-control @error('teks_jawaban') is-invalid @enderror" rows="4" placeholder="Tulis jawaban di sini jika tidak upload file...">{{ old('teks_jawaban') }}</textarea>
-                        @error('teks_jawaban') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
+                    <x-form.file
+                        name="file_upload"
+                        label="Upload File"
+                        accept=".png,.jpg,.jpeg,.pdf,image/png,image/jpeg,application/pdf"
+                        accept-label="PNG, JPG, JPEG, PDF"
+                        max-size="20MB"
+                        help="Opsional jika jawaban dikirim lewat teks."
+                    />
+                    <x-form.textarea
+                        name="teks_jawaban"
+                        label="Jawaban Teks"
+                        rows="4"
+                        placeholder="Tulis jawaban di sini jika tidak upload file..."
+                        help="Opsional jika jawaban dikirim lewat file."
+                    />
                     <div class="d-flex justify-content-end gap-2">
                         <a href="{{ route('siswa.tugas.index') }}" class="btn btn-secondary">Kembali</a>
                         <button type="submit" class="btn btn-primary">

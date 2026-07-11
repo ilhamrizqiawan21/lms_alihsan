@@ -25,7 +25,9 @@
         <form action="{{ route('siswa.chat.send', $kelasMapel) }}" method="POST" class="d-flex gap-2">
             @csrf
             <input type="text" name="message" class="form-control" placeholder="Ketik pesan..." required maxlength="1000">
-            <button class="btn btn-success"><i class="bi bi-send-fill"></i></button>
+            <button class="btn btn-success" type="submit" title="Kirim pesan" aria-label="Kirim pesan">
+                <i class="bi bi-send-fill" aria-hidden="true"></i>
+            </button>
         </form>
     </div>
 </div>

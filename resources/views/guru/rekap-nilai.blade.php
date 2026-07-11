@@ -28,10 +28,10 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <button class="btn btn-sm btn-primary w-100" type="submit"><i class="bi bi-search"></i> Tampilkan</button>
+                <button class="btn btn-sm btn-primary w-100" type="submit"><i class="bi bi-search" aria-hidden="true"></i> Tampilkan</button>
             </div>
             <div class="col-md-1">
-                <a href="{{ route('guru.rekap-nilai') }}" class="btn btn-sm btn-outline-secondary w-100" title="Reset">↻</a>
+                <a href="{{ route('guru.rekap-nilai') }}" class="btn btn-sm btn-outline-secondary w-100" title="Reset filter" aria-label="Reset filter rekap nilai">↻</a>
             </div>
         </form>
     </div>

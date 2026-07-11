@@ -144,7 +144,7 @@
                         @else
                         <form action="{{ route('kepsek.kalender.toggle-done', $e) }}" method="POST" class="d-inline">
                             @csrf @method('PATCH')
-                            <button class="btn btn-sm p-0" style="font-size:1rem;line-height:1;" title="Tandai selesai">✅</button>
+                            <button class="btn btn-sm p-0" style="font-size:1rem;line-height:1;" title="Tandai {{ $e->title }} selesai" aria-label="Tandai {{ $e->title }} selesai">✅</button>
                         </form>
                         @endif
                     </div>

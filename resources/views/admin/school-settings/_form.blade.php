@@ -136,7 +136,7 @@
                         <div class="d-flex align-items-center gap-3 mb-2">
                             <div class="border rounded d-flex align-items-center justify-content-center bg-light" style="width:80px;height:80px;">
                                 @if($logoUrl)
-                                    <img src="{{ $logoUrl }}" alt="Logo sekolah" style="max-width:70px;max-height:70px;object-fit:contain;">
+                                    <img src="{{ $logoUrl }}" alt="Logo sekolah" width="70" height="70" loading="lazy" decoding="async" style="max-width:70px;max-height:70px;object-fit:contain;">
                                 @else
                                     <i class="bi bi-buildings text-muted fs-2"></i>
                                 @endif
@@ -151,7 +151,7 @@
                         <div class="d-flex align-items-center gap-3 mb-2">
                             <div class="border rounded d-flex align-items-center justify-content-center bg-light" style="width:48px;height:48px;">
                                 @if($faviconUrl)
-                                    <img src="{{ $faviconUrl }}" alt="Favicon sekolah" style="max-width:32px;max-height:32px;object-fit:contain;">
+                                    <img src="{{ $faviconUrl }}" alt="Favicon sekolah" width="32" height="32" loading="lazy" decoding="async" style="max-width:32px;max-height:32px;object-fit:contain;">
                                 @else
                                     <i class="bi bi-bookmark-star text-muted fs-4"></i>
                                 @endif

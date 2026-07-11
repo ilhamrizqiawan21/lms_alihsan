@@ -39,10 +39,10 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <button class="btn btn-sm btn-primary w-100" type="submit"><i class="bi bi-search"></i> Filter</button>
+                <button class="btn btn-sm btn-primary w-100" type="submit"><i class="bi bi-search" aria-hidden="true"></i> Filter</button>
             </div>
             <div class="col-md-1">
-                <a href="{{ route('kepsek.laporan.absensi') }}" class="btn btn-sm btn-outline-secondary w-100" title="Reset">↻</a>
+                <a href="{{ route('kepsek.laporan.absensi') }}" class="btn btn-sm btn-outline-secondary w-100" title="Reset filter" aria-label="Reset filter laporan absensi">↻</a>
             </div>
         </form>
     </div>

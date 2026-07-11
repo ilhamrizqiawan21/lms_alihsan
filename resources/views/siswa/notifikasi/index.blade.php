@@ -67,15 +67,15 @@
                             @if($n->link)
                             <form action="{{ route('siswa.notifikasi.mark-read', $n) }}" method="POST" class="d-inline">
                                 @csrf
-                                <button type="submit" class="btn btn-sm" style="background: var(--primary-50); color: var(--primary-700);" title="Lihat">
-                                    <i class="bi bi-arrow-right"></i>
+                                <button type="submit" class="btn btn-sm btn-icon" style="background: var(--primary-50); color: var(--primary-700);" title="Lihat notifikasi {{ $n->judul }}" aria-label="Lihat notifikasi {{ $n->judul }}">
+                                    <i class="bi bi-arrow-right" aria-hidden="true"></i>
                                 </button>
                             </form>
                             @else
                             <form action="{{ route('siswa.notifikasi.mark-read', $n) }}" method="POST" class="d-inline">
                                 @csrf
-                                <button type="submit" class="btn btn-sm" style="background: var(--primary-50); color: var(--primary-700);" title="Tandai dibaca">
-                                    <i class="bi bi-check2"></i>
+                                <button type="submit" class="btn btn-sm btn-icon" style="background: var(--primary-50); color: var(--primary-700);" title="Tandai dibaca {{ $n->judul }}" aria-label="Tandai dibaca {{ $n->judul }}">
+                                    <i class="bi bi-check2" aria-hidden="true"></i>
                                 </button>
                             </form>
                             @endif

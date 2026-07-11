@@ -9,7 +9,7 @@
         <span><i class="bi bi-list-ul me-1"></i> Daftar Login</span>
         <form class="d-flex gap-2" method="GET">
             <input type="text" name="search" class="form-control form-control-sm" placeholder="Cari user..." value="{{ request('search') }}">
-            <button class="btn btn-sm btn-primary"><i class="bi bi-search"></i></button>
+            <button class="btn btn-sm btn-primary" type="submit" title="Cari riwayat login" aria-label="Cari riwayat login"><i class="bi bi-search" aria-hidden="true"></i></button>
         </form>
     </div>
     <div class="card-body p-0">

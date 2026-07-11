@@ -1,16 +1,16 @@
 @props([
     'name',
     'label' => null,
-    'type' => 'text',
     'value' => null,
     'placeholder' => null,
     'help' => null,
+    'rows' => 3,
     'wrapperClass' => 'mb-3',
     'useOld' => true,
 ])
 
 @php($id = $attributes->get('id', str_replace(['[', ']'], '_', $name)))
-@php($inputValue = $useOld ? old($name, $value) : $value)
+@php($textareaValue = $useOld ? old($name, $value) : $value)
 @php($hasError = $errors->has($name))
 @php($helpId = $help ? $id . 'Help' : null)
 @php($errorId = $hasError ? $id . 'Error' : null)
@@ -22,16 +22,15 @@
             @if($attributes->has('required'))<span class="text-danger">*</span>@endif
         </label>
     @endif
-    <input
+    <textarea
         id="{{ $id }}"
-        type="{{ $type }}"
         name="{{ $name }}"
-        value="{{ $inputValue }}"
+        rows="{{ $rows }}"
         placeholder="{{ $placeholder }}"
         @if($helpId || $errorId) aria-describedby="{{ trim($helpId . ' ' . $errorId) }}" @endif
         @if($hasError) aria-invalid="true" @endif
         {{ $attributes->class(['form-control', 'is-invalid' => $hasError]) }}
-    >
+    >{{ $textareaValue }}</textarea>
     @error($name)
         <div id="{{ $errorId }}" class="invalid-feedback d-block">{{ $message }}</div>
     @enderror

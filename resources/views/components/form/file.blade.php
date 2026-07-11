@@ -1,18 +1,17 @@
 @props([
     'name',
     'label' => null,
-    'type' => 'text',
-    'value' => null,
-    'placeholder' => null,
     'help' => null,
+    'acceptLabel' => null,
+    'maxSize' => null,
     'wrapperClass' => 'mb-3',
-    'useOld' => true,
 ])
 
 @php($id = $attributes->get('id', str_replace(['[', ']'], '_', $name)))
-@php($inputValue = $useOld ? old($name, $value) : $value)
 @php($hasError = $errors->has($name))
-@php($helpId = $help ? $id . 'Help' : null)
+@php($meta = collect([$acceptLabel, $maxSize ? 'Maks. ' . $maxSize : null])->filter()->implode(' | '))
+@php($helpText = $help ?: $meta)
+@php($helpId = $helpText ? $id . 'Help' : null)
 @php($errorId = $hasError ? $id . 'Error' : null)
 
 <div class="{{ $wrapperClass }}">
@@ -22,12 +21,13 @@
             @if($attributes->has('required'))<span class="text-danger">*</span>@endif
         </label>
     @endif
+    @if($meta)
+        <div class="form-file-meta">{{ $meta }}</div>
+    @endif
     <input
         id="{{ $id }}"
-        type="{{ $type }}"
+        type="file"
         name="{{ $name }}"
-        value="{{ $inputValue }}"
-        placeholder="{{ $placeholder }}"
         @if($helpId || $errorId) aria-describedby="{{ trim($helpId . ' ' . $errorId) }}" @endif
         @if($hasError) aria-invalid="true" @endif
         {{ $attributes->class(['form-control', 'is-invalid' => $hasError]) }}
@@ -35,7 +35,7 @@
     @error($name)
         <div id="{{ $errorId }}" class="invalid-feedback d-block">{{ $message }}</div>
     @enderror
-    @if($help)
-        <div id="{{ $helpId }}" class="form-text">{{ $help }}</div>
+    @if($helpText)
+        <div id="{{ $helpId }}" class="form-text">{{ $helpText }}</div>
     @endif
 </div>

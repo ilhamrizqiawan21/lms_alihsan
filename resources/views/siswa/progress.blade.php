@@ -80,26 +80,27 @@
 
 @push('scripts')
 @if($subjectScores->isNotEmpty())
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-new Chart(document.getElementById('subjectChart'), {
-    type: 'bar',
-    data: {
-        labels: {!! json_encode($subjectScores->pluck('nama_mapel')) !!},
-        datasets: [{
-            label: 'Rata-rata',
-            data: {!! json_encode($subjectScores->pluck('rata')->map(fn($v) => $v ?? 0)) !!},
-            backgroundColor: 'rgba(34,197,94,0.7)',
-            borderColor: '#16a34a',
-            borderWidth: 1,
-            borderRadius: 8,
-        }]
-    },
-    options: {
-        responsive: true,
-        scales: { y: { beginAtZero: true, max: 100 } },
-        plugins: { legend: { display: false } }
-    }
+window.addEventListener('load', () => {
+    window.renderChart('subjectChart', {
+        type: 'bar',
+        data: {
+            labels: @json($subjectScores->pluck('nama_mapel')),
+            datasets: [{
+                label: 'Rata-rata',
+                data: @json($subjectScores->pluck('rata')->map(fn($v) => $v ?? 0)),
+                backgroundColor: 'rgba(34,197,94,0.7)',
+                borderColor: '#16a34a',
+                borderWidth: 1,
+                borderRadius: 8,
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: { y: { beginAtZero: true, max: 100 } },
+            plugins: { legend: { display: false } }
+        }
+    });
 });
 </script>
 @endif

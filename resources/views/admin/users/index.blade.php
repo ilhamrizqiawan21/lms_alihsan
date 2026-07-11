@@ -4,15 +4,12 @@
 @section('page_title', 'Guru & Staf')
 
 @section('content')
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-people-fill me-1"></i> Daftar Guru & Staf</span>
-        <a href="{{ route('admin.users.create') }}" class="btn btn-sm btn-success">
-            <i class="bi bi-plus-lg"></i> Tambah Guru/Staf
-        </a>
-    </div>
-    <div class="card-body">
-        <form class="row g-3 mb-3" method="GET">
+<x-card title="Daftar Guru & Staf" icon="bi-people-fill">
+    <x-slot:actions>
+        <x-button :href="route('admin.users.create')" color="success" icon="bi-plus-lg">Tambah Guru/Staf</x-button>
+    </x-slot:actions>
+
+        <form class="row g-2 app-table-filter mb-3" method="GET">
             <div class="col-md-4">
                 <input type="text" name="search" class="form-control form-control-sm"
                        placeholder="Cari username/nama..." value="{{ request('search') }}">
@@ -32,8 +29,8 @@
             </div>
         </form>
 
-        <div class="table-responsive">
-            <table class="table table-hover">
+        <x-table-wrapper>
+            <table class="table table-hover app-table mb-0">
                 <thead>
                     <tr>
                         <th>Username</th>
@@ -41,7 +38,7 @@
                         <th>Email</th>
                         <th>Role</th>
                         <th>Status</th>
-                        <th>Aksi</th>
+                        <th class="table-action-column">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -58,40 +55,38 @@
                                 <span class="badge bg-danger">Nonaktif</span>
                             @endif
                         </td>
-                        <td>
-                            <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-warning btn-icon"
-                               title="Edit {{ $user->nama_lengkap }}" aria-label="Edit {{ $user->nama_lengkap }}">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            <form action="{{ route('admin.users.toggle-active', $user) }}" method="POST" class="d-inline">
-                                @csrf
-                                <button class="btn btn-sm btn-{{ $user->is_active ? 'secondary' : 'success' }} btn-icon"
-                                        title="{{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }} {{ $user->nama_lengkap }}"
-                                        aria-label="{{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }} {{ $user->nama_lengkap }}"
-                                        data-confirm="{{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }} user ini?">
-                                    <i class="bi bi-{{ $user->is_active ? 'pause-fill' : 'play-fill' }}"></i>
-                                </button>
-                            </form>
-                            <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="d-inline">
-                                @csrf @method('DELETE')
-                                <button class="btn btn-sm btn-danger btn-icon"
-                                        title="Hapus {{ $user->nama_lengkap }}"
-                                        aria-label="Hapus {{ $user->nama_lengkap }}"
-                                        data-confirm="Hapus user ini?">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
+                        <td class="table-action-column">
+                            <x-action-buttons
+                                :edit-href="route('admin.users.edit', $user)"
+                                edit-label="Edit {{ $user->nama_lengkap }}"
+                                :delete-action="route('admin.users.destroy', $user)"
+                                delete-confirm="Hapus user ini?"
+                                delete-label="Hapus {{ $user->nama_lengkap }}"
+                            >
+                                <form action="{{ route('admin.users.toggle-active', $user) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button class="btn btn-sm btn-{{ $user->is_active ? 'outline-secondary' : 'outline-success' }} btn-icon"
+                                            title="{{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }} {{ $user->nama_lengkap }}"
+                                            aria-label="{{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }} {{ $user->nama_lengkap }}"
+                                            data-confirm="{{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }} user ini?">
+                                        <i class="bi bi-{{ $user->is_active ? 'pause-fill' : 'play-fill' }}"></i>
+                                    </button>
+                                </form>
+                            </x-action-buttons>
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="6" class="text-center text-muted py-3">Tidak ada data guru atau staf</td></tr>
+                    <tr>
+                        <td colspan="6">
+                            <x-empty-state title="Tidak ada data guru atau staf" icon="bi-people" />
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
             </table>
-        </div>
+        </x-table-wrapper>
         <div class="d-flex justify-content-end">
             {{ $users->links() }}
         </div>
-    </div>
-</div>
+</x-card>
 @endsection

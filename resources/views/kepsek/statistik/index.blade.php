@@ -68,29 +68,29 @@
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+window.addEventListener('load', () => {
     @if(isset($chartLabels))
-    new Chart(document.getElementById('siswaChart'), {
+    window.renderChart('siswaChart', {
         type: 'bar',
         data: {
-            labels: {!! json_encode($chartLabels) !!},
+            labels: @json($chartLabels),
             datasets: [{
                 label: 'Jumlah Siswa',
-                data: {!! json_encode($chartData) !!},
+                data: @json($chartData),
                 backgroundColor: '#198754'
             }]
         }
     });
     @endif
     @if(isset($nilaiLabels))
-    new Chart(document.getElementById('nilaiChart'), {
+    window.renderChart('nilaiChart', {
         type: 'bar',
         data: {
-            labels: {!! json_encode($nilaiLabels) !!},
+            labels: @json($nilaiLabels),
             datasets: [{
                 label: 'Rata-rata Nilai',
-                data: {!! json_encode($nilaiData) !!},
+                data: @json($nilaiData),
                 backgroundColor: '#0d6efd'
             }]
         },
@@ -99,5 +99,6 @@
         }
     });
     @endif
+});
 </script>
 @endpush

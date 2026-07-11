@@ -11,7 +11,7 @@
         <div class="card-header {{ $headerClass }}">
             <div class="app-card-title">
                 @if($icon)
-                    <i class="bi {{ $icon }}"></i>
+                    <i class="bi {{ $icon }}" aria-hidden="true"></i>
                 @endif
                 @if($title)
                     <span>{{ $title }}</span>
