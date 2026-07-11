@@ -185,11 +185,11 @@ Catatan Tahap 9:
 
 ## Tahap 10 - Halaman Prioritas
 
-- [ ] Login.
+- [x] Login.
 - [x] Admin Dashboard.
 - [x] Kelas & Siswa.
 - [x] Guru Dashboard.
-- [ ] Absensi Guru.
+- [x] Absensi Guru.
 - [x] Input Nilai Guru.
 - [x] Tugas Guru dan Siswa.
 - [x] Materi Guru dan Siswa.
@@ -198,9 +198,16 @@ Catatan Tahap 9:
 
 Catatan Tahap 10:
 
-- Halaman `admin/dashboard`, `admin/kelas-siswa`, `guru/dashboard`, `guru/nilai/input`, `guru/tugas/*`, `guru/materi/*`, `siswa/progress`, dan laporan kepala sekolah sudah tersedia dan memakai pola layout modern.
-- Halaman `auth/login` masih menggunakan CDN eksternal dan inline CSS; perlu dimigrasi ke Vite serta diselaraskan dengan komponen umum.
-- Halaman `guru/absensi` ada fungsional, tetapi markup tabel/form masih perlu disesuaikan dengan `x-card`, `x-form.*`, dan styling konsisten.
+- **Login** (`auth/login.blade.php`): Dimigrasi ke Vite assets, Alpine.js loading state, accessibility improvements (ARIA labels, role attributes, keyboard-friendly), CSS variables untuk maintainability, removed CDN fallback.
+- **Admin Dashboard** (`admin/dashboard.blade.php`): Sudah tersedia dengan layout modern, perlu migrasi ke `x-stat-card` dan `x-card` components untuk konsistensi penuh.
+- **Kelas & Siswa** (`admin/kelas-siswa/index.blade.php`): Halaman referensi untuk komponen Blade modern (`x-card`, `x-form.*`, `x-table-wrapper`, `x-empty-state`).
+- **Guru Dashboard** (`guru/dashboard.blade.php`): Sudah menggunakan pola layout modern.
+- **Absensi Guru** (`guru/absensi/index.blade.php`): Sudah menggunakan `x-page-header`, `x-card`, `x-form.select`, `x-form.input`, `x-button`, `x-table-wrapper`, dan `x-empty-state`. **Updated**: Ditambahkan Alpine.js loading state pada form submit dengan visual feedback (opacity + disabled button + dynamic text "Menyimpan...").
+- **Input Nilai Guru** (`guru/nilai/input`): Sudah tersedia dan memakai pola layout modern.
+- **Tugas Guru dan Siswa** (`guru/tugas/*`, `siswa/tugas/*`): Sudah tersedia dan memakai pola layout modern.
+- **Materi Guru dan Siswa** (`guru/materi/*`, `siswa/materi/*`): Sudah tersedia dan memakai pola layout modern.
+- **Progress Siswa** (`siswa/progress`): Sudah tersedia dengan lazy-loaded Chart.js.
+- **Laporan Kepala Sekolah** (`kepsek/*`): Sudah tersedia dan memakai pola layout modern.
 
 ## Urutan Eksekusi Disarankan
 

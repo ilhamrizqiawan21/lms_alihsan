@@ -18,21 +18,20 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-    @if(file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @else
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    @endif
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #22c55e, #16a34a);
+            --primary-hover: linear-gradient(135deg, #16a34a, #15803d);
+            --bg-gradient: linear-gradient(135deg, #166534 0%, #145c32 40%, #0d3625 100%);
+        }
         @keyframes fadeInUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
         @keyframes pulse { 0%,100% { box-shadow:0 0 0 0 rgba(34,197,94,0.3); } 50% { box-shadow:0 0 0 10px rgba(34,197,94,0); } }
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
             font-family:'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif;
-            background:linear-gradient(135deg, #166534 0%, #145c32 40%, #0d3625 100%);
+            background:var(--bg-gradient);
             min-height:100vh; display:flex; align-items:center; justify-content:center;
             padding:20px;
         }
@@ -78,9 +77,10 @@
         }
         .login-card .input-group:focus-within .input-group-text { border-color:#22c55e; color:#22c55e; }
         .login-card .form-control:focus { box-shadow:none; border-color:#22c55e; }
+        .login-card .form-control.is-invalid { border-color:#dc3545; }
         .btn-login {
             width:100%; padding:14px; border-radius:12px; border:none;
-            background:linear-gradient(135deg, #22c55e, #16a34a);
+            background:var(--primary-gradient);
             color:white; font-weight:700; font-size:0.95rem;
             transition:all 0.3s ease; cursor:pointer;
             font-family:inherit; letter-spacing:0.02em;
@@ -88,7 +88,10 @@
         .btn-login:hover {
             transform:translateY(-2px);
             box-shadow:0 8px 25px rgba(22,163,74,0.35);
-            background:linear-gradient(135deg, #16a34a, #15803d);
+            background:var(--primary-hover);
+        }
+        .btn-login:disabled {
+            opacity:0.7; cursor:not-allowed; transform:none;
         }
         .alert { border:none; border-radius:10px; font-size:0.85rem; padding:12px 16px; margin-bottom:20px; }
         .alert-danger { background:#fee2e2; color:#991b1b; }
@@ -100,7 +103,7 @@
     </style>
 </head>
 <body>
-<div class="login-wrapper">
+<div class="login-wrapper" x-data="{ submitting: false }">
     <div class="login-header">
         <div class="logo-circle">
             <img src="{{ $logoUrl }}" alt="Logo {{ $schoolName }}" width="36" height="36" decoding="async" style="width:36px;height:36px;object-fit:contain;border-radius:50%;">
@@ -113,36 +116,54 @@
 
     <div class="login-card">
         @if(session('error'))
-            <div class="alert alert-danger d-flex align-items-center">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
+            <div class="alert alert-danger d-flex align-items-center" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2" aria-hidden="true"></i>
+                <span>{{ session('error') }}</span>
             </div>
         @endif
         @if(session('success'))
-            <div class="alert alert-success d-flex align-items-center">
-                <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+            <div class="alert alert-success d-flex align-items-center" role="status">
+                <i class="bi bi-check-circle-fill me-2" aria-hidden="true"></i>
+                <span>{{ session('success') }}</span>
             </div>
         @endif
 
-        <form action="{{ route('login.post') }}" method="POST">
+        <form action="{{ route('login.post') }}" method="POST" @submit.prevent="submitting = true; $el.submit()">
             @csrf
             <div class="mb-3">
-                <label class="form-label">Username atau Email</label>
+                <label for="username" class="form-label">Username atau Email</label>
                 <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
-                    <input type="text" name="username" class="form-control @error('username') is-invalid @enderror"
-                           value="{{ old('username') }}" placeholder="Masukkan username atau email" required autofocus>
+                    <span class="input-group-text"><i class="bi bi-person-fill" aria-hidden="true"></i></span>
+                    <input type="text"
+                           id="username"
+                           name="username"
+                           class="form-control @error('username') is-invalid @enderror"
+                           value="{{ old('username') }}"
+                           placeholder="Masukkan username atau email"
+                           required
+                           autofocus
+                           @error('username') aria-invalid="true" aria-describedby="usernameError" @enderror>
                 </div>
-                @error('username')<div class="text-danger" style="font-size:0.75rem;margin-top:4px;">{{ $message }}</div>@enderror
+                @error('username')
+                    <div id="usernameError" class="text-danger" style="font-size:0.75rem;margin-top:4px;">{{ $message }}</div>
+                @enderror
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Password</label>
+                <label for="password" class="form-label">Password</label>
                 <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
-                    <input type="password" name="password" class="form-control @error('password') is-invalid @enderror"
-                           placeholder="Masukkan password" required>
+                    <span class="input-group-text"><i class="bi bi-lock-fill" aria-hidden="true"></i></span>
+                    <input type="password"
+                           id="password"
+                           name="password"
+                           class="form-control @error('password') is-invalid @enderror"
+                           placeholder="Masukkan password"
+                           required
+                           @error('password') aria-invalid="true" aria-describedby="passwordError" @enderror>
                 </div>
-                @error('password')<div class="text-danger" style="font-size:0.75rem;margin-top:4px;">{{ $message }}</div>@enderror
+                @error('password')
+                    <div id="passwordError" class="text-danger" style="font-size:0.75rem;margin-top:4px;">{{ $message }}</div>
+                @enderror
             </div>
 
             <div class="mb-4">
@@ -152,8 +173,9 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn-login">
-                <i class="bi bi-box-arrow-in-right me-2"></i> Masuk
+            <button type="submit" class="btn-login" :disabled="submitting">
+                <i class="bi bi-box-arrow-in-right me-2" aria-hidden="true"></i>
+                <span x-text="submitting ? 'Memproses...' : 'Masuk'">Masuk</span>
             </button>
         </form>
     </div>

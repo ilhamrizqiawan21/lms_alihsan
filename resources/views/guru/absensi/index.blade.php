@@ -49,11 +49,16 @@
         </div>
     @elseif($kelasMapelId && $kmData)
         <div class="col-12">
-            <form action="{{ route('guru.absensi.store', $kmData) }}" method="POST">
+            <form action="{{ route('guru.absensi.store', $kmData) }}" method="POST" x-data="{ submitting: false }" @submit.prevent="if(!submitting) { submitting = true; $el.submit(); }">
                 @csrf
                 <input type="hidden" name="bulan" value="{{ $bulan }}">
 
-                <x-card title="Absensi {{ $kmData->kelas?->nama_kelas }} — {{ $kmData->mataPelajaran?->nama_mapel }}" icon="bi-table" body-class="p-0">
+                <x-card
+                    title="Absensi {{ $kmData->kelas?->nama_kelas }} — {{ $kmData->mataPelajaran?->nama_mapel }}"
+                    icon="bi-table"
+                    body-class="p-0"
+                    x-bind:class="{ 'opacity-50': submitting }"
+                >
                     <div class="p-3 attendance-legend d-flex flex-wrap gap-2 align-items-center">
                         <span class="badge bg-success">H=Hadir</span>
                         <span class="badge bg-warning text-dark">S=Sakit</span>
@@ -135,7 +140,9 @@
                     <x-slot:footer>
                         <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
                             <x-button :href="route('guru.absensi.index')" color="outline-secondary" icon="bi-arrow-left">Reset</x-button>
-                            <x-button type="submit" color="success" icon="bi-save">Simpan Absensi</x-button>
+                            <x-button type="submit" color="success" icon="bi-save" x-bind:disabled="submitting">
+                                <span x-text="submitting ? 'Menyimpan...' : 'Simpan Absensi'">Simpan Absensi</span>
+                            </x-button>
                         </div>
                     </x-slot:footer>
                 </x-card>
@@ -150,23 +157,6 @@
     @endif
 </div>
 @endsection
-
-@push('styles')
-<style>
-.attendance-select {
-    font-size:0.72rem;
-    min-width:70px;
-    padding:0.35rem 0.5rem;
-    text-align:center;
-}
-.attendance-select.hadir { background:#dcfce7; color:#166534; }
-.attendance-select.sakit { background:#fef3c7; color:#92400e; }
-.attendance-select.izin { background:#dbeafe; color:#1e40af; }
-.attendance-select.alpha { background:#fee2e2; color:#991b1b; }
-.attendance-legend .badge { font-size:0.78rem; }
-.attendance-table th { vertical-align: middle; }
-</style>
-@endpush
 
 @push('scripts')
 <script>
@@ -185,4 +175,22 @@ function fillColumn(select, minggu) {
     select.value = '';
 }
 </script>
+@endpush
+
+@push('styles')
+<style>
+.attendance-select {
+    font-size:0.72rem;
+    min-width:70px;
+    padding:0.35rem 0.5rem;
+    text-align:center;
+}
+.attendance-select.hadir { background:#dcfce7; color:#166534; }
+.attendance-select.sakit { background:#fef3c7; color:#92400e; }
+.attendance-select.izin { background:#dbeafe; color:#1e40af; }
+.attendance-select.alpha { background:#fee2e2; color:#991b1b; }
+.attendance-legend .badge { font-size:0.78rem; }
+.attendance-table th { vertical-align: middle; }
+.opacity-50 { opacity: 0.5; pointer-events: none; }
+</style>
 @endpush
