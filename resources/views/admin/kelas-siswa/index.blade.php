@@ -1,11 +1,52 @@
 @extends('layouts.app')
 
-@section('title', 'Kelas & Siswa')
+@section('title', 'Kelas dan Siswa')
 
 @section('content')
 
 <div class="page-header">
     <h4><i class="bi bi-mortarboard-fill me-2"></i> Kelola Kelas & Siswa</h4>
+</div>
+
+@if(session('import_errors'))
+<div class="alert alert-danger mb-3" role="alert">
+    <div class="fw-semibold mb-2"><i class="bi bi-exclamation-triangle-fill me-1"></i> Import siswa gagal</div>
+    <ul class="mb-0 ps-3">
+        @foreach(session('import_errors') as $error)
+            <li>{{ $error }}</li>
+        @endforeach
+    </ul>
+</div>
+@endif
+
+@error('file_siswa')
+<div class="alert alert-danger mb-3" role="alert">
+    <i class="bi bi-x-circle-fill me-1"></i> {{ $message }}
+</div>
+@enderror
+
+<div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-file-earmark-spreadsheet-fill me-2"></i> Import Siswa dari Excel</span>
+        <a href="{{ route('admin.kelas-siswa.import.template') }}" class="btn btn-sm btn-outline-success">
+            <i class="bi bi-download"></i> Download Template
+        </a>
+    </div>
+    <div class="card-body">
+        <form action="{{ route('admin.kelas-siswa.import') }}" method="POST" enctype="multipart/form-data" class="row g-3 align-items-end">
+            @csrf
+            <div class="col-md-8">
+                <label class="form-label">File Excel</label>
+                <input type="file" name="file_siswa" class="form-control @error('file_siswa') is-invalid @enderror" accept=".xlsx" required>
+                <div class="form-text">Gunakan template yang disediakan. Kolom kelas_id dapat dilihat di sheet Daftar Kelas.</div>
+            </div>
+            <div class="col-md-4">
+                <button class="btn btn-primary w-100">
+                    <i class="bi bi-upload"></i> Import Siswa
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <div class="card mb-3">

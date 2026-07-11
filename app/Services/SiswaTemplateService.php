@@ -25,6 +25,8 @@ class SiswaTemplateService
     public function createTemplateFile(): string
     {
         $filePath = tempnam(sys_get_temp_dir(), 'template_import_siswa_');
+        $kelasList = Kelas::orderBy('tingkat')->orderBy('nama_kelas')->get();
+        $contohKelas = $kelasList->first();
 
         $writer = new Writer();
         $writer->openToFile($filePath);
@@ -35,7 +37,7 @@ class SiswaTemplateService
             'siswa001',
             'Nama Siswa Contoh',
             '2026001',
-            '1',
+            $contohKelas?->id ?? '',
             'password123',
             'L',
             '2026',
@@ -47,15 +49,14 @@ class SiswaTemplateService
         $kelasSheet->setName('Daftar Kelas');
         $writer->addRow(Row::fromValues(['kelas_id', 'tingkat', 'nama_kelas', 'label']));
 
-        Kelas::orderBy('tingkat')->orderBy('nama_kelas')->get()
-            ->each(function (Kelas $kelas) use ($writer) {
-                $writer->addRow(Row::fromValues([
-                    $kelas->id,
-                    $kelas->tingkat,
-                    $kelas->nama_kelas,
-                    trim("{$kelas->tingkat} {$kelas->nama_kelas}"),
-                ]));
-            });
+        $kelasList->each(function (Kelas $kelas) use ($writer) {
+            $writer->addRow(Row::fromValues([
+                $kelas->id,
+                $kelas->tingkat,
+                $kelas->nama_kelas,
+                trim("{$kelas->tingkat} {$kelas->nama_kelas}"),
+            ]));
+        });
 
         $writer->close();
 

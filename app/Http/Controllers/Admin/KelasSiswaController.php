@@ -7,6 +7,8 @@ use App\Models\Kelas;
 use App\Models\Role;
 use App\Models\Siswa;
 use App\Models\User;
+use App\Services\SiswaImportService;
+use App\Services\SiswaTemplateService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -38,6 +40,29 @@ class KelasSiswaController extends Controller
 
         return view('admin.kelas-siswa.index', compact('kelasList', 'siswa'));
     }
+
+    public function downloadTemplate(SiswaTemplateService $templateService)
+    {
+        return response()
+            ->download($templateService->createTemplateFile(), SiswaTemplateService::FILENAME)
+            ->deleteFileAfterSend(true);
+    }
+
+    public function importSiswa(Request $request, SiswaImportService $importService)
+    {
+        $request->validate([
+            'file_siswa' => 'required|file|mimes:xlsx|max:5120',
+        ]);
+
+        $result = $importService->import($request->file('file_siswa')->getRealPath());
+
+        if ($result['errors'] !== []) {
+            return back()->with('import_errors', $result['errors']);
+        }
+
+        return back()->with('success', $result['imported'] . ' siswa berhasil diimport.');
+    }
+
     //Save new Siswa
     public function storeSiswa(Request $request)
     {

@@ -8,13 +8,21 @@ use App\Models\Siswa;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use OpenSpout\Common\Exception\OpenSpoutException;
 use OpenSpout\Reader\XLSX\Reader;
 
 class SiswaImportService
 {
     public function import(string $filePath): array
     {
-        $rows = $this->readRows($filePath);
+        try {
+            $rows = $this->readRows($filePath);
+        } catch (OpenSpoutException $e) {
+            return [
+                'imported' => 0,
+                'errors' => ['File Excel tidak dapat dibaca. Pastikan file menggunakan template .xlsx yang valid.'],
+            ];
+        }
 
         if ($rows['errors'] !== []) {
             return [
@@ -56,7 +64,7 @@ class SiswaImportService
     private function readRows(string $filePath): array
     {
         $reader = new Reader();
-        $reader->open($filePath);
+        $readerOpened = false;
 
         $dataRows = [];
         $errors = [];
@@ -64,45 +72,52 @@ class SiswaImportService
         $seenNis = [];
         $headerChecked = false;
 
-        foreach ($reader->getSheetIterator() as $sheet) {
-            if ($sheet->getIndex() !== 0) {
+        try {
+            $reader->open($filePath);
+            $readerOpened = true;
+
+            foreach ($reader->getSheetIterator() as $sheet) {
+                if ($sheet->getIndex() !== 0) {
+                    break;
+                }
+
+                foreach ($sheet->getRowIterator() as $rowIndex => $row) {
+                    $values = $this->normalizeRow($row->toArray());
+                    $values = array_slice(array_pad($values, count(SiswaTemplateService::HEADERS), ''), 0, count(SiswaTemplateService::HEADERS));
+
+                    if (!$headerChecked) {
+                        $headerChecked = true;
+                        if ($values !== SiswaTemplateService::HEADERS) {
+                            $errors[] = 'Header template tidak sesuai. Silakan unduh dan gunakan template terbaru.';
+                            break 2;
+                        }
+                        continue;
+                    }
+
+                    if ($this->isEmptyRow($values)) {
+                        continue;
+                    }
+
+                    $rowData = array_combine(SiswaTemplateService::HEADERS, $values);
+                    $rowErrors = $this->validateRow($rowData, $rowIndex, $seenUsernames, $seenNis);
+
+                    if ($rowErrors !== []) {
+                        $errors = array_merge($errors, $rowErrors);
+                        continue;
+                    }
+
+                    $seenUsernames[] = strtolower($rowData['username']);
+                    $seenNis[] = $rowData['nis'];
+                    $dataRows[] = $rowData;
+                }
+
                 break;
             }
-
-            foreach ($sheet->getRowIterator() as $rowIndex => $row) {
-                $values = $this->normalizeRow($row->toArray());
-                $values = array_slice(array_pad($values, count(SiswaTemplateService::HEADERS), ''), 0, count(SiswaTemplateService::HEADERS));
-
-                if (!$headerChecked) {
-                    $headerChecked = true;
-                    if ($values !== SiswaTemplateService::HEADERS) {
-                        $errors[] = 'Header template tidak sesuai. Silakan unduh dan gunakan template terbaru.';
-                        break 2;
-                    }
-                    continue;
-                }
-
-                if ($this->isEmptyRow($values)) {
-                    continue;
-                }
-
-                $rowData = array_combine(SiswaTemplateService::HEADERS, $values);
-                $rowErrors = $this->validateRow($rowData, $rowIndex, $seenUsernames, $seenNis);
-
-                if ($rowErrors !== []) {
-                    $errors = array_merge($errors, $rowErrors);
-                    continue;
-                }
-
-                $seenUsernames[] = strtolower($rowData['username']);
-                $seenNis[] = $rowData['nis'];
-                $dataRows[] = $rowData;
+        } finally {
+            if ($readerOpened) {
+                $reader->close();
             }
-
-            break;
         }
-
-        $reader->close();
 
         if (!$headerChecked) {
             $errors[] = 'File Excel kosong atau sheet template tidak ditemukan.';

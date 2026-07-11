@@ -67,6 +67,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Kelas & Siswa
     Route::get('/kelas-siswa', [KelasSiswaController::class, 'index'])->name('kelas-siswa.index');
+    Route::get('/kelas-siswa/import/template', [KelasSiswaController::class, 'downloadTemplate'])->name('kelas-siswa.import.template');
+    Route::post('/kelas-siswa/import', [KelasSiswaController::class, 'importSiswa'])->name('kelas-siswa.import');
     Route::post('/kelas-siswa/siswa', [KelasSiswaController::class, 'storeSiswa'])->name('kelas-siswa.store-siswa');
     Route::put('/kelas-siswa/siswa/{siswa}', [KelasSiswaController::class, 'updateSiswa'])->name('kelas-siswa.update-siswa');
     Route::post('/kelas-siswa/siswa/{siswa}/reset-password', [KelasSiswaController::class, 'resetPassword'])->name('kelas-siswa.reset-password');
@@ -146,36 +148,36 @@ Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(f
 
     // Absensi
     Route::get('/absensi', [AbsensiController::class, 'index'])->name('absensi.index');
-    Route::get('/absensi/{kelasMapel}/create', [AbsensiController::class, 'create'])->name('absensi.create');
-    Route::post('/absensi/{kelasMapel}/store', [AbsensiController::class, 'store'])->name('absensi.store');
-    Route::get('/absensi/{kelasMapel}/rekap', [AbsensiController::class, 'rekap'])->name('absensi.rekap');
+    Route::get('/absensi/{kelasMapel}/create', [AbsensiController::class, 'create'])->name('absensi.create')->middleware('can:mengajar,kelasMapel');
+    Route::post('/absensi/{kelasMapel}/store', [AbsensiController::class, 'store'])->name('absensi.store')->middleware('can:mengajar,kelasMapel');
+    Route::get('/absensi/{kelasMapel}/rekap', [AbsensiController::class, 'rekap'])->name('absensi.rekap')->middleware('can:mengajar,kelasMapel');
 
     // Materi
     Route::get('/materi', [GuruMateriController::class, 'index'])->name('materi.index');
-    Route::get('/materi/{kelasMapel}/list', [GuruMateriController::class, 'list'])->name('materi.list');
-    Route::post('/materi/{kelasMapel}/store', [GuruMateriController::class, 'store'])->name('materi.store');
-    Route::get('/materi/{kelasMapel}/{materi}/download', [GuruMateriController::class, 'download'])->name('materi.download');
-    Route::delete('/materi/{kelasMapel}/{materi}', [GuruMateriController::class, 'destroy'])->name('materi.destroy');
+    Route::get('/materi/{kelasMapel}/list', [GuruMateriController::class, 'list'])->name('materi.list')->middleware('can:mengajar,kelasMapel');
+    Route::post('/materi/{kelasMapel}/store', [GuruMateriController::class, 'store'])->name('materi.store')->middleware('can:mengajar,kelasMapel');
+    Route::get('/materi/{kelasMapel}/{materi}/download', [GuruMateriController::class, 'download'])->name('materi.download')->middleware('can:mengajar,kelasMapel');
+    Route::delete('/materi/{kelasMapel}/{materi}', [GuruMateriController::class, 'destroy'])->name('materi.destroy')->middleware('can:mengajar,kelasMapel');
 
     // Tugas
     Route::get('/tugas', [GuruTugasController::class, 'index'])->name('tugas.index');
-    Route::get('/tugas/{kelasMapel}/list', [GuruTugasController::class, 'list'])->name('tugas.list');
-    Route::post('/tugas/{kelasMapel}/store', [GuruTugasController::class, 'store'])->name('tugas.store');
-    Route::get('/tugas/{kelasMapel}/{tugas}/pengumpulan', [GuruTugasController::class, 'pengumpulan'])->name('tugas.pengumpulan');
-    Route::get('/tugas/{kelasMapel}/{tugas}/pengumpulan/{file}/download', [GuruTugasController::class, 'downloadFile'])->name('tugas.file.download');
-    Route::get('/tugas/{kelasMapel}/{tugas}/pengumpulan/{pengumpulan}/legacy-download', [GuruTugasController::class, 'downloadLegacyFile'])->name('tugas.pengumpulan.download');
-    Route::post('/tugas/{kelasMapel}/{tugas}/{pengumpulan}/nilai', [GuruTugasController::class, 'nilai'])->name('tugas.nilai');
+    Route::get('/tugas/{kelasMapel}/list', [GuruTugasController::class, 'list'])->name('tugas.list')->middleware('can:mengajar,kelasMapel');
+    Route::post('/tugas/{kelasMapel}/store', [GuruTugasController::class, 'store'])->name('tugas.store')->middleware('can:mengajar,kelasMapel');
+    Route::get('/tugas/{kelasMapel}/{tugas}/pengumpulan', [GuruTugasController::class, 'pengumpulan'])->name('tugas.pengumpulan')->middleware('can:mengajar,kelasMapel');
+    Route::get('/tugas/{kelasMapel}/{tugas}/pengumpulan/{file}/download', [GuruTugasController::class, 'downloadFile'])->name('tugas.file.download')->middleware('can:mengajar,kelasMapel');
+    Route::get('/tugas/{kelasMapel}/{tugas}/pengumpulan/{pengumpulan}/legacy-download', [GuruTugasController::class, 'downloadLegacyFile'])->name('tugas.pengumpulan.download')->middleware('can:mengajar,kelasMapel');
+    Route::post('/tugas/{kelasMapel}/{tugas}/{pengumpulan}/nilai', [GuruTugasController::class, 'nilai'])->name('tugas.nilai')->middleware('can:mengajar,kelasMapel');
     Route::delete('/tugas/{tugas}', [GuruTugasController::class, 'destroy'])->name('tugas.destroy');
 
     // Nilai
     Route::get('/nilai', [NilaiController::class, 'index'])->name('nilai.index');
-    Route::get('/nilai/{kelasMapel}/input', [NilaiController::class, 'input'])->name('nilai.input');
-    Route::post('/nilai/{kelasMapel}/store', [NilaiController::class, 'store'])->name('nilai.store');
+    Route::get('/nilai/{kelasMapel}/input', [NilaiController::class, 'input'])->name('nilai.input')->middleware('can:mengajar,kelasMapel');
+    Route::post('/nilai/{kelasMapel}/store', [NilaiController::class, 'store'])->name('nilai.store')->middleware('can:mengajar,kelasMapel');
 
     // Sikap
     Route::get('/sikap', [SikapController::class, 'index'])->name('sikap.index');
-    Route::get('/sikap/{kelasMapel}/input', [SikapController::class, 'input'])->name('sikap.input');
-    Route::post('/sikap/{kelasMapel}/store', [SikapController::class, 'store'])->name('sikap.store');
+    Route::get('/sikap/{kelasMapel}/input', [SikapController::class, 'input'])->name('sikap.input')->middleware('can:mengajar,kelasMapel');
+    Route::post('/sikap/{kelasMapel}/store', [SikapController::class, 'store'])->name('sikap.store')->middleware('can:mengajar,kelasMapel');
 
     // Rekap
     Route::get('/rekap-nilai', [NilaiController::class, 'rekap'])->name('rekap-nilai');
@@ -183,8 +185,8 @@ Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(f
 
     // Chat
     Route::get('/chat', [GuruChatController::class, 'index'])->name('chat.index');
-    Route::get('/chat/{kelasMapel}', [GuruChatController::class, 'chat'])->name('chat.show');
-    Route::post('/chat/{kelasMapel}/send', [GuruChatController::class, 'send'])->name('chat.send');
+    Route::get('/chat/{kelasMapel}', [GuruChatController::class, 'chat'])->name('chat.show')->middleware('can:mengajar,kelasMapel');
+    Route::post('/chat/{kelasMapel}/send', [GuruChatController::class, 'send'])->name('chat.send')->middleware('can:mengajar,kelasMapel');
 
     // Notifikasi
     Route::get('/notifikasi', [GuruNotifikasiController::class, 'index'])->name('notifikasi.index');
