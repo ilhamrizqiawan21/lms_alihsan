@@ -31,7 +31,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($pengumpulan as $p)
+                    @if(!blank($pengumpulan))
+                        @foreach($pengumpulan as $p)
                     <tr>
                         <td>{{ $p->siswa?->user?->nama_lengkap ?? '-' }}</td>
                         <td>
@@ -145,9 +146,10 @@
                             </div>
                         </div>
                     </div>
-                    @empty
+                        @endforeach
+                    @else
                     <tr><td colspan="8" class="text-center text-muted py-3">Belum ada pengumpulan</td></tr>
-                    @endforelse
+                    @endif
                 </tbody>
             </table>
         </div>

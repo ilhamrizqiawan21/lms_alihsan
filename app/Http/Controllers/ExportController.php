@@ -26,8 +26,9 @@ class ExportController extends Controller
     // ─────────────────────────────────────────────
     public function excelNilai(Request $request)
     {
-        $kelasId = $request->input('kelas_id');
-        $semester = $request->input('semester', Pengaturan::getValue('semester_aktif', '1'));
+        $filters = $this->validatedExportFilters($request);
+        $kelasId = $filters['kelas_id'];
+        $semester = $filters['semester'];
         $taAktif = TahunAjaran::getAktif();
 
         $kelas = Kelas::findOrFail($kelasId);
@@ -85,9 +86,10 @@ class ExportController extends Controller
     // ─────────────────────────────────────────────
     public function excelAbsensi(Request $request)
     {
-        $kelasId = $request->input('kelas_id');
-        $bulan = $request->input('bulan', date('Y-m'));
-        $semester = $request->input('semester', Pengaturan::getValue('semester_aktif', '1'));
+        $filters = $this->validatedExportFilters($request, withMonth: true);
+        $kelasId = $filters['kelas_id'];
+        $bulan = $filters['bulan'];
+        $semester = $filters['semester'];
         $taAktif = TahunAjaran::getAktif();
 
         $kelas = Kelas::findOrFail($kelasId);
@@ -165,8 +167,9 @@ class ExportController extends Controller
     // ─────────────────────────────────────────────
     public function excelTugas(Request $request)
     {
-        $kelasId = $request->input('kelas_id');
-        $semester = $request->input('semester', Pengaturan::getValue('semester_aktif', '1'));
+        $filters = $this->validatedExportFilters($request);
+        $kelasId = $filters['kelas_id'];
+        $semester = $filters['semester'];
         $taAktif = TahunAjaran::getAktif();
 
         $kelas = Kelas::findOrFail($kelasId);
@@ -221,8 +224,9 @@ class ExportController extends Controller
     // ─────────────────────────────────────────────
     public function pdfNilai(Request $request)
     {
-        $kelasId = $request->input('kelas_id');
-        $semester = $request->input('semester', Pengaturan::getValue('semester_aktif', '1'));
+        $filters = $this->validatedExportFilters($request);
+        $kelasId = $filters['kelas_id'];
+        $semester = $filters['semester'];
         $taAktif = TahunAjaran::getAktif();
 
         $kelas = Kelas::findOrFail($kelasId);
@@ -259,9 +263,10 @@ class ExportController extends Controller
     // ─────────────────────────────────────────────
     public function pdfAbsensi(Request $request)
     {
-        $kelasId = $request->input('kelas_id');
-        $bulan = $request->input('bulan', date('Y-m'));
-        $semester = $request->input('semester', Pengaturan::getValue('semester_aktif', '1'));
+        $filters = $this->validatedExportFilters($request, withMonth: true);
+        $kelasId = $filters['kelas_id'];
+        $bulan = $filters['bulan'];
+        $semester = $filters['semester'];
         $taAktif = TahunAjaran::getAktif();
 
         $kelas = Kelas::findOrFail($kelasId);
@@ -311,8 +316,9 @@ class ExportController extends Controller
     // ─────────────────────────────────────────────
     public function pdfTugas(Request $request)
     {
-        $kelasId = $request->input('kelas_id');
-        $semester = $request->input('semester', Pengaturan::getValue('semester_aktif', '1'));
+        $filters = $this->validatedExportFilters($request);
+        $kelasId = $filters['kelas_id'];
+        $semester = $filters['semester'];
         $taAktif = TahunAjaran::getAktif();
 
         $kelas = Kelas::findOrFail($kelasId);
@@ -352,6 +358,26 @@ class ExportController extends Controller
                     'nama_mapel' => $kelasMapel->mataPelajaran?->nama_mapel ?? '-',
                 ];
             });
+    }
+
+    private function validatedExportFilters(Request $request, bool $withMonth = false): array
+    {
+        $rules = [
+            'kelas_id' => 'required|integer|exists:kelas,id',
+            'semester' => 'nullable|in:1,2',
+        ];
+
+        if ($withMonth) {
+            $rules['bulan'] = 'nullable|date_format:Y-m';
+        }
+
+        $validated = $request->validate($rules);
+
+        return [
+            'kelas_id' => (int) $validated['kelas_id'],
+            'semester' => $validated['semester'] ?? Pengaturan::getValue('semester_aktif', '1'),
+            'bulan' => $validated['bulan'] ?? date('Y-m'),
+        ];
     }
 
     private function reportSchool(?TahunAjaran $tahunAjaran, string $semester): array

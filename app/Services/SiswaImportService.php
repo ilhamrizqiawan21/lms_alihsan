@@ -13,6 +13,8 @@ use OpenSpout\Reader\XLSX\Reader;
 
 class SiswaImportService
 {
+    private const MAX_IMPORT_ROWS = 500;
+
     public function import(string $filePath): array
     {
         try {
@@ -96,6 +98,11 @@ class SiswaImportService
 
                     if ($this->isEmptyRow($values)) {
                         continue;
+                    }
+
+                    if (count($dataRows) >= self::MAX_IMPORT_ROWS) {
+                        $errors[] = 'Import dibatasi maksimal ' . self::MAX_IMPORT_ROWS . ' siswa per file. Pecah file menjadi beberapa bagian.';
+                        break 2;
                     }
 
                     $rowData = array_combine(SiswaTemplateService::HEADERS, $values);

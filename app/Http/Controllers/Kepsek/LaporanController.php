@@ -14,7 +14,9 @@ use App\Models\SikapSosial;
 use App\Models\SikapSpiritual;
 use App\Models\TahunAjaran;
 use App\Models\Tugas;
+use App\Models\WaliKelas;
 use App\Services\AbsensiService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 // Laporan Nilai, Sikap, Tugas, dan Absensi untuk Kepala Sekolah
@@ -186,5 +188,120 @@ class LaporanController extends Controller
         })->values();
 
         return view('kepsek.laporan.rekap-sikap', compact('sikapSosial', 'sikapSpiritual', 'kelas', 'kelasId', 'semester', 'taAktif'));
+    }
+
+    public function waliKelas()
+    {
+        $waliKelas = WaliKelas::with(['kelas', 'guru', 'tahunAjaran'])
+            ->aktif()
+            ->withCount([
+                'absensi',
+                'pertemuan',
+                'penangananSiswa',
+                'penangananSiswa as penanganan_aktif_count' => fn($q) => $q->whereIn('status', ['baru', 'proses']),
+            ])
+            ->orderBy('kelas_id')
+            ->paginate(20);
+
+        return view('kepsek.laporan.wali-kelas.index', compact('waliKelas'));
+    }
+
+    public function waliKelasShow(Request $request, WaliKelas $waliKelas)
+    {
+        $this->authorize('lihat-laporan-wali-kelas', $waliKelas);
+
+        $request->validate([
+            'bulan' => 'nullable|date_format:Y-m',
+        ]);
+
+        $bulan = $request->input('bulan', date('Y-m'));
+        $bulanOptions = $this->waliKelasMonthOptions($waliKelas, $bulan);
+        $tanggalList = $this->schoolDays($bulan);
+        $siswaList = $waliKelas->kelas->siswa()
+            ->with('user')
+            ->where('status', 'aktif')
+            ->orderBy('nis')
+            ->get();
+
+        $absensiRaw = $waliKelas->absensi()
+            ->whereIn('siswa_id', $siswaList->pluck('id'))
+            ->whereBetween('tanggal', ["{$bulan}-01", Carbon::createFromFormat('Y-m-d', "{$bulan}-01")->endOfMonth()->format('Y-m-d')])
+            ->get();
+
+        $absensiData = [];
+        foreach ($absensiRaw as $row) {
+            $absensiData[$row->siswa_id][$row->tanggal->format('Y-m-d')] = $row->status;
+        }
+
+        $pertemuan = $waliKelas->pertemuan()
+            ->orderBy('tanggal', 'desc')
+            ->take(20)
+            ->get();
+
+        $penanganan = $waliKelas->penangananSiswa()
+            ->with('siswa.user')
+            ->orderByRaw("case status when 'baru' then 1 when 'proses' then 2 else 3 end")
+            ->orderBy('updated_at', 'desc')
+            ->take(20)
+            ->get();
+
+        return view('kepsek.laporan.wali-kelas.show', compact(
+            'waliKelas',
+            'bulan',
+            'bulanOptions',
+            'tanggalList',
+            'siswaList',
+            'absensiData',
+            'pertemuan',
+            'penanganan'
+        ));
+    }
+
+    private function schoolDays(string $bulan): array
+    {
+        $start = Carbon::createFromFormat('Y-m-d', "{$bulan}-01")->startOfDay();
+        $end = $start->copy()->endOfMonth();
+        $days = [];
+
+        for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
+            if ($date->isWeekday()) {
+                $days[] = $date->copy();
+            }
+        }
+
+        return $days;
+    }
+
+    private function waliKelasMonthOptions(WaliKelas $waliKelas, string $bulan): array
+    {
+        $year = (int) substr($bulan, 0, 4);
+        $startYear = (int) substr((string) $waliKelas->tahunAjaran?->tahun, 0, 4);
+        if (!$startYear) {
+            $monthNumber = (int) substr($bulan, 5, 2);
+            $startYear = $monthNumber >= 7 ? $year : $year - 1;
+        }
+
+        $labels = [
+            1 => 'Januari',
+            2 => 'Februari',
+            3 => 'Maret',
+            4 => 'April',
+            5 => 'Mei',
+            6 => 'Juni',
+            7 => 'Juli',
+            8 => 'Agustus',
+            9 => 'September',
+            10 => 'Oktober',
+            11 => 'November',
+            12 => 'Desember',
+        ];
+
+        $months = [];
+        foreach ([7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6] as $month) {
+            $optionYear = $month >= 7 ? $startYear : $startYear + 1;
+            $months[sprintf('%04d-%02d', $optionYear, $month)] = "{$labels[$month]} {$optionYear}";
+        }
+
+        return $months;
     }
 }

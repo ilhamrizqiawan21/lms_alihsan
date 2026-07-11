@@ -98,6 +98,11 @@ class User extends Authenticatable
         return $this->hasMany(KelasMapel::class, 'guru_id');
     }
 
+    public function waliKelas(): HasMany
+    {
+        return $this->hasMany(WaliKelas::class, 'guru_id');
+    }
+
     // Chat messages
     public function chatMessages(): HasMany
     {

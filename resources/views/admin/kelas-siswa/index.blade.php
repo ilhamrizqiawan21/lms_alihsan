@@ -23,6 +23,17 @@
 </div>
 @enderror
 
+@if(session('student_password'))
+@php($credential = session('student_password'))
+<div class="alert alert-warning mb-3" role="alert">
+    <div class="fw-semibold mb-1"><i class="bi bi-key-fill me-1"></i> {{ $credential['title'] }}</div>
+    <div>Nama: <strong>{{ $credential['name'] }}</strong></div>
+    <div>Username: <code>{{ $credential['username'] }}</code></div>
+    <div>Password: <code>{{ $credential['password'] }}</code></div>
+    <div class="small mt-2">Catat dan serahkan password ini secara langsung. Password hanya ditampilkan pada halaman ini setelah proses berhasil.</div>
+</div>
+@endif
+
 <x-card title="Import Siswa dari Excel" icon="bi-file-earmark-spreadsheet-fill" class="mb-3">
     <x-slot:actions>
         <x-button :href="route('admin.kelas-siswa.import.template')" color="outline-success" icon="bi-download">
@@ -38,10 +49,10 @@
                 label="File Excel"
                 accept=".xlsx"
                 accept-label="Format .xlsx"
-                max-size="2MB"
+                max-size="5MB"
                 required
                 wrapper-class="mb-0"
-                help="Gunakan template yang disediakan. Kolom kelas_id dapat dilihat di sheet Daftar Kelas."
+                help="Gunakan template yang disediakan. Maksimal 500 siswa per file."
             />
         </div>
         <div class="col-md-4">

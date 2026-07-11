@@ -51,9 +51,12 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @php($fields = ['sum1','sum2','sum3','sum4','sts','sas','sat'])
+                    @php
+                        $fields = ['sum1','sum2','sum3','sum4','sts','sas','sat'];
+                    @endphp
 
-                    @forelse($siswa as $i => $s)
+                    @if(!blank($siswa))
+                        @foreach($siswa as $i => $s)
                         @php
                             $nilai = $nilaiList[$s->id] ?? null;
                             $rataAkhir = $nilai?->rata_akhir;
@@ -90,13 +93,14 @@
                                 @endif
                             </td>
                         </tr>
-                    @empty
+                        @endforeach
+                    @else
                         <tr>
                             <td colspan="12">
                                 <x-empty-state title="Tidak ada siswa di kelas ini." icon="bi-people" />
                             </td>
                         </tr>
-                    @endforelse
+                    @endif
                 </tbody>
             </table>
         </x-table-wrapper>

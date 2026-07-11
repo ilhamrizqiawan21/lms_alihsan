@@ -7,6 +7,7 @@ use App\Models\KelasMapel;
 use App\Models\Pengumuman;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class PengumumanController extends Controller
 {
@@ -49,10 +50,14 @@ class PengumumanController extends Controller
      */
     public function store(Request $request)
     {
+        $allowedTargets = Auth::user()->isGuru()
+            ? ['kelas_mapel']
+            : ['semua', 'guru', 'siswa', 'kelas_mapel'];
+
         $validated = $request->validate([
             'judul' => 'required|string|max:200',
             'isi' => 'required|string',
-            'target' => 'required|in:semua,guru,siswa,kelas_mapel',
+            'target' => ['required', Rule::in($allowedTargets)],
             'target_kelas' => 'nullable|string',
             'kelas_mapel_id' => 'nullable|required_if:target,kelas_mapel|exists:kelas_mapel,id',
         ]);

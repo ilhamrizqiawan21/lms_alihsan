@@ -24,6 +24,11 @@ class TahunAjaran extends Model
         return $this->hasMany(KelasMapel::class, 'tahun_ajaran_id');
     }
 
+    public function waliKelas(): HasMany
+    {
+        return $this->hasMany(WaliKelas::class, 'tahun_ajaran_id');
+    }
+
     public function nilaiAkhir(): HasMany
     {
         return $this->hasMany(NilaiAkhir::class, 'tahun_ajaran_id');

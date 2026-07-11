@@ -50,6 +50,7 @@ Sheet kedua bernama `Daftar Kelas` dan membantu admin memilih `kelas_id`.
 
 - File harus `.xlsx`.
 - Maksimal file mengikuti validasi controller saat ini: 5 MB.
+- Maksimal 500 siswa per file agar proses import tetap stabil.
 - Header sheet pertama harus sama dengan template terbaru.
 - Baris kosong dilewati.
 - Duplikasi `username` dan `nis` dicek di dalam file dan database.

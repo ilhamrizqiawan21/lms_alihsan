@@ -3,6 +3,11 @@
 @section('title', 'Dashboard Admin')
 
 @section('content')
+@php
+    $loginTerbaruList = collect($loginTerbaru ?? []);
+    $pengumumanList = collect($pengumuman ?? []);
+@endphp
+
 <div class="page-header">
     <h4><i class="bi bi-speedometer2 me-2"></i> Dashboard Admin</h4>
     <nav class="breadcrumb">
@@ -50,16 +55,18 @@
                     <table class="table table-hover mb-0">
                         <thead><tr><th>Nama</th><th>Role</th><th>Waktu</th><th>IP</th></tr></thead>
                         <tbody>
-                            @forelse($loginTerbaru ?? [] as $log)
-                            <tr>
-                                <td><strong>{{ $log->nama_lengkap }}</strong></td>
-                                <td><span class="badge badge-{{ $log->role }}">{{ $log->role }}</span></td>
-                                <td class="text-muted small">{{ $log->login_time ? \Carbon\Carbon::parse($log->login_time)->diffForHumans() : '-' }}</td>
-                                <td class="text-muted small">{{ $log->ip_address }}</td>
-                            </tr>
-                            @empty
-                            <tr><td colspan="4" class="text-center text-muted py-3">Belum ada data login</td></tr>
-                            @endforelse
+                            @if($loginTerbaruList->isNotEmpty())
+                                @foreach($loginTerbaruList as $log)
+                                <tr>
+                                    <td><strong>{{ $log->nama_lengkap }}</strong></td>
+                                    <td><span class="badge badge-{{ $log->role }}">{{ $log->role }}</span></td>
+                                    <td class="text-muted small">{{ $log->login_time ? \Carbon\Carbon::parse($log->login_time)->diffForHumans() : '-' }}</td>
+                                    <td class="text-muted small">{{ $log->ip_address }}</td>
+                                </tr>
+                                @endforeach
+                            @else
+                                <tr><td colspan="4" class="text-center text-muted py-3">Belum ada data login</td></tr>
+                            @endif
                         </tbody>
                     </table>
                 </div>
@@ -70,18 +77,20 @@
         <div class="card">
             <div class="card-header"><i class="bi bi-megaphone-fill me-2"></i> Pengumuman Terbaru</div>
             <div class="card-body p-0">
-                @forelse($pengumuman ?? [] as $p)
-                <div style="border-left:4px solid var(--primary-500); padding:0.8rem 1rem; border-bottom:1px solid var(--gray-200);">
-                    <strong>{{ $p->judul }}</strong>
-                    <div class="text-muted small mt-1">
-                        {{ $p->created_at ? \Carbon\Carbon::parse($p->created_at)->format('d M Y') : '-' }}
-                        &mdash; {{ $p->creator ? $p->creator->nama_lengkap : 'Admin' }}
+                @if($pengumumanList->isNotEmpty())
+                    @foreach($pengumumanList as $p)
+                    <div style="border-left:4px solid var(--primary-500); padding:0.8rem 1rem; border-bottom:1px solid var(--gray-200);">
+                        <strong>{{ $p->judul }}</strong>
+                        <div class="text-muted small mt-1">
+                            {{ $p->created_at ? \Carbon\Carbon::parse($p->created_at)->format('d M Y') : '-' }}
+                            &mdash; {{ $p->creator ? $p->creator->nama_lengkap : 'Admin' }}
+                        </div>
+                        <div class="mt-1" style="font-size:0.85rem;">{{ \Illuminate\Support\Str::limit($p->isi, 120) }}</div>
                     </div>
-                    <div class="mt-1" style="font-size:0.85rem;">{{ \Illuminate\Support\Str::limit($p->isi, 120) }}</div>
-                </div>
-                @empty
-                <div class="text-center text-muted py-4">Belum ada pengumuman</div>
-                @endforelse
+                    @endforeach
+                @else
+                    <div class="text-center text-muted py-4">Belum ada pengumuman</div>
+                @endif
             </div>
         </div>
     </div>

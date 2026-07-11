@@ -23,6 +23,7 @@ use App\Http\Controllers\Guru\ProfilController;
 use App\Http\Controllers\Guru\SikapController;
 use App\Http\Controllers\Guru\ChatController as GuruChatController;
 use App\Http\Controllers\Guru\NotifikasiController as GuruNotifikasiController;
+use App\Http\Controllers\Guru\WaliKelasController as GuruWaliKelasController;
 use App\Http\Controllers\Siswa\DashboardController as SiswaDashboardController;
 use App\Http\Controllers\Siswa\MateriController as SiswaMateriController;
 use App\Http\Controllers\Siswa\TugasController as SiswaTugasController;
@@ -85,6 +86,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/kelas-mapel', [KelasMapelController::class, 'index'])->name('kelas-mapel.index');
     Route::post('/kelas-mapel', [KelasMapelController::class, 'store'])->name('kelas-mapel.store');
     Route::delete('/kelas-mapel/{kelasMapel}', [KelasMapelController::class, 'destroy'])->name('kelas-mapel.destroy');
+    Route::post('/wali-kelas', [KelasMapelController::class, 'storeWaliKelas'])->name('wali-kelas.store');
+    Route::delete('/wali-kelas/{waliKelas}', [KelasMapelController::class, 'destroyWaliKelas'])->name('wali-kelas.destroy');
 
     // Tahun Ajaran
     Route::get('/tahun-ajaran', [TahunAjaranController::class, 'index'])->name('tahun-ajaran.index');
@@ -183,6 +186,18 @@ Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(f
     Route::get('/rekap-nilai', [NilaiController::class, 'rekap'])->name('rekap-nilai');
     Route::get('/rekap-sikap', [SikapController::class, 'rekap'])->name('rekap-sikap');
 
+    // Wali Kelas
+    Route::get('/wali-kelas', [GuruWaliKelasController::class, 'index'])->name('wali-kelas.index');
+    Route::get('/wali-kelas/{waliKelas}/absensi', [GuruWaliKelasController::class, 'absensi'])->name('wali-kelas.absensi')->middleware('can:kelola-wali-kelas,waliKelas');
+    Route::post('/wali-kelas/{waliKelas}/absensi', [GuruWaliKelasController::class, 'storeAbsensi'])->name('wali-kelas.absensi.store')->middleware('can:kelola-wali-kelas,waliKelas');
+    Route::get('/wali-kelas/{waliKelas}/pertemuan', [GuruWaliKelasController::class, 'pertemuan'])->name('wali-kelas.pertemuan')->middleware('can:kelola-wali-kelas,waliKelas');
+    Route::post('/wali-kelas/{waliKelas}/pertemuan', [GuruWaliKelasController::class, 'storePertemuan'])->name('wali-kelas.pertemuan.store')->middleware('can:kelola-wali-kelas,waliKelas');
+    Route::delete('/wali-kelas/{waliKelas}/pertemuan/{pertemuan}', [GuruWaliKelasController::class, 'destroyPertemuan'])->name('wali-kelas.pertemuan.destroy')->middleware('can:kelola-wali-kelas,waliKelas');
+    Route::get('/wali-kelas/{waliKelas}/penanganan', [GuruWaliKelasController::class, 'penanganan'])->name('wali-kelas.penanganan')->middleware('can:kelola-wali-kelas,waliKelas');
+    Route::post('/wali-kelas/{waliKelas}/penanganan', [GuruWaliKelasController::class, 'storePenanganan'])->name('wali-kelas.penanganan.store')->middleware('can:kelola-wali-kelas,waliKelas');
+    Route::put('/wali-kelas/{waliKelas}/penanganan/{penanganan}', [GuruWaliKelasController::class, 'updatePenanganan'])->name('wali-kelas.penanganan.update')->middleware('can:kelola-wali-kelas,waliKelas');
+    Route::delete('/wali-kelas/{waliKelas}/penanganan/{penanganan}', [GuruWaliKelasController::class, 'destroyPenanganan'])->name('wali-kelas.penanganan.destroy')->middleware('can:kelola-wali-kelas,waliKelas');
+
     // Chat
     Route::get('/chat', [GuruChatController::class, 'index'])->name('chat.index');
     Route::get('/chat/{kelasMapel}', [GuruChatController::class, 'chat'])->name('chat.show')->middleware('can:mengajar,kelasMapel');
@@ -261,6 +276,8 @@ Route::middleware(['auth', 'role:kepala_sekolah'])->prefix('kepsek')->name('keps
     // Laporan
     Route::get('/laporan/absensi', [LaporanController::class, 'absensi'])->name('laporan.absensi');
     Route::get('/laporan/nilai', [LaporanController::class, 'nilai'])->name('laporan.nilai');
+    Route::get('/laporan/wali-kelas', [LaporanController::class, 'waliKelas'])->name('laporan.wali-kelas');
+    Route::get('/laporan/wali-kelas/{waliKelas}', [LaporanController::class, 'waliKelasShow'])->name('laporan.wali-kelas.show')->middleware('can:lihat-laporan-wali-kelas,waliKelas');
     Route::get('/laporan/rekap-absensi', [LaporanController::class, 'rekapAbsensi'])->name('laporan.rekap-absensi');
     Route::get('/laporan/rekap-tugas', [LaporanController::class, 'rekapTugas'])->name('laporan.rekap-tugas');
     Route::get('/laporan/rekap-sikap', [LaporanController::class, 'rekapSikap'])->name('laporan.rekap-sikap');

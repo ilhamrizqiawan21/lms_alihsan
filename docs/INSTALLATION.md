@@ -65,14 +65,16 @@ DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=lms_school
-DB_USERNAME=root
-DB_PASSWORD=
+DB_USERNAME=lms_app
+DB_PASSWORD=change-this-db-password
 
 DEFAULT_ADMIN_USERNAME=admin
 DEFAULT_ADMIN_EMAIL=admin@example.test
 DEFAULT_ADMIN_PASSWORD=ganti-password-kuat
 DEFAULT_ADMIN_NAME="Administrator"
 ```
+
+Gunakan user database khusus aplikasi dengan privilege minimal pada database LMS. Jangan memakai user `root` untuk production.
 
 Untuk production, gunakan:
 

@@ -8,7 +8,8 @@
 </div>
 
 <div class="row">
-    @forelse($rekap as $r)
+    @if(!blank($rekap))
+        @foreach($rekap as $r)
     <div class="col-md-6 col-lg-4 mb-3">
         <div class="card border h-100">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -34,8 +35,9 @@
             </div>
         </div>
     </div>
-    @empty
+        @endforeach
+    @else
     <div class="col-12"><p class="text-muted text-center py-4">Tidak ada data rekap absensi.</p></div>
-    @endforelse
+    @endif
 </div>
 @endsection

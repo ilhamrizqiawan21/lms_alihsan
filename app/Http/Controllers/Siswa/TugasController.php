@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Storage;
 
 class TugasController extends Controller
 {
+    private const MAX_UPLOAD_FILES = 5;
+
     public function index()
     {
         $user = Auth::user();
@@ -61,9 +63,9 @@ class TugasController extends Controller
         $siswa = $user->siswa;
 
         $validated = $request->validate([
-            'files' => 'nullable|array',
-            'file_upload' => 'nullable|file|mimes:png,jpg,jpeg,pdf|extensions:png,jpg,jpeg,pdf|max:20480',
-            'files.*' => 'nullable|file|mimes:png,jpg,jpeg,pdf|extensions:png,jpg,jpeg,pdf|max:20480',
+            'files' => 'nullable|array|max:' . self::MAX_UPLOAD_FILES,
+            'file_upload' => 'nullable|file|mimes:png,jpg,jpeg,pdf|extensions:png,jpg,jpeg,pdf|max:5120',
+            'files.*' => 'nullable|file|mimes:png,jpg,jpeg,pdf|extensions:png,jpg,jpeg,pdf|max:5120',
             'teks_jawaban' => 'nullable|string|max:5000',
         ]);
 
@@ -74,11 +76,18 @@ class TugasController extends Controller
         $hasTextJawaban = filled($validated['teks_jawaban'] ?? null);
         $hasSingleFile = $request->hasFile('file_upload');
         $hasMultipleFiles = collect($request->file('files', []))->filter()->isNotEmpty();
+        $totalUploadedFiles = ($hasSingleFile ? 1 : 0) + collect($request->file('files', []))->filter()->count();
 
         if (!$hasTextJawaban && !$hasSingleFile && !$hasMultipleFiles) {
             return back()
                 ->withInput()
                 ->withErrors(['file_upload' => 'Upload file atau isi jawaban teks terlebih dahulu.']);
+        }
+
+        if ($totalUploadedFiles > self::MAX_UPLOAD_FILES) {
+            return back()
+                ->withInput()
+                ->withErrors(['files' => 'Maksimal ' . self::MAX_UPLOAD_FILES . ' file untuk satu pengumpulan tugas.']);
         }
 
         $existingPengumpulan = PengumpulanTugas::where('tugas_id', $tugas->id)

@@ -52,7 +52,8 @@
                 <table class="table table-hover mb-0">
                     <thead><tr><th>Mata Pelajaran</th><th class="text-center">Rata-rata</th><th class="text-center">Status</th></tr></thead>
                     <tbody>
-                        @forelse($subjectScores as $sc)
+                        @if(!blank($subjectScores))
+                            @foreach($subjectScores as $sc)
                         <tr>
                             <td>{{ $sc['nama_mapel'] }}</td>
                             <td class="text-center fw-bold" style="color:{{ ($sc['rata'] ?? 0) >= 75 ? '#16a34a' : '#ef4444' }};">
@@ -67,9 +68,10 @@
                                 @endif
                             </td>
                         </tr>
-                        @empty
+                            @endforeach
+                        @else
                         <tr><td colspan="3" class="text-center text-muted py-4">Belum ada nilai</td></tr>
-                        @endforelse
+                        @endif
                     </tbody>
                 </table>
             </div>

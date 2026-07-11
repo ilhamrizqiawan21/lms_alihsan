@@ -3,6 +3,10 @@
 @section('title', 'Pengumuman')
 @section('page_title', 'Pengumuman')
 
+@php
+    $isGuru = auth()->user()->isGuru();
+@endphp
+
 @section('content')
 <div class="row">
     <div class="col-md-5 mb-4">
@@ -26,10 +30,12 @@
                     <div class="mb-3">
                         <label class="form-label">Target</label>
                         <select name="target" class="form-select @error('target') is-invalid @enderror">
-                            <option value="semua" @selected(old('target', 'semua') === 'semua')>Semua</option>
-                            <option value="guru" @selected(old('target') === 'guru')>Guru</option>
-                            <option value="siswa" @selected(old('target') === 'siswa')>Siswa</option>
-                            <option value="kelas_mapel" @selected(old('target') === 'kelas_mapel')>Kelas Mapel Tertentu</option>
+                            @if(!$isGuru)
+                                <option value="semua" @selected(old('target', 'semua') === 'semua')>Semua</option>
+                                <option value="guru" @selected(old('target') === 'guru')>Guru</option>
+                                <option value="siswa" @selected(old('target') === 'siswa')>Siswa</option>
+                            @endif
+                            <option value="kelas_mapel" @selected(old('target', $isGuru ? 'kelas_mapel' : null) === 'kelas_mapel')>Kelas Mapel Tertentu</option>
                         </select>
                         @error('target') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
@@ -65,7 +71,8 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($pengumuman as $p)
+                            @if(!blank($pengumuman))
+                                @foreach($pengumuman as $p)
                             <tr>
                                 <td>{{ $p->judul }}</td>
                                 <td>
@@ -88,9 +95,10 @@
                                     @endif
                                 </td>
                             </tr>
-                            @empty
+                                @endforeach
+                            @else
                             <tr><td colspan="4" class="text-center text-muted py-3">Belum ada pengumuman</td></tr>
-                            @endforelse
+                            @endif
                         </tbody>
                     </table>
                 </div>

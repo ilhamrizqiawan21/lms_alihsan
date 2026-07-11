@@ -26,7 +26,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($logs as $log)
+                    @if(!blank($logs))
+                        @foreach($logs as $log)
                     <tr>
                         <td style="white-space:nowrap;">{{ $log->login_time ? \Carbon\Carbon::parse($log->login_time)->format('d M Y H:i:s') : '-' }}</td>
                         <td><strong>{{ $log->username }}</strong></td>
@@ -35,9 +36,10 @@
                         <td style="font-family:monospace;">{{ $log->ip_address }}</td>
                         <td class="text-muted" style="font-size:0.72rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ $log->user_agent }}">{{ \Illuminate\Support\Str::limit($log->user_agent, 50) }}</td>
                     </tr>
-                    @empty
+                        @endforeach
+                    @else
                     <tr><td colspan="6" class="text-center text-muted py-4">Belum ada data login</td></tr>
-                    @endforelse
+                    @endif
                 </tbody>
             </table>
         </div>

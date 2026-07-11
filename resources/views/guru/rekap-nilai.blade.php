@@ -61,7 +61,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($nilai as $i => $n)
+                    @if(!blank($nilai))
+                        @foreach($nilai as $i => $n)
                     @php
                         $rata = $n->rata_akhir;
                         $color = $rata >= 92 ? '#166534' : ($rata >= 83 ? '#1e40af' : ($rata >= 75 ? '#92400e' : '#991b1b'));
@@ -92,9 +93,10 @@
                             @endif
                         </td>
                     </tr>
-                    @empty
+                        @endforeach
+                    @else
                     <tr><td colspan="14" class="text-center text-muted py-4">Tidak ada data nilai.</td></tr>
-                    @endforelse
+                    @endif
                 </tbody>
             </table>
         </div>

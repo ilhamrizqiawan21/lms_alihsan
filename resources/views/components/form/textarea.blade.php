@@ -9,11 +9,13 @@
     'useOld' => true,
 ])
 
-@php($id = $attributes->get('id', str_replace(['[', ']'], '_', $name)))
-@php($textareaValue = $useOld ? old($name, $value) : $value)
-@php($hasError = $errors->has($name))
-@php($helpId = $help ? $id . 'Help' : null)
-@php($errorId = $hasError ? $id . 'Error' : null)
+@php
+    $id = $attributes->get('id', str_replace(['[', ']'], '_', $name));
+    $textareaValue = $useOld ? old($name, $value) : $value;
+    $hasError = $errors->has($name);
+    $helpId = $help ? $id . 'Help' : null;
+    $errorId = $hasError ? $id . 'Error' : null;
+@endphp
 
 <div class="{{ $wrapperClass }}">
     @if($label)

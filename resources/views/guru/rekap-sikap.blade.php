@@ -62,7 +62,8 @@
                 </thead>
                 <tbody>
                     @php $spFields = ['taqwa','kejujuran','disiplin','sabar','syukur','tawadhu']; @endphp
-                    @forelse($sikapSpiritual as $i => $s)
+                    @if(!blank($sikapSpiritual))
+                        @foreach($sikapSpiritual as $i => $s)
                     <tr>
                         <td class="text-center text-muted">{{ $i + 1 }}</td>
                         <td>{{ $s['siswa']->user->nama_lengkap ?? $s['siswa']->nis ?? '—' }}</td>
@@ -79,9 +80,10 @@
                             </strong>
                         </td>
                     </tr>
-                    @empty
+                        @endforeach
+                    @else
                     <tr><td colspan="10" class="text-center text-muted py-3">Belum ada data.</td></tr>
-                    @endforelse
+                    @endif
                 </tbody>
             </table>
         </div>
@@ -112,7 +114,8 @@
                 </thead>
                 <tbody>
                     @php $soFields = ['empati','kerjasama','toleransi','percaya_diri','komunikasi']; @endphp
-                    @forelse($sikapSosial as $i => $s)
+                    @if(!blank($sikapSosial))
+                        @foreach($sikapSosial as $i => $s)
                     <tr>
                         <td class="text-center text-muted">{{ $i + 1 }}</td>
                         <td>{{ $s['siswa']->user->nama_lengkap ?? $s['siswa']->nis ?? '—' }}</td>
@@ -129,9 +132,10 @@
                             </strong>
                         </td>
                     </tr>
-                    @empty
+                        @endforeach
+                    @else
                     <tr><td colspan="9" class="text-center text-muted py-3">Belum ada data.</td></tr>
-                    @endforelse
+                    @endif
                 </tbody>
             </table>
         </div>

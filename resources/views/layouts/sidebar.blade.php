@@ -29,6 +29,9 @@
 <li><a href="{{ route('admin.blocked-ips') }}" class="nav-link {{ request()->routeIs('admin.blocked-ips') ? 'active' : '' }}"><i class="bi bi-shield-fill-x"></i><span>IP Diblokir</span></a></li>
 
 @elseif($role == 'guru')
+@php
+    $hasWaliKelasAktif = \App\Models\WaliKelas::where('guru_id', auth()->id())->aktif()->exists();
+@endphp
 <li class="nav-section">Mengajar</li>
 <li><a href="{{ route('guru.dashboard') }}" class="nav-link {{ request()->routeIs('guru.dashboard') ? 'active' : '' }}"><i class="bi bi-speedometer2"></i><span>Dashboard</span></a></li>
 <li><a href="{{ route('guru.absensi.index') }}" class="nav-link {{ request()->routeIs('guru.absensi.*') ? 'active' : '' }}"><i class="bi bi-clipboard-check-fill"></i><span>Absensi</span></a></li>
@@ -36,6 +39,11 @@
 <li><a href="{{ route('guru.tugas.index') }}" class="nav-link {{ request()->routeIs('guru.tugas.*') ? 'active' : '' }}"><i class="bi bi-journal-fill"></i><span>Tugas</span></a></li>
 <li><a href="{{ route('guru.nilai.index') }}" class="nav-link {{ request()->routeIs('guru.nilai.*') ? 'active' : '' }}"><i class="bi bi-bar-chart-fill"></i><span>Nilai</span></a></li>
 <li><a href="{{ route('guru.sikap.index') }}" class="nav-link {{ request()->routeIs('guru.sikap.*') ? 'active' : '' }}"><i class="bi bi-emoji-smile-fill"></i><span>Sikap</span></a></li>
+
+@if($hasWaliKelasAktif)
+<li class="nav-section">Wali Kelas</li>
+<li><a href="{{ route('guru.wali-kelas.index') }}" class="nav-link {{ request()->routeIs('guru.wali-kelas.*') ? 'active' : '' }}"><i class="bi bi-person-badge-fill"></i><span>Wali Kelas</span></a></li>
+@endif
 
 <li class="nav-section">Komunikasi</li>
 <li><a href="{{ route('guru.kalender') }}" class="nav-link {{ request()->routeIs('guru.kalender') ? 'active' : '' }}"><i class="bi bi-calendar3"></i><span>Kalender</span></a></li>
@@ -70,6 +78,7 @@
 <li class="nav-section">Laporan</li>
 <li><a href="{{ route('kepsek.laporan.absensi') }}" class="nav-link {{ request()->routeIs('kepsek.laporan.absensi') ? 'active' : '' }}"><i class="bi bi-clipboard-data-fill"></i><span>Absensi</span></a></li>
 <li><a href="{{ route('kepsek.laporan.nilai') }}" class="nav-link {{ request()->routeIs('kepsek.laporan.nilai') ? 'active' : '' }}"><i class="bi bi-bar-chart-fill"></i><span>Nilai</span></a></li>
+<li><a href="{{ route('kepsek.laporan.wali-kelas') }}" class="nav-link {{ request()->routeIs('kepsek.laporan.wali-kelas*') ? 'active' : '' }}"><i class="bi bi-person-badge-fill"></i><span>Wali Kelas</span></a></li>
 <li><a href="{{ route('kepsek.laporan.rekap-absensi') }}" class="nav-link {{ request()->routeIs('kepsek.laporan.rekap-absensi') ? 'active' : '' }}"><i class="bi bi-file-earmark-bar-graph-fill"></i><span>Rekap Absensi</span></a></li>
 <li><a href="{{ route('kepsek.laporan.rekap-tugas') }}" class="nav-link {{ request()->routeIs('kepsek.laporan.rekap-tugas') ? 'active' : '' }}"><i class="bi bi-journal-check"></i><span>Rekap Tugas</span></a></li>
 <li><a href="{{ route('kepsek.laporan.rekap-sikap') }}" class="nav-link {{ request()->routeIs('kepsek.laporan.rekap-sikap') ? 'active' : '' }}"><i class="bi bi-heart-fill"></i><span>Rekap Sikap</span></a></li>

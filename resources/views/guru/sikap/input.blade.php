@@ -45,7 +45,8 @@
                         @php
                             $spFields = ['taqwa','kejujuran','disiplin','sabar','syukur','tawadhu'];
                         @endphp
-                        @forelse($siswa as $i => $s)
+                        @if(!blank($siswa))
+                            @foreach($siswa as $i => $s)
                         @php
                             $sp = $sikapSpiritual[$s->id] ?? null;
                             $spAvg = $sp ? round(array_sum(array_map(fn($f) => $sp->$f ?? 0, $spFields)) / count($spFields), 1) : null;
@@ -73,9 +74,10 @@
                                 @endif
                             </td>
                         </tr>
-                        @empty
+                            @endforeach
+                        @else
                         <tr><td colspan="9" class="text-center text-muted py-4">Tidak ada siswa.</td></tr>
-                        @endforelse
+                        @endif
                     </tbody>
                 </table>
             </div>
@@ -107,7 +109,8 @@
                         @php
                             $soFields = ['empati','kerjasama','toleransi','percaya_diri','komunikasi'];
                         @endphp
-                        @forelse($siswa as $i => $s)
+                        @if(!blank($siswa))
+                            @foreach($siswa as $i => $s)
                         @php
                             $so = $sikapSosial[$s->id] ?? null;
                             $soAvg = $so ? round(array_sum(array_map(fn($f) => $so->$f ?? 0, $soFields)) / count($soFields), 1) : null;
@@ -135,9 +138,10 @@
                                 @endif
                             </td>
                         </tr>
-                        @empty
+                            @endforeach
+                        @else
                         <tr><td colspan="8" class="text-center text-muted py-4">Tidak ada siswa.</td></tr>
-                        @endforelse
+                        @endif
                     </tbody>
                 </table>
             </div>

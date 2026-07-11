@@ -121,7 +121,7 @@
                         label="Upload File"
                         accept=".png,.jpg,.jpeg,.pdf,image/png,image/jpeg,application/pdf"
                         accept-label="PNG, JPG, JPEG, PDF"
-                        max-size="20MB"
+                        max-size="5MB"
                         help="Opsional jika jawaban dikirim lewat teks."
                     />
                     <x-form.textarea

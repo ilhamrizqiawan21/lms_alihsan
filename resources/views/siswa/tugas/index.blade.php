@@ -20,7 +20,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($tugas as $t)
+                    @if(!blank($tugas))
+                        @foreach($tugas as $t)
                     @php
                         $pengumpulan = $t->pengumpulan->where('siswa_id', auth()->user()->siswa?->id)->first();
                     @endphp
@@ -50,13 +51,13 @@
                             </a>
                         </td>
                     </tr>
-                    @empty
+                        @endforeach
+                    @else
                     <tr><td colspan="6" class="text-center text-muted py-3">Belum ada tugas</td></tr>
-                    @endforelse
+                    @endif
                 </tbody>
             </table>
         </div>
     </div>
 </div>
 @endsection
-

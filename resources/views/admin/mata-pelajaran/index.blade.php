@@ -29,7 +29,8 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($mapel as $m)
+                            @if(!blank($mapel))
+                                @foreach($mapel as $m)
                             <tr>
                                 <td><span class="badge bg-secondary">{{ $m->kode }}</span></td>
                                 <td>{{ $m->nama_mapel }}</td>
@@ -44,13 +45,14 @@
                                     />
                                 </td>
                             </tr>
-                            @empty
+                                @endforeach
+                            @else
                             <tr>
                                 <td colspan="4">
                                     <x-empty-state title="Belum ada mata pelajaran" icon="bi-book" />
                                 </td>
                             </tr>
-                            @endforelse
+                            @endif
                         </tbody>
                     </table>
                 </x-table-wrapper>

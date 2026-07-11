@@ -23,7 +23,8 @@
                     <tr><th style="width:70px;">Level</th><th style="width:130px;">Waktu</th><th>Message</th><th>File</th><th style="width:50px;">Line</th><th>URL</th></tr>
                 </thead>
                 <tbody>
-                    @forelse($errors as $e)
+                    @if(!blank($errors))
+                        @foreach($errors as $e)
                     <tr>
                         <td>
                             <span class="badge bg-{{ $e->error_level === 'EXCEPTION' ? 'danger' : ($e->error_level === 'WARNING' ? 'warning' : ($e->error_level === 'DEPRECATED' ? 'secondary' : 'info')) }}">{{ $e->error_level }}</span>
@@ -34,9 +35,10 @@
                         <td class="text-center">{{ $e->line }}</td>
                         <td class="text-muted">{{ \Illuminate\Support\Str::limit($e->url, 40) }}</td>
                     </tr>
-                    @empty
+                        @endforeach
+                    @else
                     <tr><td colspan="6" class="text-center text-muted py-4">Tidak ada error — sistem berjalan normal</td></tr>
-                    @endforelse
+                    @endif
                 </tbody>
             </table>
         </div>

@@ -84,7 +84,8 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($kelasMapel as $km)
+                            @if(!blank($kelasMapel))
+                                @foreach($kelasMapel as $km)
                             <tr>
                                 <td>{{ $km->kelas?->nama_kelas ?? '-' }}</td>
                                 <td>{{ $km->mataPelajaran?->nama_mapel ?? '-' }}</td>
@@ -100,13 +101,101 @@
                                     </form>
                                 </td>
                             </tr>
-                            @empty
+                                @endforeach
+                            @else
                             <tr><td colspan="6" class="text-center text-muted py-3">Belum ada pengajaran</td></tr>
-                            @endforelse
+                            @endif
                         </tbody>
                     </table>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-5 mb-4">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-person-badge-fill me-1"></i> Tambah Wali Kelas</div>
+            <div class="card-body">
+                <form action="{{ route('admin.wali-kelas.store') }}" method="POST">
+                    @csrf
+                    <div class="mb-3">
+                        <label class="form-label">Kelas <span class="text-danger">*</span></label>
+                        <select name="kelas_id" class="form-select select2 @error('kelas_id') is-invalid @enderror" required>
+                            <option value="">-- Pilih Kelas --</option>
+                            @foreach($kelas as $k)
+                                <option value="{{ $k->id }}" @selected(old('kelas_id') == $k->id)>{{ $k->tingkat }} {{ $k->nama_kelas }}</option>
+                            @endforeach
+                        </select>
+                        @error('kelas_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Guru Wali Kelas <span class="text-danger">*</span></label>
+                        <select name="guru_id" class="form-select select2 @error('guru_id') is-invalid @enderror" required>
+                            <option value="">-- Pilih Guru --</option>
+                            @foreach($guru as $g)
+                                <option value="{{ $g->id }}" @selected(old('guru_id') == $g->id)>{{ $g->nama_lengkap }}</option>
+                            @endforeach
+                        </select>
+                        @error('guru_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tahun Ajaran <span class="text-danger">*</span></label>
+                        <select name="tahun_ajaran_id" class="form-select @error('tahun_ajaran_id') is-invalid @enderror" required>
+                            <option value="">-- Pilih --</option>
+                            @foreach($tahunAjaran as $ta)
+                                <option value="{{ $ta->id }}" @selected(old('tahun_ajaran_id') == $ta->id)>{{ $ta->tahun }}</option>
+                            @endforeach
+                        </select>
+                        @error('tahun_ajaran_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <button type="submit" class="btn btn-success w-100"><i class="bi bi-save"></i> Simpan Wali Kelas</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-7 mb-4">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-people-fill me-1"></i> Daftar Wali Kelas</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Kelas</th>
+                                <th>Wali Kelas</th>
+                                <th>Tahun Ajaran</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if(!blank($waliKelas))
+                                @foreach($waliKelas as $wk)
+                            <tr>
+                                <td>{{ $wk->kelas?->tingkat }} {{ $wk->kelas?->nama_kelas ?? '-' }}</td>
+                                <td>{{ $wk->guru?->nama_lengkap ?? '-' }}</td>
+                                <td>{{ $wk->tahunAjaran?->tahun ?? '-' }}</td>
+                                <td>
+                                    <form action="{{ route('admin.wali-kelas.destroy', $wk) }}" method="POST" class="d-inline">
+                                        @csrf @method('DELETE')
+                                        <button class="btn btn-sm btn-danger" data-confirm="Hapus penugasan wali kelas ini?">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                                @endforeach
+                            @else
+                            <tr><td colspan="4" class="text-center text-muted py-3">Belum ada penugasan wali kelas</td></tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            @if($waliKelas->hasPages())
+                <div class="card-footer">{{ $waliKelas->links() }}</div>
+            @endif
         </div>
     </div>
 </div>

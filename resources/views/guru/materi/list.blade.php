@@ -20,7 +20,7 @@
                         label="File Materi"
                         accept=".jpg,.jpeg,.pdf,image/jpeg,application/pdf"
                         accept-label="JPG, JPEG, PDF"
-                        max-size="20MB"
+                        max-size="5MB"
                         required
                     />
                     <x-button type="submit" color="success" size="" icon="bi-upload" class="w-100">Upload</x-button>
@@ -34,7 +34,8 @@
                 <table class="table table-hover mb-0">
                     <thead><tr><th>Judul</th><th>Deskripsi</th><th>Tanggal</th><th>Aksi</th></tr></thead>
                     <tbody>
-                        @forelse($materi as $m)
+                        @if(!blank($materi))
+                            @foreach($materi as $m)
                         <tr>
                             <td><strong>{{ $m->judul }}</strong></td>
                             <td style="font-size:0.82rem;">{{ \Illuminate\Support\Str::limit($m->deskripsi, 60) }}</td>
@@ -53,9 +54,10 @@
                                 </form>
                             </td>
                         </tr>
-                        @empty
+                            @endforeach
+                        @else
                         <tr><td colspan="4" class="text-center text-muted py-4">Belum ada materi</td></tr>
-                        @endforelse
+                        @endif
                     </tbody>
                 </table>
             </div>

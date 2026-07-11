@@ -57,7 +57,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($nilai as $n)
+                    @if(!blank($nilai))
+                        @foreach($nilai as $n)
                     <tr>
                         <td>{{ $n->siswa?->user?->nama_lengkap ?? '-' }}</td>
                         <td>{{ $n->siswa?->kelas?->nama_kelas ?? '-' }}</td>
@@ -72,9 +73,10 @@
                         <td>{{ $n->sat ?? '-' }}</td>
                         <td><strong>{{ $n->rata_akhir ?? '-' }}</strong></td>
                     </tr>
-                    @empty
+                        @endforeach
+                    @else
                     <tr><td colspan="12" class="text-center text-muted py-3">Tidak ada data</td></tr>
-                    @endforelse
+                    @endif
                 </tbody>
             </table>
         </div>

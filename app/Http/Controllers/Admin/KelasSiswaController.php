@@ -107,8 +107,13 @@ class KelasSiswaController extends Controller
 
             return back()->with(
                 'success',
-                "Siswa {$validated['nama_lengkap']} berhasil ditambahkan. Password awal: {$created['password']}"
-            );
+                "Siswa {$validated['nama_lengkap']} berhasil ditambahkan."
+            )->with('student_password', [
+                'title' => 'Password awal siswa',
+                'name' => $validated['nama_lengkap'],
+                'username' => $created['user']->username,
+                'password' => $created['password'],
+            ]);
         } catch (UniqueConstraintViolationException $e) {
             return back()
                 ->withInput()
@@ -151,7 +156,14 @@ class KelasSiswaController extends Controller
 
         $siswa->user->update(['password' => Hash::make($password)]);
 
-        return back()->with('success', "Password siswa direset. Password baru: {$password}");
+        return back()
+            ->with('success', 'Password siswa berhasil direset.')
+            ->with('student_password', [
+                'title' => 'Password baru siswa',
+                'name' => $siswa->user->nama_lengkap,
+                'username' => $siswa->user->username,
+                'password' => $password,
+            ]);
     }
     //Delete Siswa beserta Usernya
     public function destroySiswa(Siswa $siswa)

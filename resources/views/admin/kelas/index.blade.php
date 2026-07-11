@@ -32,7 +32,8 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($kelas as $k)
+                            @if(!blank($kelas))
+                                @foreach($kelas as $k)
                             <tr>
                                 <td><span class="badge bg-secondary">{{ $k->tingkat }}</span></td>
                                 <td><strong>{{ $k->nama_kelas }}</strong></td>
@@ -47,13 +48,14 @@
                                     />
                                 </td>
                             </tr>
-                            @empty
+                                @endforeach
+                            @else
                             <tr>
                                 <td colspan="4">
                                     <x-empty-state title="Belum ada kelas" icon="bi-building" />
                                 </td>
                             </tr>
-                            @endforelse
+                            @endif
                         </tbody>
                     </table>
                 </x-table-wrapper>

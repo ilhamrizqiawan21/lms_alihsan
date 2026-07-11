@@ -29,6 +29,11 @@ class Kelas extends Model
         return $this->hasMany(KelasMapel::class, 'kelas_id');
     }
 
+    public function waliKelas(): HasMany
+    {
+        return $this->hasMany(WaliKelas::class, 'kelas_id');
+    }
+
     // Relasi: kelas memiliki banyak mata pelajaran melalui pivot
     public function mataPelajaran(): BelongsToMany
     {

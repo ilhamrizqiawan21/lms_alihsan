@@ -64,7 +64,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($absensi as $i => $a)
+                    @if(!blank($absensi))
+                        @foreach($absensi as $i => $a)
                     <tr>
                         <td class="text-center">{{ $absensi->firstItem() + $i }}</td>
                         <td>{{ $a->siswa->user->nama_lengkap ?? $a->siswa->nis ?? '—' }}</td>
@@ -85,9 +86,10 @@
                         </td>
                         <td>{{ $a->keterangan ?? '—' }}</td>
                     </tr>
-                    @empty
+                        @endforeach
+                    @else
                     <tr><td colspan="7" class="text-center text-muted py-4">Tidak ada data absensi.</td></tr>
-                    @endforelse
+                    @endif
                 </tbody>
             </table>
         </div>

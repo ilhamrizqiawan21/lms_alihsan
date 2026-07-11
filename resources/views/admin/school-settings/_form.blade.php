@@ -202,7 +202,9 @@
                         <div class="col-sm-5 mb-3">
                             <label class="form-label">Semester <span class="text-danger">*</span></label>
                             <select name="semester" class="form-select @error('semester') is-invalid @enderror" required>
-                                @php($semesterValue = old('semester', $setting->semester))
+                                @php
+                                    $semesterValue = old('semester', $setting->semester);
+                                @endphp
                                 <option value="Ganjil" {{ $semesterValue === 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
                                 <option value="Genap" {{ $semesterValue === 'Genap' ? 'selected' : '' }}>Genap</option>
                             </select>

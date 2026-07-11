@@ -39,7 +39,8 @@
                 <table class="table table-hover mb-0">
                     <thead><tr><th>Judul</th><th>Deadline</th><th>Kumpul</th><th>Aksi</th></tr></thead>
                     <tbody>
-                        @forelse($tugas as $t)
+                        @if(!blank($tugas))
+                            @foreach($tugas as $t)
                         <tr>
                             <td><strong>{{ $t->judul }}</strong></td>
                             <td style="white-space:nowrap;font-size:0.82rem;">{{ $t->batas_waktu ? \Carbon\Carbon::parse($t->batas_waktu)->format('d M Y H:i') : '-' }}</td>
@@ -54,9 +55,10 @@
                                 </form>
                             </td>
                         </tr>
-                        @empty
+                            @endforeach
+                        @else
                         <tr><td colspan="4" class="text-center text-muted py-4">Belum ada tugas</td></tr>
-                        @endforelse
+                        @endif
                     </tbody>
                 </table>
             </div>

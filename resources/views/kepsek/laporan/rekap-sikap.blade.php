@@ -50,7 +50,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($sikapSosial as $i => $s)
+                    @if(!blank($sikapSosial))
+                        @foreach($sikapSosial as $i => $s)
                     <tr>
                         <td class="text-center">{{ $i + 1 }}</td>
                         <td>{{ $s['siswa']->user->nama_lengkap ?? $s['siswa']->nis ?? '—' }}</td>
@@ -64,9 +65,10 @@
                         </td>
                         @endforeach
                     </tr>
-                    @empty
+                        @endforeach
+                    @else
                     <tr><td colspan="8" class="text-center text-muted py-3">Belum ada data sikap sosial.</td></tr>
-                    @endforelse
+                    @endif
                 </tbody>
             </table>
         </div>
@@ -96,7 +98,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($sikapSpiritual as $i => $s)
+                    @if(!blank($sikapSpiritual))
+                        @foreach($sikapSpiritual as $i => $s)
                     <tr>
                         <td class="text-center">{{ $i + 1 }}</td>
                         <td>{{ $s['siswa']->user->nama_lengkap ?? $s['siswa']->nis ?? '—' }}</td>
@@ -110,9 +113,10 @@
                         </td>
                         @endforeach
                     </tr>
-                    @empty
+                        @endforeach
+                    @else
                     <tr><td colspan="9" class="text-center text-muted py-3">Belum ada data sikap spiritual.</td></tr>
-                    @endforelse
+                    @endif
                 </tbody>
             </table>
         </div>

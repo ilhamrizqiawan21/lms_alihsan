@@ -8,6 +8,7 @@ use App\Models\KelasMapel;
 use App\Models\MataPelajaran;
 use App\Models\TahunAjaran;
 use App\Models\User;
+use App\Models\WaliKelas;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -24,6 +25,11 @@ class KelasMapelController extends Controller
             ->orderBy('semester')
             ->paginate(20);
 
+        $waliKelas = WaliKelas::with(['kelas', 'guru', 'tahunAjaran'])
+            ->orderBy('tahun_ajaran_id', 'desc')
+            ->orderBy('kelas_id')
+            ->paginate(20, ['*'], 'wali_page');
+
         $kelas = Kelas::all();
         $mapel = MataPelajaran::orderBy('urutan')->get();
         $guru = User::whereHas('role', fn($q) => $q->where('nama_role', 'guru'))
@@ -32,7 +38,7 @@ class KelasMapelController extends Controller
             ->get();
         $tahunAjaran = TahunAjaran::orderBy('tahun', 'desc')->get();
 
-        return view('admin.kelas-mapel.index', compact('kelasMapel', 'kelas', 'mapel', 'guru', 'tahunAjaran'));
+        return view('admin.kelas-mapel.index', compact('kelasMapel', 'waliKelas', 'kelas', 'mapel', 'guru', 'tahunAjaran'));
     }
 
     /**
@@ -114,5 +120,56 @@ class KelasMapelController extends Controller
         $kelasMapel->delete();
         return redirect()->route('admin.kelas-mapel.index')
             ->with('success', 'Pengaturan kelas-mapel berhasil dihapus.');
+    }
+
+    public function storeWaliKelas(Request $request)
+    {
+        $validated = $request->validate([
+            'kelas_id' => 'required|exists:kelas,id',
+            'guru_id' => 'required|exists:users,id',
+            'tahun_ajaran_id' => 'required|exists:tahun_ajaran,id',
+        ]);
+
+        $isGuru = User::whereKey($validated['guru_id'])
+            ->whereHas('role', fn($q) => $q->where('nama_role', 'guru'))
+            ->where('is_active', true)
+            ->exists();
+
+        if (!$isGuru) {
+            throw ValidationException::withMessages([
+                'guru_id' => 'Guru wali kelas yang dipilih tidak aktif atau tidak valid.',
+            ]);
+        }
+
+        $exists = WaliKelas::where([
+            'kelas_id' => $validated['kelas_id'],
+            'tahun_ajaran_id' => $validated['tahun_ajaran_id'],
+        ])->exists();
+
+        if ($exists) {
+            return back()->with('error', 'Kelas ini sudah memiliki wali kelas pada tahun ajaran tersebut.')
+                ->withInput();
+        }
+
+        WaliKelas::create($validated);
+
+        return redirect()->route('admin.kelas-mapel.index')
+            ->with('success', 'Penugasan wali kelas berhasil ditambahkan.');
+    }
+
+    public function destroyWaliKelas(WaliKelas $waliKelas)
+    {
+        $hasData = $waliKelas->absensi()->exists()
+            || $waliKelas->pertemuan()->exists()
+            || $waliKelas->penangananSiswa()->exists();
+
+        if ($hasData) {
+            return back()->with('error', 'Penugasan wali kelas tidak dapat dihapus karena sudah memiliki data absensi, pertemuan, atau penanganan siswa.');
+        }
+
+        $waliKelas->delete();
+
+        return redirect()->route('admin.kelas-mapel.index')
+            ->with('success', 'Penugasan wali kelas berhasil dihapus.');
     }
 }

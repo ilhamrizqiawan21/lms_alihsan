@@ -13,7 +13,8 @@
                     <tr><th>IP Address</th><th>Diblokir Sampai</th><th>Alasan</th><th>Waktu Blokir</th><th>Aksi</th></tr>
                 </thead>
                 <tbody>
-                    @forelse($ips as $ip)
+                    @if(!blank($ips))
+                        @foreach($ips as $ip)
                     <tr>
                         <td style="font-family:monospace;"><strong>{{ $ip->ip_address }}</strong></td>
                         <td>
@@ -34,9 +35,10 @@
                             </form>
                         </td>
                     </tr>
-                    @empty
+                        @endforeach
+                    @else
                     <tr><td colspan="5" class="text-center text-muted py-4">Tidak ada IP yang diblokir</td></tr>
-                    @endforelse
+                    @endif
                 </tbody>
             </table>
         </div>

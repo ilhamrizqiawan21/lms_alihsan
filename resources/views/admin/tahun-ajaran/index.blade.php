@@ -37,7 +37,8 @@
                             <tr><th>Tahun</th><th>Status</th><th>Aksi</th></tr>
                         </thead>
                         <tbody>
-                            @forelse($tahunAjaran as $ta)
+                            @if(!blank($tahunAjaran))
+                                @foreach($tahunAjaran as $ta)
                             <tr>
                                 <td><strong>{{ $ta->tahun }}</strong></td>
                                 <td>
@@ -67,9 +68,10 @@
                                     </form>
                                 </td>
                             </tr>
-                            @empty
+                                @endforeach
+                            @else
                             <tr><td colspan="3" class="text-center text-muted py-3">Belum ada tahun ajaran</td></tr>
-                            @endforelse
+                            @endif
                         </tbody>
                     </table>
                 </div>

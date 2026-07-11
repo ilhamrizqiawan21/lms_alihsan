@@ -61,8 +61,8 @@
     @if(file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @else
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
         <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
@@ -279,20 +279,22 @@
                         @endif
                     </li>
                     <li><hr class="dropdown-divider my-1"></li>
-                    @forelse($topbarNotifs as $tn)
-                    <li>
-                        <form action="{{ $topbarRole === 'guru' ? route('guru.notifikasi.mark-read', $tn) : route('siswa.notifikasi.mark-read', $tn) }}" method="POST">
-                            @csrf
-                            <button type="submit" class="dropdown-item notification-link {{ $tn->is_read ? '' : 'unread' }}">
-                                <div class="notification-item-title">{{ $tn->judul }}</div>
-                                <div class="notification-item-message">{{ Str::limit($tn->pesan, 80) }}</div>
-                                <small class="notification-item-time">{{ $tn->created_at ? \Carbon\Carbon::parse($tn->created_at)->diffForHumans() : '' }}</small>
-                            </button>
-                        </form>
-                    </li>
-                    @empty
-                    <li><span class="dropdown-item-text text-muted text-center notification-action-link">Belum ada notifikasi</span></li>
-                    @endforelse
+                    @if($topbarNotifs->isNotEmpty())
+                        @foreach($topbarNotifs as $tn)
+                        <li>
+                            <form action="{{ $topbarRole === 'guru' ? route('guru.notifikasi.mark-read', $tn) : route('siswa.notifikasi.mark-read', $tn) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="dropdown-item notification-link {{ $tn->is_read ? '' : 'unread' }}">
+                                    <div class="notification-item-title">{{ $tn->judul }}</div>
+                                    <div class="notification-item-message">{{ Str::limit($tn->pesan, 80) }}</div>
+                                    <small class="notification-item-time">{{ $tn->created_at ? \Carbon\Carbon::parse($tn->created_at)->diffForHumans() : '' }}</small>
+                                </button>
+                            </form>
+                        </li>
+                        @endforeach
+                    @else
+                        <li><span class="dropdown-item-text text-muted text-center notification-action-link">Belum ada notifikasi</span></li>
+                    @endif
                     <li><hr class="dropdown-divider my-1"></li>
                     <li><a href="{{ $topbarNotifRoute }}" class="dropdown-item text-center notification-action-link">Lihat Semua Notifikasi</a></li>
                 </ul>
@@ -391,7 +393,7 @@
     <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
 
     @unless(file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
         <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
         <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>

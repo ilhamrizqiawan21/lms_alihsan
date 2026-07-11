@@ -19,11 +19,14 @@ Layak untuk instalasi single-school dengan catatan production checklist dijalank
 - Export Excel sementara sudah diarahkan ke temporary directory sistem, bukan folder storage yang rawan permission error pada hosting.
 - Template import siswa dibuat sebagai temporary file dan dihapus setelah response download.
 - Import siswa memakai transaksi database sehingga tidak menyisakan data setengah masuk saat validasi gagal.
+- IP yang masuk tabel `blocked_ips` ditolak oleh middleware web sebelum mengakses halaman aplikasi.
 
 ## Risiko Tersisa
 
 - Pastikan `APP_DEBUG=false` di production.
 - Pastikan `APP_KEY` unik per instalasi.
+- Gunakan user database khusus aplikasi dengan privilege minimal, bukan user `root`.
+- Pastikan status tabel `migrations` sesuai dengan struktur database aktual sebelum menjalankan `php artisan migrate --force`.
 - Ganti semua password default/demo setelah instalasi.
 - Batasi akses server ke file `.env`, `storage/logs`, dan backup database.
 - Pastikan folder `storage` dan `bootstrap/cache` writable hanya oleh user web server yang tepat.

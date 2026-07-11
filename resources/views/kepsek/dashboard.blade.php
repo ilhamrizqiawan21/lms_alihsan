@@ -36,14 +36,16 @@
                             <tr><th>Judul</th><th>Tanggal</th></tr>
                         </thead>
                         <tbody>
-                            @forelse($pengumuman ?? [] as $p)
+                            @if(!blank(($pengumuman ?? [])))
+                                @foreach(($pengumuman ?? []) as $p)
                             <tr>
                                 <td>{{ $p->judul }}</td>
                                 <td>{{ $p->created_at ? \Carbon\Carbon::parse($p->created_at)->format('d/m/Y') : '-' }}</td>
                             </tr>
-                            @empty
+                                @endforeach
+                            @else
                             <tr><td colspan="2" class="text-center text-muted py-3">Belum ada pengumuman</td></tr>
-                            @endforelse
+                            @endif
                         </tbody>
                     </table>
                 </div>

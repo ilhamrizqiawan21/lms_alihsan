@@ -82,7 +82,9 @@ $today = date('Y-m-d');
 </div>
 
 @foreach($monthEvents as $e)
-@php($canManageEvent = (int) $e->user_id === (int) auth()->id())
+@php
+    $canManageEvent = (int) $e->user_id === (int) auth()->id();
+@endphp
 <div class="modal fade" id="editModal{{$e->id}}" tabindex="-1">
     <div class="modal-dialog"><div class="modal-content">
     <div class="modal-header"><h5 class="modal-title">{{ $canManageEvent ? 'Edit Event' : 'Detail Event' }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>

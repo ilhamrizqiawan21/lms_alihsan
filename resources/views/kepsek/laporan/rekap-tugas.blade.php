@@ -33,7 +33,8 @@
 </div>
 
 <div class="row">
-    @forelse($tugas as $t)
+    @if(!blank($tugas))
+        @foreach($tugas as $t)
     <div class="col-md-6 col-lg-4 mb-3">
         <div class="card border h-100 {{ $t->batas_waktu && $t->batas_waktu->isPast() && $t->belum_kumpul > 0 ? 'border-danger' : '' }}">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -94,9 +95,10 @@
             </div>
         </div>
     </div>
-    @empty
+        @endforeach
+    @else
     <div class="col-12"><p class="text-muted text-center py-4">Tidak ada data tugas.</p></div>
-    @endforelse
+    @endif
 </div>
 
 @if($tugas->hasPages())

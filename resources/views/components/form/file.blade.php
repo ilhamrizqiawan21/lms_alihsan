@@ -7,12 +7,14 @@
     'wrapperClass' => 'mb-3',
 ])
 
-@php($id = $attributes->get('id', str_replace(['[', ']'], '_', $name)))
-@php($hasError = $errors->has($name))
-@php($meta = collect([$acceptLabel, $maxSize ? 'Maks. ' . $maxSize : null])->filter()->implode(' | '))
-@php($helpText = $help ?: $meta)
-@php($helpId = $helpText ? $id . 'Help' : null)
-@php($errorId = $hasError ? $id . 'Error' : null)
+@php
+    $id = $attributes->get('id', str_replace(['[', ']'], '_', $name));
+    $hasError = $errors->has($name);
+    $meta = collect([$acceptLabel, $maxSize ? 'Maks. ' . $maxSize : null])->filter()->implode(' | ');
+    $helpText = $help ?: $meta;
+    $helpId = $helpText ? $id . 'Help' : null;
+    $errorId = $hasError ? $id . 'Error' : null;
+@endphp
 
 <div class="{{ $wrapperClass }}">
     @if($label)

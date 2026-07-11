@@ -42,7 +42,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($users as $user)
+                    @if(!blank($users))
+                        @foreach($users as $user)
                     <tr>
                         <td><strong>{{ $user->username }}</strong></td>
                         <td>{{ $user->nama_lengkap }}</td>
@@ -75,13 +76,14 @@
                             </x-action-buttons>
                         </td>
                     </tr>
-                    @empty
+                        @endforeach
+                    @else
                     <tr>
                         <td colspan="6">
                             <x-empty-state title="Tidak ada data guru atau staf" icon="bi-people" />
                         </td>
                     </tr>
-                    @endforelse
+                    @endif
                 </tbody>
             </table>
         </x-table-wrapper>

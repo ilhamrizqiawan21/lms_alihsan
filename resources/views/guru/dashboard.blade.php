@@ -62,28 +62,32 @@
                 @endif
             </div>
             <div class="card-body">
-                @forelse($notifikasi ?? [] as $n)
+                @if(!blank(($notifikasi ?? [])))
+                    @foreach(($notifikasi ?? []) as $n)
                 <div style="border-left:3px solid {{ $n->is_read ? '#d1d5db' : '#ef4444' }};padding:0.5rem 0.75rem;margin-bottom:0.5rem;background:{{ $n->is_read ? '#f9fafb' : '#fef2f2' }};border-radius:0 6px 6px 0;">
                     <strong style="font-size:0.85rem;">{{ $n->judul }}</strong>
                     <div class="text-muted" style="font-size:0.7rem;">{{ $n->pesan }}</div>
                     <small class="text-muted" style="font-size:0.65rem;">{{ $n->created_at ? \Carbon\Carbon::parse($n->created_at)->diffForHumans() : '' }}</small>
                 </div>
-                @empty
+                    @endforeach
+                @else
                 <p class="text-muted text-center py-3">Belum ada notifikasi.</p>
-                @endforelse
+                @endif
             </div>
         </div>
         <div class="card">
             <div class="card-header"><i class="bi bi-megaphone me-2"></i> Pengumuman</div>
             <div class="card-body">
-                @forelse($pengumuman as $p)
+                @if(!blank($pengumuman))
+                    @foreach($pengumuman as $p)
                 <div style="border-left:3px solid var(--primary-500);padding:0.5rem 0.75rem;margin-bottom:0.5rem;background:#f9fafb;border-radius:0 6px 6px 0;">
                     <strong style="font-size:0.85rem;">{{ $p->judul }}</strong>
                     <div class="text-muted" style="font-size:0.7rem;">{{ $p->created_at ? \Carbon\Carbon::parse($p->created_at)->format('d M Y') : '' }}</div>
                 </div>
-                @empty
+                    @endforeach
+                @else
                 <p class="text-muted text-center py-3">Belum ada pengumuman.</p>
-                @endforelse
+                @endif
             </div>
         </div>
     </div>

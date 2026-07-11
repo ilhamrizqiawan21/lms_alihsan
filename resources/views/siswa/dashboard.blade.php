@@ -33,7 +33,8 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($tugasTerbaru ?? [] as $t)
+                            @if(!blank(($tugasTerbaru ?? [])))
+                                @foreach(($tugasTerbaru ?? []) as $t)
                             <tr>
                                 <td>{{ $t->judul }}</td>
                                 <td>{{ $t->kelasMapel?->mataPelajaran?->nama_mapel ?? '-' }}</td>
@@ -49,9 +50,10 @@
                                     @endif
                                 </td>
                             </tr>
-                            @empty
+                                @endforeach
+                            @else
                             <tr><td colspan="4" class="text-center text-muted py-3">Belum ada tugas</td></tr>
-                            @endforelse
+                            @endif
                         </tbody>
                     </table>
                 </div>
@@ -70,7 +72,8 @@
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <tbody>
-                            @forelse($notifikasi ?? [] as $n)
+                            @if(!blank(($notifikasi ?? [])))
+                                @foreach(($notifikasi ?? []) as $n)
                             <tr style="{{ $n->is_read ? '' : 'background: #fef2f2;' }}">
                                 <td style="width: 40px; text-align: center;">
                                     @php
@@ -95,9 +98,10 @@
                                     <small class="text-muted">{{ $n->created_at ? \Carbon\Carbon::parse($n->created_at)->diffForHumans() : '' }}</small>
                                 </td>
                             </tr>
-                            @empty
+                                @endforeach
+                            @else
                             <tr><td colspan="3" class="text-center text-muted py-3">Belum ada notifikasi</td></tr>
-                            @endforelse
+                            @endif
                         </tbody>
                     </table>
                 </div>
@@ -115,14 +119,16 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($pengumuman ?? [] as $p)
+                            @if(!blank(($pengumuman ?? [])))
+                                @foreach(($pengumuman ?? []) as $p)
                             <tr>
                                 <td>{{ $p->judul }}</td>
                                 <td>{{ $p->created_at ? \Carbon\Carbon::parse($p->created_at)->format('d/m/Y') : '-' }}</td>
                             </tr>
-                            @empty
+                                @endforeach
+                            @else
                             <tr><td colspan="2" class="text-center text-muted py-3">Tidak ada pengumuman</td></tr>
-                            @endforelse
+                            @endif
                         </tbody>
                     </table>
                 </div>

@@ -4,16 +4,22 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\CalendarEvent;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class KalenderController extends Controller
 {
     public function index(Request $request)
     {
-        $year = $request->input('year', date('Y'));
-        $month = $request->input('month', date('m'));
+        $validated = $request->validate([
+            'year' => 'nullable|integer|min:2000|max:2100',
+            'month' => 'nullable|integer|min:1|max:12',
+        ]);
 
-        $firstDay = \Carbon\Carbon::create($year, $month, 1);
+        $year = (int) ($validated['year'] ?? date('Y'));
+        $month = (int) ($validated['month'] ?? date('m'));
+
+        $firstDay = Carbon::create($year, $month, 1);
         $daysInMonth = $firstDay->daysInMonth;
         $startDayOfWeek = $firstDay->dayOfWeek;
 
@@ -48,6 +54,9 @@ class KalenderController extends Controller
             'is_done' => 'boolean',
         ]);
 
+        $validated['is_holiday'] = $request->boolean('is_holiday');
+        $validated['is_done'] = $request->boolean('is_done');
+
         CalendarEvent::create($validated + ['user_id' => auth()->id()]);
 
         return back()->with('success', 'Event berhasil ditambahkan.');
@@ -62,6 +71,9 @@ class KalenderController extends Controller
             'is_holiday' => 'boolean',
             'is_done' => 'boolean',
         ]);
+
+        $validated['is_holiday'] = $request->boolean('is_holiday');
+        $validated['is_done'] = $request->boolean('is_done');
 
         $calendarEvent->update($validated);
 

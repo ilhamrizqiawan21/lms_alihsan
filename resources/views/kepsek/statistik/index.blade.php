@@ -39,7 +39,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($statPerKelas ?? [] as $stat)
+                    @if(!blank(($statPerKelas ?? [])))
+                        @foreach(($statPerKelas ?? []) as $stat)
                     <tr>
                         <td><strong>{{ $stat['kelas'] }}</strong></td>
                         <td>{{ $stat['hadir'] }}</td>
@@ -57,9 +58,10 @@
                             @endif
                         </td>
                     </tr>
-                    @empty
+                        @endforeach
+                    @else
                     <tr><td colspan="6" class="text-center text-muted py-3">Tidak ada data</td></tr>
-                    @endforelse
+                    @endif
                 </tbody>
             </table>
         </div>
