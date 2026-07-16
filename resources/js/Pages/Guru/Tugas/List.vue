@@ -53,6 +53,12 @@ async function destroy(item) {
                 <a href="/guru/tugas" class="btn btn-sm btn-outline-secondary">
                     <i class="bi bi-arrow-left me-1" aria-hidden="true"></i> Kembali
                 </a>
+                <a :href="kelasMapel.export_excel_url" class="btn btn-sm btn-outline-success">
+                    <i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i> Excel
+                </a>
+                <a :href="kelasMapel.export_pdf_url" class="btn btn-sm btn-outline-danger">
+                    <i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i> PDF
+                </a>
             </template>
         </PageHeader>
 

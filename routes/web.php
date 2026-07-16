@@ -61,6 +61,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/users/import-siswa', [UserController::class, 'importSiswa'])->name('users.import-siswa');
     Route::resource('users', UserController::class)->except(['show']);
     Route::post('/users/{user}/toggle-active', [UserController::class, 'toggleActive'])->name('users.toggle-active');
+    Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
 
     // Kelas
     Route::get('/kelas', [KelasController::class, 'index'])->name('kelas.index');
@@ -70,6 +71,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Kelas & Siswa
     Route::get('/kelas-siswa', [KelasSiswaController::class, 'index'])->name('kelas-siswa.index');
+    Route::get('/kelas-siswa/export/excel', [KelasSiswaController::class, 'exportExcel'])->name('kelas-siswa.export.excel');
     Route::get('/kelas-siswa/import/template', [KelasSiswaController::class, 'downloadTemplate'])->name('kelas-siswa.import.template');
     Route::post('/kelas-siswa/import', [KelasSiswaController::class, 'importSiswa'])->name('kelas-siswa.import');
     Route::post('/kelas-siswa/siswa', [KelasSiswaController::class, 'storeSiswa'])->name('kelas-siswa.store-siswa');
@@ -122,6 +124,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/export/absensi/pdf', [ExportController::class, 'pdfAbsensi'])->name('export.absensi.pdf');
     Route::get('/export/tugas/excel', [ExportController::class, 'excelTugas'])->name('export.tugas.excel');
     Route::get('/export/tugas/pdf', [ExportController::class, 'pdfTugas'])->name('export.tugas.pdf');
+    Route::get('/export/sikap/excel', [ExportController::class, 'excelSikap'])->name('export.sikap.excel');
+    Route::get('/export/sikap/pdf', [ExportController::class, 'pdfSikap'])->name('export.sikap.pdf');
 
     // Sistem
     Route::get('/school-settings', [SchoolSettingController::class, 'index'])->name('school-settings.index');
@@ -156,6 +160,8 @@ Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(f
     Route::get('/absensi/{kelasMapel}/create', [AbsensiController::class, 'create'])->name('absensi.create')->middleware('can:mengajar,kelasMapel');
     Route::post('/absensi/{kelasMapel}/store', [AbsensiController::class, 'store'])->name('absensi.store')->middleware('can:mengajar,kelasMapel');
     Route::get('/absensi/{kelasMapel}/rekap', [AbsensiController::class, 'rekap'])->name('absensi.rekap')->middleware('can:mengajar,kelasMapel');
+    Route::get('/absensi/{kelasMapel}/export/excel', [ExportController::class, 'guruAbsensiExcel'])->name('absensi.export.excel')->middleware('can:mengajar,kelasMapel');
+    Route::get('/absensi/{kelasMapel}/export/pdf', [ExportController::class, 'guruAbsensiPdf'])->name('absensi.export.pdf')->middleware('can:mengajar,kelasMapel');
 
     // Materi
     Route::get('/materi', [GuruMateriController::class, 'index'])->name('materi.index');
@@ -167,8 +173,12 @@ Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(f
     // Tugas
     Route::get('/tugas', [GuruTugasController::class, 'index'])->name('tugas.index');
     Route::get('/tugas/{kelasMapel}/list', [GuruTugasController::class, 'list'])->name('tugas.list')->middleware('can:mengajar,kelasMapel');
+    Route::get('/tugas/{kelasMapel}/export/excel', [ExportController::class, 'guruTugasExcel'])->name('tugas.export.excel')->middleware('can:mengajar,kelasMapel');
+    Route::get('/tugas/{kelasMapel}/export/pdf', [ExportController::class, 'guruTugasPdf'])->name('tugas.export.pdf')->middleware('can:mengajar,kelasMapel');
     Route::post('/tugas/{kelasMapel}/store', [GuruTugasController::class, 'store'])->name('tugas.store')->middleware('can:mengajar,kelasMapel');
     Route::get('/tugas/{kelasMapel}/{tugas}/pengumpulan', [GuruTugasController::class, 'pengumpulan'])->name('tugas.pengumpulan')->middleware('can:mengajar,kelasMapel');
+    Route::get('/tugas/{kelasMapel}/{tugas}/pengumpulan/export/excel', [ExportController::class, 'guruPengumpulanTugasExcel'])->name('tugas.pengumpulan.export.excel')->middleware('can:mengajar,kelasMapel');
+    Route::get('/tugas/{kelasMapel}/{tugas}/pengumpulan/export/pdf', [ExportController::class, 'guruPengumpulanTugasPdf'])->name('tugas.pengumpulan.export.pdf')->middleware('can:mengajar,kelasMapel');
     Route::get('/tugas/{kelasMapel}/{tugas}/pengumpulan/{file}/download', [GuruTugasController::class, 'downloadFile'])->name('tugas.file.download')->middleware('can:mengajar,kelasMapel');
     Route::get('/tugas/{kelasMapel}/{tugas}/pengumpulan/{pengumpulan}/legacy-download', [GuruTugasController::class, 'downloadLegacyFile'])->name('tugas.pengumpulan.download')->middleware('can:mengajar,kelasMapel');
     Route::post('/tugas/{kelasMapel}/{tugas}/{pengumpulan}/nilai', [GuruTugasController::class, 'nilai'])->name('tugas.nilai')->middleware('can:mengajar,kelasMapel');
@@ -177,11 +187,15 @@ Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(f
     // Nilai
     Route::get('/nilai', [NilaiController::class, 'index'])->name('nilai.index');
     Route::get('/nilai/{kelasMapel}/input', [NilaiController::class, 'input'])->name('nilai.input')->middleware('can:mengajar,kelasMapel');
+    Route::get('/nilai/{kelasMapel}/export/excel', [ExportController::class, 'guruNilaiExcel'])->name('nilai.export.excel')->middleware('can:mengajar,kelasMapel');
+    Route::get('/nilai/{kelasMapel}/export/pdf', [ExportController::class, 'guruNilaiPdf'])->name('nilai.export.pdf')->middleware('can:mengajar,kelasMapel');
     Route::post('/nilai/{kelasMapel}/store', [NilaiController::class, 'store'])->name('nilai.store')->middleware('can:mengajar,kelasMapel');
 
     // Sikap
     Route::get('/sikap', [SikapController::class, 'index'])->name('sikap.index');
     Route::get('/sikap/{kelasMapel}/input', [SikapController::class, 'input'])->name('sikap.input')->middleware('can:mengajar,kelasMapel');
+    Route::get('/sikap/{kelasMapel}/export/excel', [ExportController::class, 'guruSikapExcel'])->name('sikap.export.excel')->middleware('can:mengajar,kelasMapel');
+    Route::get('/sikap/{kelasMapel}/export/pdf', [ExportController::class, 'guruSikapPdf'])->name('sikap.export.pdf')->middleware('can:mengajar,kelasMapel');
     Route::post('/sikap/{kelasMapel}/store', [SikapController::class, 'store'])->name('sikap.store')->middleware('can:mengajar,kelasMapel');
 
     // Rekap
@@ -283,6 +297,17 @@ Route::middleware(['auth', 'role:kepala_sekolah'])->prefix('kepsek')->name('keps
     Route::get('/laporan/rekap-absensi', [LaporanController::class, 'rekapAbsensi'])->name('laporan.rekap-absensi');
     Route::get('/laporan/rekap-tugas', [LaporanController::class, 'rekapTugas'])->name('laporan.rekap-tugas');
     Route::get('/laporan/rekap-sikap', [LaporanController::class, 'rekapSikap'])->name('laporan.rekap-sikap');
+
+    Route::get('/export/laporan/absensi/excel', [ExportController::class, 'kepsekAbsensiExcel'])->name('export.laporan.absensi.excel');
+    Route::get('/export/laporan/absensi/pdf', [ExportController::class, 'kepsekAbsensiPdf'])->name('export.laporan.absensi.pdf');
+    Route::get('/export/laporan/nilai/excel', [ExportController::class, 'kepsekNilaiExcel'])->name('export.laporan.nilai.excel');
+    Route::get('/export/laporan/nilai/pdf', [ExportController::class, 'kepsekNilaiPdf'])->name('export.laporan.nilai.pdf');
+    Route::get('/export/laporan/rekap-tugas/excel', [ExportController::class, 'kepsekRekapTugasExcel'])->name('export.laporan.rekap-tugas.excel');
+    Route::get('/export/laporan/rekap-tugas/pdf', [ExportController::class, 'kepsekRekapTugasPdf'])->name('export.laporan.rekap-tugas.pdf');
+    Route::get('/export/laporan/rekap-absensi/excel', [ExportController::class, 'kepsekRekapAbsensiExcel'])->name('export.laporan.rekap-absensi.excel');
+    Route::get('/export/laporan/rekap-absensi/pdf', [ExportController::class, 'kepsekRekapAbsensiPdf'])->name('export.laporan.rekap-absensi.pdf');
+    Route::get('/export/laporan/rekap-sikap/excel', [ExportController::class, 'kepsekRekapSikapExcel'])->name('export.laporan.rekap-sikap.excel');
+    Route::get('/export/laporan/rekap-sikap/pdf', [ExportController::class, 'kepsekRekapSikapPdf'])->name('export.laporan.rekap-sikap.pdf');
 
     // Statistik
     Route::get('/statistik', [StatistikController::class, 'index'])->name('statistik');

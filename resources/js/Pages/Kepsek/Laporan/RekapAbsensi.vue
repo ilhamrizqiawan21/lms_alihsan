@@ -6,6 +6,7 @@ import { Badge, Card, EmptyState } from '../../../Components/UI';
 
 defineProps({
     rekap: { type: Array, default: () => [] },
+    exportUrls: { type: Object, default: () => ({}) },
 });
 
 function progressColor(value) {
@@ -22,7 +23,16 @@ function progressColor(value) {
         <PageHeader
             title="Rekap Absensi Per Kelas"
             icon="bi-file-earmark-bar-graph-fill"
-        />
+        >
+            <template v-if="rekap.length" #actions>
+                <a :href="exportUrls.excel" class="btn btn-sm btn-outline-success">
+                    <i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i> Excel
+                </a>
+                <a :href="exportUrls.pdf" class="btn btn-sm btn-outline-danger">
+                    <i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i> PDF
+                </a>
+            </template>
+        </PageHeader>
 
         <div v-if="rekap.length" class="row">
             <div

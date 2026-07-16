@@ -39,7 +39,7 @@ class SiswaImportService
             foreach ($rows['data'] as $row) {
                 $user = User::create([
                     'username' => $row['username'],
-                    'password' => Hash::make($row['password']),
+                    'password' => Hash::make($row['password'] ?: User::DEFAULT_PASSWORD),
                     'nama_lengkap' => $row['nama_lengkap'],
                     'nip_nis' => $row['nis'],
                     'jenis_kelamin' => $row['jenis_kelamin'] ?: null,
@@ -199,9 +199,7 @@ class SiswaImportService
             $errors[] = "{$prefix} kelas_id tidak ditemukan.";
         }
 
-        if ($data['password'] === '') {
-            $errors[] = "{$prefix} password wajib diisi.";
-        } elseif (strlen($data['password']) < 6) {
+        if ($data['password'] !== '' && strlen($data['password']) < 6) {
             $errors[] = "{$prefix} password minimal 6 karakter.";
         }
 

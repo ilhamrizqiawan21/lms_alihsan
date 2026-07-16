@@ -14,6 +14,7 @@ const props = defineProps({
     semester: { type: [String, Number], default: '' },
     taAktif: { type: Object, default: null },
     resetUrl: { type: String, required: true },
+    exportUrls: { type: Object, default: () => ({}) },
 });
 
 const filterForm = reactive({
@@ -72,6 +73,12 @@ function scoreBadge(value) {
     if (value >= 3) return 'warning text-dark';
     return 'danger';
 }
+
+function exportUrl(format) {
+    const base = props.exportUrls[format];
+    const params = filterForm.kelas_id ? new URLSearchParams({ kelas_id: filterForm.kelas_id }).toString() : '';
+    return params ? `${base}?${params}` : base;
+}
 </script>
 
 <template>
@@ -104,6 +111,15 @@ function scoreBadge(value) {
                 </div>
             </form>
         </Card>
+
+        <div v-if="hasSummary" class="d-flex flex-wrap gap-2 mb-3">
+            <a :href="exportUrl('excel')" class="btn btn-sm btn-outline-success">
+                <i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i> Excel
+            </a>
+            <a :href="exportUrl('pdf')" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i> PDF
+            </a>
+        </div>
 
         <Card title="Sikap Sosial (KI-2)" icon="bi-people-fill" body-class="p-0" class="mb-3">
             <template #actions>

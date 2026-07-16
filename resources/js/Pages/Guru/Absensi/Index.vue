@@ -104,6 +104,16 @@ function submit() {
         preserveScroll: true,
     });
 }
+
+function selectedExportUrl(format) {
+    if (!props.selected) {
+        return '#';
+    }
+
+    const base = format === 'excel' ? props.selected.export_excel_url : props.selected.export_pdf_url;
+    const params = new URLSearchParams({ bulan: filterForm.bulan || props.filters.bulan || '' }).toString();
+    return params ? `${base}?${params}` : base;
+}
 </script>
 
 <template>
@@ -165,6 +175,14 @@ function submit() {
                             <Badge color="warning" class="text-dark">S=Sakit</Badge>
                             <Badge color="info" class="text-dark">I=Izin</Badge>
                             <Badge color="danger">A=Alpha</Badge>
+                            <span class="ms-auto d-flex flex-wrap gap-2">
+                                <a :href="selectedExportUrl('excel')" class="btn btn-sm btn-outline-success">
+                                    <i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i> Excel
+                                </a>
+                                <a :href="selectedExportUrl('pdf')" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i> PDF
+                                </a>
+                            </span>
                         </div>
 
                         <TableWrapper>

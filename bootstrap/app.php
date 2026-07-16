@@ -4,6 +4,7 @@ use App\Http\Middleware\CheckBlockedIp;
 use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\SystemError;
+use App\Support\SensitiveDataRedactor;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -51,13 +52,13 @@ return Application::configure(basePath: dirname(__DIR__))
                 SystemError::create([
                     'error_level' => 'error',
                     'error_code' => get_class($e),
-                    'message' => mb_substr($e->getMessage() ?: get_class($e), 0, 5000),
+                    'message' => mb_substr(SensitiveDataRedactor::text($e->getMessage() ?: get_class($e)) ?? get_class($e), 0, 5000),
                     'file' => mb_substr($e->getFile(), 0, 255),
                     'line' => $e->getLine(),
-                    'trace' => mb_substr($e->getTraceAsString(), 0, 10000),
-                    'url' => mb_substr($request->fullUrl(), 0, 255),
+                    'trace' => mb_substr(SensitiveDataRedactor::text($e->getTraceAsString()) ?? '', 0, 10000),
+                    'url' => mb_substr(SensitiveDataRedactor::url($request->fullUrl()) ?? '', 0, 255),
                     'ip_address' => $request->ip(),
-                    'user_agent' => mb_substr((string) $request->userAgent(), 0, 255),
+                    'user_agent' => mb_substr(SensitiveDataRedactor::text((string) $request->userAgent()) ?? '', 0, 255),
                     'user_id' => Auth::id(),
                     'created_at' => now(),
                 ]);
@@ -120,8 +121,12 @@ return Application::configure(basePath: dirname(__DIR__))
             return redirect($redirectToDashboard())->with('error', 'Anda tidak memiliki akses ke halaman tersebut.');
         });
 
-        $exceptions->render(function (NotFoundHttpException $e, Request $request) use ($maintenanceResponse) {
-            return $maintenanceResponse($request, 404);
+        $exceptions->render(function (NotFoundHttpException $e, Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return null;
+            }
+
+            return response()->view('errors.404', [], 404);
         });
 
         // Tangani duplicate key constraint violation

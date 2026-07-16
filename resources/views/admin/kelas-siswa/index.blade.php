@@ -178,7 +178,7 @@
                                 edit-target="#editModal{{ $s->id }}"
                                 edit-label="Edit {{ $s->user->nama_lengkap ?? $s->nis }}"
                                 :reset-action="route('admin.kelas-siswa.reset-password', $s)"
-                                reset-confirm="Reset password siswa ke password acak baru?"
+                                reset-confirm="Reset password siswa ke password default 123456?"
                                 reset-label="Reset password {{ $s->user->nama_lengkap ?? $s->nis }}"
                                 :delete-action="route('admin.kelas-siswa.destroy-siswa', $s)"
                                 delete-confirm="Hapus siswa {{ $s->user->nama_lengkap ?? $s->nis }}?"

@@ -4,12 +4,15 @@
     <meta charset="utf-8">
     <title>Rekap Tugas</title>
     <style>
-        body { font-family: 'DejaVu Sans', sans-serif; font-size: 10pt; }
-        h2, h4 { text-align: center; margin: 5px 0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 8pt; }
-        th, td { border: 1px solid #333; padding: 4px 6px; text-align: center; }
-        th { background-color: #4a5568; color: white; }
-        .header-info { text-align: center; margin-bottom: 10px; font-size: 9pt; color: #555; }
+        @page { margin: 22px 24px 28px; }
+        body { font-family: 'DejaVu Sans', sans-serif; font-size: 9pt; color:#0f172a; }
+        h2, h4 { text-align: center; margin: 4px 0; }
+        h2 { color:#1e3a8a; letter-spacing:.5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 7.5pt; }
+        th, td { border: 1px solid #cbd5e1; padding: 5px 6px; text-align: center; }
+        th { background-color: #334155; color: white; }
+        tbody tr:nth-child(even) td { background:#f8fafc; }
+        .header-info { text-align: center; margin: 8px auto 10px; font-size: 8pt; color: #334155; background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px; padding:6px; width:70%; }
         .judul { text-align: left; }
         .school-header { width: 100%; display: table; margin-bottom: 6px; }
         .school-logo { display: table-cell; width: 70px; vertical-align: middle; text-align: center; }
@@ -18,7 +21,7 @@
         .school-name { font-size: 15pt; font-weight: bold; text-transform: uppercase; }
         .school-address { font-size: 9pt; margin-top: 2px; }
         .school-contact { font-size: 8pt; color: #555; margin-top: 2px; }
-        .header-line { border-top: 2px solid #111; border-bottom: 1px solid #111; height: 2px; margin-bottom: 10px; }
+        .header-line { border-top: 3px solid #1d4ed8; height: 0; margin-bottom: 10px; }
         .signature { width: 240px; margin-left: auto; margin-top: 24px; font-size: 8pt; text-align: left; }
         .signature-space { height: 42px; }
     </style>

@@ -60,6 +60,22 @@ async function toggleActive(user) {
     });
 }
 
+async function resetPassword(user) {
+    const confirmed = await window.confirmDialog?.(`Reset password ${user.nama_lengkap} ke 123456?`, {
+        title: 'Reset Password',
+        confirmText: 'Ya, reset',
+    });
+
+    if (!confirmed) {
+        return;
+    }
+
+    router.post(`/admin/users/${user.id}/reset-password`, {}, {
+        preserveScroll: true,
+        preserveState: true,
+    });
+}
+
 async function destroy(user) {
     const confirmed = await window.confirmDialog?.('Hapus user ini?', {
         title: 'Hapus User',
@@ -163,6 +179,12 @@ async function destroy(user) {
                                         :label="`${user.is_active ? 'Nonaktifkan' : 'Aktifkan'} ${user.nama_lengkap}`"
                                         :color="user.is_active ? 'outline-secondary' : 'outline-success'"
                                         @click="toggleActive(user)"
+                                    />
+                                    <IconButton
+                                        icon="bi-key"
+                                        :label="`Reset password ${user.nama_lengkap}`"
+                                        color="outline-warning"
+                                        @click="resetPassword(user)"
                                     />
                                     <IconButton
                                         icon="bi-trash"

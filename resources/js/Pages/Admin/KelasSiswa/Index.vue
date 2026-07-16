@@ -13,6 +13,7 @@ const props = defineProps({
     importErrors: { type: Array, default: () => [] },
     studentPassword: { type: Object, default: null },
     templateUrl: { type: String, required: true },
+    exportUrl: { type: String, required: true },
 });
 
 const genderOptions = [
@@ -45,6 +46,11 @@ function kelasOptions() {
 
 function cleanFilters() {
     return Object.fromEntries(Object.entries(filterForm).filter(([, value]) => value !== '' && value !== null));
+}
+
+function exportExcelUrl() {
+    const params = new URLSearchParams(cleanFilters()).toString();
+    return params ? `${props.exportUrl}?${params}` : props.exportUrl;
 }
 
 function applyFilters() {
@@ -107,7 +113,7 @@ function submitEdit(item) {
 }
 
 async function resetPassword(item) {
-    const confirmed = await window.confirmDialog?.('Reset password siswa ke password acak baru?', {
+    const confirmed = await window.confirmDialog?.('Reset password siswa ke password default 123456?', {
         title: 'Reset Password',
         confirmText: 'Ya, reset',
     });
@@ -276,6 +282,9 @@ function statusColor(status) {
                     <TextInput v-model="filterForm.search" name="search" wrapper-class="mb-0 filter-control" placeholder="Cari NIS/Nama..." />
                     <Button type="submit" color="primary" icon="bi-search" aria-label="Cari siswa" />
                     <Button type="button" color="outline-secondary" icon="bi-arrow-clockwise" aria-label="Reset filter" @click="resetFilters" />
+                    <a :href="exportExcelUrl()" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i> Excel
+                    </a>
                 </form>
             </template>
 

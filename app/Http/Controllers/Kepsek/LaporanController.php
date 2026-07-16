@@ -76,6 +76,10 @@ class LaporanController extends Controller
                 'status' => $request->input('status', ''),
             ],
             'resetUrl' => route('kepsek.laporan.absensi'),
+            'exportUrls' => [
+                'excel' => route('kepsek.export.laporan.absensi.excel'),
+                'pdf' => route('kepsek.export.laporan.absensi.pdf'),
+            ],
         ]);
     }
 
@@ -132,6 +136,10 @@ class LaporanController extends Controller
                 'tahun' => $taAktif->tahun,
             ] : null,
             'resetUrl' => route('kepsek.laporan.nilai'),
+            'exportUrls' => [
+                'excel' => route('kepsek.export.laporan.nilai.excel'),
+                'pdf' => route('kepsek.export.laporan.nilai.pdf'),
+            ],
         ]);
     }
 
@@ -164,6 +172,10 @@ class LaporanController extends Controller
                 'total_hadir' => (int) $item['total_hadir'],
                 'persen' => (float) $item['persen'],
             ]),
+            'exportUrls' => [
+                'excel' => route('kepsek.export.laporan.rekap-absensi.excel'),
+                'pdf' => route('kepsek.export.laporan.rekap-absensi.pdf'),
+            ],
         ]);
     }
 
@@ -222,6 +234,10 @@ class LaporanController extends Controller
                 'search' => $request->input('search', ''),
             ],
             'resetUrl' => route('kepsek.laporan.rekap-tugas'),
+            'exportUrls' => [
+                'excel' => route('kepsek.export.laporan.rekap-tugas.excel'),
+                'pdf' => route('kepsek.export.laporan.rekap-tugas.pdf'),
+            ],
         ]);
     }
 
@@ -315,6 +331,10 @@ class LaporanController extends Controller
                 'tahun' => $taAktif->tahun,
             ] : null,
             'resetUrl' => route('kepsek.laporan.rekap-sikap'),
+            'exportUrls' => [
+                'excel' => route('kepsek.export.laporan.rekap-sikap.excel'),
+                'pdf' => route('kepsek.export.laporan.rekap-sikap.pdf'),
+            ],
         ]);
     }
 

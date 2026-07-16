@@ -12,9 +12,18 @@ use App\Services\SiswaTemplateService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Inertia\Inertia;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Common\Entity\Style\Border;
+use OpenSpout\Common\Entity\Style\BorderName;
+use OpenSpout\Common\Entity\Style\BorderPart;
+use OpenSpout\Common\Entity\Style\BorderWidth;
+use OpenSpout\Common\Entity\Style\CellAlignment;
+use OpenSpout\Common\Entity\Style\CellVerticalAlignment;
+use OpenSpout\Common\Entity\Style\Color;
+use OpenSpout\Common\Entity\Style\Style;
+use OpenSpout\Writer\XLSX\Writer;
 
 class KelasSiswaController extends Controller
 {
@@ -66,7 +75,77 @@ class KelasSiswaController extends Controller
             'importErrors' => session('import_errors', []),
             'studentPassword' => session('student_password'),
             'templateUrl' => route('admin.kelas-siswa.import.template'),
+            'exportUrl' => route('admin.kelas-siswa.export.excel'),
         ]);
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $request->validate([
+            'kelas_id' => 'nullable|exists:kelas,id',
+            'search' => 'nullable|string|max:100',
+        ]);
+
+        $query = Siswa::with(['user', 'kelas'])
+            ->whereHas('user')
+            ->orderBy('nis');
+
+        if ($request->filled('kelas_id')) {
+            $query->where('kelas_id', $request->kelas_id);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('nis', 'like', "%{$search}%")
+                    ->orWhereHas('user', fn ($u) => $u->where('nama_lengkap', 'like', "%{$search}%"));
+            });
+        }
+
+        $writer = new Writer();
+        $filePath = tempnam(sys_get_temp_dir(), 'siswa_');
+        $filename = 'data_siswa_' . date('Ymd_His') . '.xlsx';
+
+        $writer->openToFile($filePath);
+        $writer->getCurrentSheet()->setColumnWidth(6, 1);
+        $writer->getCurrentSheet()->setColumnWidth(15, 2, 3);
+        $writer->getCurrentSheet()->setColumnWidth(30, 4);
+        $writer->getCurrentSheet()->setColumnWidthForRange(18, 5, 8);
+
+        $styles = $this->excelStyles();
+        $writer->addRow(Row::fromValuesWithStyle([school_setting('school_name', 'Nama Sekolah')], $styles['school'], 24));
+        $writer->addRow(Row::fromValuesWithStyle(['DATA SISWA'], $styles['title'], 24));
+        $writer->addRow(Row::fromValuesWithStyle(['Tanggal Export', now()->format('d/m/Y H:i')], $styles['meta'], 18));
+        $writer->addRow(Row::fromValues([]));
+        $writer->addRow(Row::fromValuesWithStyle([
+            'No',
+            'NIS',
+            'Username',
+            'Nama Lengkap',
+            'Jenis Kelamin',
+            'Kelas',
+            'Status',
+            'Tinggal Kelas',
+        ], $styles['tableHeader'], 24));
+
+        $query->get()->values()->each(function (Siswa $siswa, int $index) use ($writer) {
+            $writer->addRow(Row::fromValuesWithStyle([
+                $index + 1,
+                $siswa->nis,
+                $siswa->user?->username ?? '-',
+                $siswa->user?->nama_lengkap ?? '-',
+                ['L' => 'Laki-laki', 'P' => 'Perempuan'][$siswa->user?->jenis_kelamin] ?? '-',
+                trim(($siswa->kelas?->tingkat ? $siswa->kelas->tingkat . ' ' : '') . ($siswa->kelas?->nama_kelas ?? '')) ?: '-',
+                ucfirst((string) $siswa->status),
+                $siswa->tinggal_kelas ? 'Ya' : 'Tidak',
+            ], $index % 2 === 0 ? $this->excelStyles()['row'] : $this->excelStyles()['alternateRow'], 20));
+        });
+
+        $writer->close();
+
+        return response()
+            ->download($filePath, $filename)
+            ->deleteFileAfterSend(true);
     }
 
     public function downloadTemplate(SiswaTemplateService $templateService)
@@ -177,7 +256,7 @@ class KelasSiswaController extends Controller
 
         return back()->with('success', 'Data siswa berhasil diperbarui.');
     }
-    //Reset password ke password acak baru.
+    //Reset password ke password default.
     public function resetPassword(Siswa $siswa)
     {
         $password = $this->generateInitialPassword();
@@ -218,6 +297,51 @@ class KelasSiswaController extends Controller
 
     private function generateInitialPassword(): string
     {
-        return Str::upper(Str::random(4)) . random_int(1000, 9999);
+        return User::DEFAULT_PASSWORD;
+    }
+
+    private function excelStyles(): array
+    {
+        $border = new Border(
+            new BorderPart(BorderName::TOP, 'CBD5E1', BorderWidth::THIN),
+            new BorderPart(BorderName::RIGHT, 'CBD5E1', BorderWidth::THIN),
+            new BorderPart(BorderName::BOTTOM, 'CBD5E1', BorderWidth::THIN),
+            new BorderPart(BorderName::LEFT, 'CBD5E1', BorderWidth::THIN),
+        );
+
+        $base = (new Style())
+            ->withFontName('Arial')
+            ->withFontSize(10)
+            ->withShouldWrapText(true)
+            ->withCellVerticalAlignment(CellVerticalAlignment::CENTER);
+
+        return [
+            'school' => $base
+                ->withFontBold(true)
+                ->withFontSize(14)
+                ->withFontColor('0F172A')
+                ->withCellAlignment(CellAlignment::CENTER),
+            'title' => $base
+                ->withFontBold(true)
+                ->withFontSize(13)
+                ->withFontColor(Color::WHITE)
+                ->withBackgroundColor('1D4ED8')
+                ->withCellAlignment(CellAlignment::CENTER),
+            'meta' => $base
+                ->withFontColor('475569')
+                ->withBackgroundColor('F8FAFC'),
+            'tableHeader' => $base
+                ->withFontBold(true)
+                ->withFontColor(Color::WHITE)
+                ->withBackgroundColor('334155')
+                ->withCellAlignment(CellAlignment::CENTER)
+                ->withBorder($border),
+            'row' => $base
+                ->withBackgroundColor(Color::WHITE)
+                ->withBorder($border),
+            'alternateRow' => $base
+                ->withBackgroundColor('F8FAFC')
+                ->withBorder($border),
+        ];
     }
 }

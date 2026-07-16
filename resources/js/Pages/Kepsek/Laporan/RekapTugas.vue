@@ -11,6 +11,7 @@ const props = defineProps({
     kelasOptions: { type: Array, default: () => [] },
     filters: { type: Object, default: () => ({}) },
     resetUrl: { type: String, required: true },
+    exportUrls: { type: Object, default: () => ({}) },
 });
 
 const filterForm = reactive({
@@ -45,6 +46,12 @@ function progressColor(value) {
     if (value >= 80) return 'bg-success';
     if (value >= 50) return 'bg-warning';
     return 'bg-danger';
+}
+
+function exportUrl(format) {
+    const base = props.exportUrls[format];
+    const params = new URLSearchParams(cleanFilters()).toString();
+    return params ? `${base}?${params}` : base;
 }
 </script>
 
@@ -93,6 +100,15 @@ function progressColor(value) {
                 </div>
             </form>
         </Card>
+
+        <div v-if="tugas.data.length" class="d-flex flex-wrap gap-2 mb-3">
+            <a :href="exportUrl('excel')" class="btn btn-sm btn-outline-success">
+                <i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i> Excel
+            </a>
+            <a :href="exportUrl('pdf')" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i> PDF
+            </a>
+        </div>
 
         <div v-if="tugas.data.length" class="row">
             <div

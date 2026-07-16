@@ -21,7 +21,7 @@
             <x-form.section title="Akses & Role" icon="bi-shield-lock" class="mb-3">
                 <div class="row">
                     <div class="col-md-6">
-                        <x-form.input name="password" type="password" label="Password" help="Minimal 8 karakter." required />
+                        <x-form.input name="password" type="password" label="Password" help="Kosongkan untuk memakai password default 123456." />
                     </div>
                     <div class="col-md-3">
                         <x-form.select name="role_id" label="Role" placeholder="-- Pilih Role --" required>

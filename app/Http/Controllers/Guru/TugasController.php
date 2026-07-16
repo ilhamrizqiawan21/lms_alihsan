@@ -66,6 +66,8 @@ class TugasController extends Controller
                 'kelas' => $kelasMapel->kelas?->nama_kelas ?? '-',
                 'mata_pelajaran' => $kelasMapel->mataPelajaran?->nama_mapel ?? '-',
                 'store_url' => route('guru.tugas.store', $kelasMapel),
+                'export_excel_url' => route('guru.tugas.export.excel', $kelasMapel),
+                'export_pdf_url' => route('guru.tugas.export.pdf', $kelasMapel),
             ],
             'tugas' => $tugas->map(fn (Tugas $item) => [
                 'id' => $item->id,
@@ -124,6 +126,8 @@ class TugasController extends Controller
                 'kelas' => $kelasMapel->kelas?->nama_kelas ?? '-',
                 'mata_pelajaran' => $kelasMapel->mataPelajaran?->nama_mapel ?? '-',
                 'back_url' => route('guru.tugas.list', $kelasMapel),
+                'export_excel_url' => route('guru.tugas.pengumpulan.export.excel', [$kelasMapel, $tugas]),
+                'export_pdf_url' => route('guru.tugas.pengumpulan.export.pdf', [$kelasMapel, $tugas]),
             ],
             'tugas' => [
                 'id' => $tugas->id,

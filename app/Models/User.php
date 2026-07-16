@@ -14,6 +14,8 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
+    public const DEFAULT_PASSWORD = '123456';
+
     protected $table = 'users';
 
     // Tabel users asli tidak punya kolom timestamps created_at/updated_at

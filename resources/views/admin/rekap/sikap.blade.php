@@ -28,6 +28,8 @@
             <div class="col-md-3">
                 <button class="btn btn-primary"><i class="bi bi-search me-1"></i> Tampilkan</button>
                 @if($kelasId && count($rekap) > 0)
+                <a href="{{ route('admin.export.sikap.excel', request()->only(['kelas_id', 'semester'])) }}" class="btn btn-outline-success"><i class="bi bi-file-earmark-excel me-1"></i> Excel</a>
+                <a href="{{ route('admin.export.sikap.pdf', request()->only(['kelas_id', 'semester'])) }}" class="btn btn-outline-danger"><i class="bi bi-file-earmark-pdf me-1"></i> PDF</a>
                 <a href="#" class="btn btn-outline-secondary" onclick="window.print();return false;"><i class="bi bi-printer me-1"></i> Cetak</a>
                 @endif
             </div>

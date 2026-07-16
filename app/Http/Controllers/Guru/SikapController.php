@@ -69,6 +69,8 @@ class SikapController extends Controller
                 'kelas' => $kelasMapel->kelas?->nama_kelas ?? '-',
                 'mata_pelajaran' => $kelasMapel->mataPelajaran?->nama_mapel ?? '-',
                 'store_url' => route('guru.sikap.store', $kelasMapel),
+                'export_excel_url' => route('guru.sikap.export.excel', $kelasMapel),
+                'export_pdf_url' => route('guru.sikap.export.pdf', $kelasMapel),
                 'back_url' => route('guru.sikap.index'),
             ],
             'tahunAjaran' => $tahunAjaran ? [

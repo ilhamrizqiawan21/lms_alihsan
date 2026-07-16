@@ -89,7 +89,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'username' => 'required|string|max:50|unique:users,username',
             'nama_lengkap' => 'required|string|max:100',
-            'password' => 'required|string|min:8',
+            'password' => 'nullable|string|min:6',
             'role_id' => 'required|exists:roles,id',
             'nip_nis' => 'nullable|string|max:20|unique:users,nip_nis',
             'jenis_kelamin' => 'nullable|in:L,P',
@@ -99,7 +99,7 @@ class UserController extends Controller
         $role = Role::findOrFail($validated['role_id']);
         $this->ensureStaffRole($role);
 
-        $validated['password'] = Hash::make($validated['password']);
+        $validated['password'] = Hash::make($request->filled('password') ? $validated['password'] : User::DEFAULT_PASSWORD);
         $validated['is_active'] = $request->boolean('is_active');
 
         DB::transaction(fn () => User::create($validated));
@@ -159,7 +159,7 @@ class UserController extends Controller
             'role_id' => 'required|exists:roles,id',
             'nip_nis' => 'nullable|string|max:20|unique:users,nip_nis,' . $user->id,
             'jenis_kelamin' => 'nullable|in:L,P',
-            'password' => 'nullable|string|min:8',
+            'password' => 'nullable|string|min:6',
             'is_active' => 'boolean',
         ]);
 
@@ -242,6 +242,18 @@ class UserController extends Controller
 
         $user->update(['is_active' => !$user->is_active]);
         return back()->with('success', 'Status user berhasil diubah.');
+    }
+
+    /**
+     * Reset password guru/staf ke password default.
+     */
+    public function resetPassword(User $user)
+    {
+        $this->ensureNotSiswaUser($user);
+
+        $user->update(['password' => Hash::make(User::DEFAULT_PASSWORD)]);
+
+        return back()->with('success', "Password {$user->nama_lengkap} berhasil direset ke " . User::DEFAULT_PASSWORD . '.');
     }
 
     private function isLastActiveAdmin(User $user): bool

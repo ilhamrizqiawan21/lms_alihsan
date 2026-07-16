@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Kelas;
+use App\Models\User;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Writer\XLSX\Writer;
 
@@ -38,7 +39,7 @@ class SiswaTemplateService
             'Nama Siswa Contoh',
             '2026001',
             $contohKelas?->id ?? '',
-            'password123',
+            User::DEFAULT_PASSWORD,
             'L',
             '2026',
             'aktif',

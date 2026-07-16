@@ -110,6 +110,8 @@ class AbsensiController extends Controller
                 'kelas' => $kmData->kelas?->nama_kelas ?? '-',
                 'mata_pelajaran' => $kmData->mataPelajaran?->nama_mapel ?? '-',
                 'store_url' => route('guru.absensi.store', $kmData),
+                'export_excel_url' => route('guru.absensi.export.excel', $kmData),
+                'export_pdf_url' => route('guru.absensi.export.pdf', $kmData),
             ] : null,
             'weeks' => $weeks,
             'students' => $siswaList->values()->map(function (Siswa $siswa, int $index) use ($weeks, $absensiData) {

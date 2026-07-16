@@ -11,6 +11,7 @@ const props = defineProps({
     kelasMapelOptions: { type: Array, default: () => [] },
     filters: { type: Object, default: () => ({}) },
     resetUrl: { type: String, required: true },
+    exportUrls: { type: Object, default: () => ({}) },
 });
 
 const filterForm = reactive({
@@ -63,6 +64,12 @@ function statusBadge(status) {
 
 function statusLabel(status) {
     return status ? status.charAt(0).toUpperCase() + status.slice(1) : '-';
+}
+
+function exportUrl(format) {
+    const base = props.exportUrls[format];
+    const params = new URLSearchParams(cleanFilters()).toString();
+    return params ? `${base}?${params}` : base;
 }
 </script>
 
@@ -128,6 +135,15 @@ function statusLabel(status) {
                 </div>
             </form>
         </Card>
+
+        <div v-if="absensi.data.length" class="d-flex flex-wrap gap-2 mb-3">
+            <a :href="exportUrl('excel')" class="btn btn-sm btn-outline-success">
+                <i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i> Excel
+            </a>
+            <a :href="exportUrl('pdf')" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i> PDF
+            </a>
+        </div>
 
         <Card body-class="p-0">
             <TableWrapper v-if="absensi.data.length">
