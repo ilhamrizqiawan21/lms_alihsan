@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
 
 class WaliKelasController extends Controller
 {
@@ -27,7 +28,17 @@ class WaliKelasController extends Controller
             ])
             ->get();
 
-        return view('guru.wali-kelas.index', compact('waliKelas'));
+        return Inertia::render('Guru/WaliKelas/Index', [
+            'waliKelas' => $waliKelas->map(fn (WaliKelas $item) => [
+                ...$this->waliKelasProps($item),
+                'absensi_count' => $item->absensi_count ?? 0,
+                'pertemuan_count' => $item->pertemuan_count ?? 0,
+                'penanganan_aktif_count' => $item->penanganan_aktif_count ?? 0,
+                'absensi_url' => route('guru.wali-kelas.absensi', $item),
+                'pertemuan_url' => route('guru.wali-kelas.pertemuan', $item),
+                'penanganan_url' => route('guru.wali-kelas.penanganan', $item),
+            ])->values(),
+        ]);
     }
 
     public function absensi(Request $request, WaliKelas $waliKelas)
@@ -44,7 +55,28 @@ class WaliKelasController extends Controller
         $siswaList = $this->siswaAktif($waliKelas);
         $absensiData = $this->absensiData($waliKelas, $siswaList->pluck('id'), $bulan);
 
-        return view('guru.wali-kelas.absensi', compact('waliKelas', 'bulan', 'bulanOptions', 'tanggalList', 'siswaList', 'absensiData'));
+        return Inertia::render('Guru/WaliKelas/Absensi', [
+            'waliKelas' => [
+                ...$this->waliKelasProps($waliKelas),
+                'store_url' => route('guru.wali-kelas.absensi.store', $waliKelas),
+                'back_url' => route('guru.wali-kelas.index'),
+            ],
+            'bulan' => $bulan,
+            'bulanLabel' => $bulanOptions[$bulan] ?? $bulan,
+            'bulanOptions' => $bulanOptions,
+            'tanggalList' => collect($tanggalList)->map(fn (Carbon $tanggal) => [
+                'key' => $tanggal->format('Y-m-d'),
+                'day' => $tanggal->format('d'),
+                'label' => $tanggal->translatedFormat('D'),
+            ])->values(),
+            'students' => $siswaList->map(fn (Siswa $siswa, int $index) => [
+                'id' => $siswa->id,
+                'no' => $index + 1,
+                'nis' => $siswa->nis,
+                'nama' => $siswa->user?->nama_lengkap ?? '-',
+                'absensi' => $absensiData[$siswa->id] ?? [],
+            ])->values(),
+        ]);
     }
 
     public function storeAbsensi(Request $request, WaliKelas $waliKelas)
@@ -105,7 +137,20 @@ class WaliKelasController extends Controller
             ->orderBy('tanggal', 'desc')
             ->paginate(15);
 
-        return view('guru.wali-kelas.pertemuan', compact('waliKelas', 'pertemuan'));
+        return Inertia::render('Guru/WaliKelas/Pertemuan', [
+            'waliKelas' => [
+                ...$this->waliKelasProps($waliKelas),
+                'store_url' => route('guru.wali-kelas.pertemuan.store', $waliKelas),
+                'back_url' => route('guru.wali-kelas.index'),
+            ],
+            'pertemuan' => $pertemuan->through(fn (PertemuanWaliKelas $item) => [
+                'id' => $item->id,
+                'tanggal' => $item->tanggal?->format('d/m/Y') ?? '-',
+                'topik' => $item->topik,
+                'hasil' => $item->hasil,
+                'delete_url' => route('guru.wali-kelas.pertemuan.destroy', [$waliKelas, $item]),
+            ]),
+        ]);
     }
 
     public function storePertemuan(Request $request, WaliKelas $waliKelas)
@@ -144,7 +189,30 @@ class WaliKelasController extends Controller
             ->orderBy('updated_at', 'desc')
             ->paginate(15);
 
-        return view('guru.wali-kelas.penanganan', compact('waliKelas', 'siswaList', 'penanganan'));
+        return Inertia::render('Guru/WaliKelas/Penanganan', [
+            'waliKelas' => [
+                ...$this->waliKelasProps($waliKelas),
+                'store_url' => route('guru.wali-kelas.penanganan.store', $waliKelas),
+                'back_url' => route('guru.wali-kelas.index'),
+            ],
+            'siswaOptions' => $siswaList->map(fn (Siswa $siswa) => [
+                'value' => $siswa->id,
+                'label' => "{$siswa->nis} - " . ($siswa->user?->nama_lengkap ?? '-'),
+            ])->values(),
+            'penanganan' => $penanganan->through(fn (PenangananSiswa $item) => [
+                'id' => $item->id,
+                'siswa_id' => $item->siswa_id,
+                'siswa' => $item->siswa?->user?->nama_lengkap ?? '-',
+                'nis' => $item->siswa?->nis,
+                'kondisi' => $item->kondisi,
+                'deskripsi' => $item->deskripsi,
+                'tindak_lanjut' => $item->tindak_lanjut,
+                'hasil' => $item->hasil,
+                'status' => $item->status,
+                'update_url' => route('guru.wali-kelas.penanganan.update', [$waliKelas, $item]),
+                'delete_url' => route('guru.wali-kelas.penanganan.destroy', [$waliKelas, $item]),
+            ]),
+        ]);
     }
 
     public function storePenanganan(Request $request, WaliKelas $waliKelas)
@@ -279,5 +347,14 @@ class WaliKelasController extends Controller
         if ((int) $waliKelas->id !== (int) $waliKelasId) {
             abort(404);
         }
+    }
+
+    private function waliKelasProps(WaliKelas $waliKelas): array
+    {
+        return [
+            'id' => $waliKelas->id,
+            'kelas' => trim(($waliKelas->kelas?->tingkat ? $waliKelas->kelas?->tingkat . ' ' : '') . ($waliKelas->kelas?->nama_kelas ?? '-')),
+            'tahun_ajaran' => $waliKelas->tahunAjaran?->tahun ?? '-',
+        ];
     }
 }

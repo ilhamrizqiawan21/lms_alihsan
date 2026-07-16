@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
 
 class LoginController extends Controller
 {
@@ -17,7 +18,17 @@ class LoginController extends Controller
      */
     public function showLogin()
     {
-        return view('auth.login');
+        return Inertia::render('Auth/Login', [
+            'branding' => [
+                'school_name' => school_setting('school_name', 'Nama Sekolah'),
+                'school_short_name' => school_setting('school_short_name', 'LMS'),
+                'school_motto' => school_setting('motto', 'Learning Management System'),
+                'school_address' => school_setting('address', 'Alamat sekolah belum diatur'),
+                'logo_url' => school_logo_url(),
+            ],
+            'loginUrl' => route('login.post'),
+            'year' => date('Y'),
+        ]);
     }
 
     /**
@@ -72,8 +83,15 @@ class LoginController extends Controller
             // Hapus percobaan login yang berhasil
             RateLimiter::clear($throttleKey);
 
-            // Redirect berdasarkan role
-            return redirect()->intended($this->redirectToByRole($user));
+            // Redirect berdasarkan role. Untuk request Inertia, pakai full visit agar aman
+            // saat target intended masih halaman Blade.
+            $intendedUrl = $request->session()->pull('url.intended', $this->redirectToByRole($user));
+
+            if ($request->header('X-Inertia')) {
+                return Inertia::location($intendedUrl);
+            }
+
+            return redirect($intendedUrl);
         }
 
         // Catat percobaan gagal

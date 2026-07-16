@@ -11,6 +11,8 @@ use App\Services\NotifikasiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
 
 class TugasController extends Controller
 {
@@ -28,7 +30,16 @@ class TugasController extends Controller
             ->aktif()
             ->get();
 
-        return view('guru.tugas.index', compact('kelasMapel'));
+        return Inertia::render('Guru/Tugas/Index', [
+            'kelasMapel' => $kelasMapel->map(fn (KelasMapel $item) => [
+                'id' => $item->id,
+                'kelas' => $item->kelas?->nama_kelas ?? '-',
+                'mata_pelajaran' => $item->mataPelajaran?->nama_mapel ?? '-',
+                'initials' => strtoupper(substr($item->mataPelajaran?->nama_mapel ?? 'MP', 0, 2)),
+                'semester' => $item->semester,
+                'href' => route('guru.tugas.list', $item),
+            ])->values(),
+        ]);
     }
 
     public function list(KelasMapel $kelasMapel)
@@ -49,7 +60,24 @@ class TugasController extends Controller
             ->where('status', 'aktif')
             ->count();
 
-        return view('guru.tugas.list', compact('kelasMapel', 'tugas', 'totalSiswa'));
+        return Inertia::render('Guru/Tugas/List', [
+            'kelasMapel' => [
+                'id' => $kelasMapel->id,
+                'kelas' => $kelasMapel->kelas?->nama_kelas ?? '-',
+                'mata_pelajaran' => $kelasMapel->mataPelajaran?->nama_mapel ?? '-',
+                'store_url' => route('guru.tugas.store', $kelasMapel),
+            ],
+            'tugas' => $tugas->map(fn (Tugas $item) => [
+                'id' => $item->id,
+                'judul' => $item->judul,
+                'deskripsi' => Str::limit((string) $item->deskripsi, 80),
+                'batas_waktu' => $item->batas_waktu?->format('d M Y H:i'),
+                'sudah_mengumpulkan' => $item->sudah_mengumpulkan ?? 0,
+                'pengumpulan_url' => route('guru.tugas.pengumpulan', [$kelasMapel, $item]),
+                'delete_url' => route('guru.tugas.destroy', $item),
+            ])->values(),
+            'totalSiswa' => $totalSiswa,
+        ]);
     }
 
     public function store(Request $request, KelasMapel $kelasMapel)
@@ -90,7 +118,37 @@ class TugasController extends Controller
             ->where('tugas_id', $tugas->id)
             ->get();
 
-        return view('guru.tugas.pengumpulan', compact('kelasMapel', 'tugas', 'pengumpulan'));
+        return Inertia::render('Guru/Tugas/Pengumpulan', [
+            'kelasMapel' => [
+                'id' => $kelasMapel->id,
+                'kelas' => $kelasMapel->kelas?->nama_kelas ?? '-',
+                'mata_pelajaran' => $kelasMapel->mataPelajaran?->nama_mapel ?? '-',
+                'back_url' => route('guru.tugas.list', $kelasMapel),
+            ],
+            'tugas' => [
+                'id' => $tugas->id,
+                'judul' => $tugas->judul,
+                'batas_waktu' => $tugas->batas_waktu?->format('d/m/Y H:i'),
+            ],
+            'pengumpulan' => $pengumpulan->map(function (PengumpulanTugas $item) use ($kelasMapel, $tugas) {
+                return [
+                    'id' => $item->id,
+                    'siswa' => $item->siswa?->user?->nama_lengkap ?? '-',
+                    'status' => $item->status,
+                    'tanggal_kumpul' => $item->tanggal_kumpul?->format('d/m/Y H:i'),
+                    'teks_jawaban' => $item->teks_jawaban,
+                    'catatan' => $item->catatan,
+                    'nilai' => $item->nilai,
+                    'nilai_url' => route('guru.tugas.nilai', [$kelasMapel, $tugas, $item]),
+                    'legacy_file_url' => $item->file_upload ? route('guru.tugas.pengumpulan.download', [$kelasMapel, $tugas, $item]) : null,
+                    'files' => $item->files->map(fn (PengumpulanFile $file) => [
+                        'id' => $file->id,
+                        'name' => $file->file_name,
+                        'url' => route('guru.tugas.file.download', [$kelasMapel, $tugas, $file]),
+                    ])->values(),
+                ];
+            })->values(),
+        ]);
     }
 
     public function nilai(Request $request, KelasMapel $kelasMapel, Tugas $tugas, PengumpulanTugas $pengumpulan)

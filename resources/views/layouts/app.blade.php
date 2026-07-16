@@ -63,9 +63,6 @@
     @else
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
-        <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
-        <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
     @endif
     <style>
         :root {
@@ -214,15 +211,15 @@
     <link rel="stylesheet" href="{{ asset('css/lms-app.css') }}">
     @stack('styles')
 </head>
-<body x-data="appShell" x-on:keydown.escape.window="closeSidebar()">
+<body>
     <a href="#mainContent" class="skip-link">Lewati ke konten utama</a>
 
     <!-- Sidebar Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay" x-bind:class="{ 'show': sidebarOpen }" x-on:click="closeSidebar()" x-cloak></div>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <!-- Topbar -->
     <div class="topbar">
-        <button class="topbar-toggle-btn" type="button" aria-label="Buka menu" aria-controls="sidebar" x-bind:aria-expanded="sidebarOpen.toString()" x-on:click="toggleSidebar()">
+        <button class="topbar-toggle-btn" type="button" aria-label="Buka menu" aria-controls="sidebar" aria-expanded="false" data-sidebar-toggle>
             <i class="bi bi-list" aria-hidden="true"></i>
         </button>
         <div class="topbar-brand">
@@ -324,7 +321,7 @@
     </div>
 
     <!-- Sidebar -->
-    <div class="sidebar" id="sidebar" x-bind:class="{ 'sidebar-open': sidebarOpen }">
+    <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="sidebar-logo-icon">
                 <img src="{{ $layoutLogoUrl }}" alt="Logo {{ $layoutSchoolName }}" class="app-logo-md" width="36" height="36" decoding="async">
@@ -390,14 +387,8 @@
         </footer>
     </main>
 
-    <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
-
     @unless(file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-        <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     @endunless
     @stack('scripts')
 </body>

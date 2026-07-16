@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Services\StatistikService;
 use App\Models\LogLogin;
 use App\Models\Pengumuman;
+use Carbon\Carbon;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
@@ -31,6 +34,22 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        return view('admin.dashboard', compact('statistik', 'loginTerbaru', 'pengumuman'));
+        return Inertia::render('Admin/Dashboard', [
+            'statistik' => $statistik,
+            'loginTerbaru' => $loginTerbaru->map(fn (LogLogin $log) => [
+                'id' => $log->id,
+                'nama_lengkap' => $log->nama_lengkap,
+                'role' => $log->role,
+                'ip_address' => $log->ip_address,
+                'login_time' => $log->login_time?->diffForHumans(),
+            ])->values(),
+            'pengumuman' => $pengumuman->map(fn (Pengumuman $item) => [
+                'id' => $item->id,
+                'judul' => $item->judul,
+                'isi' => Str::limit($item->isi, 120),
+                'created_at' => $item->created_at ? Carbon::parse($item->created_at)->format('d M Y') : null,
+                'creator' => $item->creator?->nama_lengkap ?? 'Admin',
+            ])->values(),
+        ]);
     }
 }

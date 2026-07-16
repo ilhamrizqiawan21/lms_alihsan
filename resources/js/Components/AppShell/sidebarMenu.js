@@ -1,0 +1,83 @@
+export function sidebarMenu(role, capabilities = {}) {
+    const menus = {
+        admin: [
+            section('Master Data'),
+            item('Dashboard', '/admin/dashboard', 'bi-speedometer2', ['/admin/dashboard', '/admin/inertia-test'], true),
+            item('Guru & Staf', '/admin/users', 'bi-people-fill', ['/admin/users'], true),
+            item('Data Kelas', '/admin/kelas', 'bi-building', ['/admin/kelas'], true),
+            item('Kelas & Siswa', '/admin/kelas-siswa', 'bi-mortarboard-fill', ['/admin/kelas-siswa'], true),
+            item('Mata Pelajaran', '/admin/mata-pelajaran', 'bi-book-fill', ['/admin/mata-pelajaran'], true),
+            item('Penugasan Guru', '/admin/kelas-mapel', 'bi-diagram-3-fill', ['/admin/kelas-mapel']),
+            item('Tahun Ajaran', '/admin/tahun-ajaran', 'bi-calendar-event-fill', ['/admin/tahun-ajaran'], true),
+            section('Aktivitas'),
+            item('Pengumuman', '/admin/pengumuman', 'bi-megaphone-fill', ['/admin/pengumuman']),
+            item('Kalender', '/admin/kalender', 'bi-calendar3', ['/admin/kalender'], true),
+            section('Laporan'),
+            item('Absensi', '/admin/rekap/absensi', 'bi-clipboard-check-fill', ['/admin/rekap/absensi']),
+            item('Nilai', '/admin/rekap/nilai', 'bi-bar-chart-fill', ['/admin/rekap/nilai']),
+            item('Sikap', '/admin/rekap/sikap', 'bi-heart-fill', ['/admin/rekap/sikap']),
+            item('Tugas', '/admin/rekap/tugas', 'bi-journal-check', ['/admin/rekap/tugas']),
+            section('Sistem'),
+            item('Pengaturan', '/admin/pengaturan', 'bi-gear-fill', ['/admin/pengaturan', '/admin/school-settings']),
+            item('Log Login', '/admin/log-login', 'bi-clock-history', ['/admin/log-login'], true),
+            item('Log Error', '/admin/log-error', 'bi-bug-fill', ['/admin/log-error'], true),
+            item('IP Diblokir', '/admin/blocked-ips', 'bi-shield-fill-x', ['/admin/blocked-ips']),
+        ],
+        guru: [
+            section('Mengajar'),
+            item('Dashboard', '/guru/dashboard', 'bi-speedometer2', ['/guru/dashboard'], true),
+            item('Absensi', '/guru/absensi', 'bi-clipboard-check-fill', ['/guru/absensi'], true),
+            item('Materi', '/guru/materi', 'bi-file-earmark-text-fill', ['/guru/materi'], true),
+            item('Tugas', '/guru/tugas', 'bi-journal-fill', ['/guru/tugas'], true),
+            item('Nilai', '/guru/nilai', 'bi-bar-chart-fill', ['/guru/nilai'], true),
+            item('Sikap', '/guru/sikap', 'bi-emoji-smile-fill', ['/guru/sikap'], true),
+            ...(capabilities.has_wali_kelas ? [
+                section('Wali Kelas'),
+                item('Wali Kelas', '/guru/wali-kelas', 'bi-person-badge-fill', ['/guru/wali-kelas'], true),
+            ] : []),
+            section('Komunikasi'),
+            item('Kalender', '/guru/kalender', 'bi-calendar3', ['/guru/kalender'], true),
+            item('Pengumuman', '/guru/pengumuman', 'bi-megaphone-fill', ['/guru/pengumuman']),
+            item('Chat Kelas', '/guru/chat', 'bi-chat-dots-fill', ['/guru/chat'], true),
+            section('Rekap'),
+            item('Rekap Nilai', '/guru/rekap-nilai', 'bi-file-earmark-bar-graph-fill', ['/guru/rekap-nilai']),
+            item('Rekap Sikap', '/guru/rekap-sikap', 'bi-file-earmark-text-fill', ['/guru/rekap-sikap']),
+        ],
+        siswa: [
+            section('Belajar'),
+            item('Dashboard', '/siswa/dashboard', 'bi-speedometer2', ['/siswa/dashboard'], true),
+            item('Progress Saya', '/siswa/progress', 'bi-graph-up-arrow', ['/siswa/progress'], true),
+            item('Materi Saya', '/siswa/materi', 'bi-file-earmark-text-fill', ['/siswa/materi'], true),
+            item('Tugas Saya', '/siswa/tugas', 'bi-journal-fill', ['/siswa/tugas'], true),
+            item('Nilai Saya', '/siswa/nilai', 'bi-bar-chart-fill', ['/siswa/nilai'], true),
+            section('Kelas'),
+            item('Kalender', '/siswa/kalender', 'bi-calendar3', ['/siswa/kalender'], true),
+            item('Chat Kelas', '/siswa/chat', 'bi-chat-dots-fill', ['/siswa/chat'], true),
+        ],
+        kepala_sekolah: [
+            section('Ringkasan'),
+            item('Dashboard', '/kepsek/dashboard', 'bi-speedometer2', ['/kepsek/dashboard'], true),
+            item('Statistik', '/kepsek/statistik', 'bi-graph-up-arrow', ['/kepsek/statistik'], true),
+            section('Komunikasi'),
+            item('Kalender', '/kepsek/kalender', 'bi-calendar3', ['/kepsek/kalender'], true),
+            item('Pengumuman', '/kepsek/pengumuman', 'bi-megaphone-fill', ['/kepsek/pengumuman']),
+            section('Laporan'),
+            item('Absensi', '/kepsek/laporan/absensi', 'bi-clipboard-data-fill', ['/kepsek/laporan/absensi'], true),
+            item('Nilai', '/kepsek/laporan/nilai', 'bi-bar-chart-fill', ['/kepsek/laporan/nilai'], true),
+            item('Wali Kelas', '/kepsek/laporan/wali-kelas', 'bi-person-badge-fill', ['/kepsek/laporan/wali-kelas'], true),
+            item('Rekap Absensi', '/kepsek/laporan/rekap-absensi', 'bi-file-earmark-bar-graph-fill', ['/kepsek/laporan/rekap-absensi'], true),
+            item('Rekap Tugas', '/kepsek/laporan/rekap-tugas', 'bi-journal-check', ['/kepsek/laporan/rekap-tugas'], true),
+            item('Rekap Sikap', '/kepsek/laporan/rekap-sikap', 'bi-heart-fill', ['/kepsek/laporan/rekap-sikap'], true),
+        ],
+    };
+
+    return menus[role] ?? [];
+}
+
+function section(label) {
+    return { type: 'section', label };
+}
+
+function item(label, href, icon, activePrefixes, inertia = false) {
+    return { type: 'item', label, href, icon, activePrefixes, inertia };
+}

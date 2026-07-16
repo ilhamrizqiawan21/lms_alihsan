@@ -10,6 +10,7 @@ use App\Models\PengumpulanTugas;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class ProgressController extends Controller
 {
@@ -70,10 +71,32 @@ class ProgressController extends Controller
                 ];
             });
 
-        return view('siswa.progress', compact(
-            'siswa', 'gpa', 'persenHadir', 'persenTugas',
-            'hadir', 'sakit', 'izin', 'alpha', 'totalAbsen', 'totalTugas', 'selesai',
-            'subjectScores', 'taAktif', 'semester'
-        ));
+        return Inertia::render('Siswa/Progress', [
+            'header' => [
+                'nama' => $user->nama_lengkap,
+                'kelas' => trim(($siswa->kelas?->tingkat ? $siswa->kelas?->tingkat . ' ' : '') . ($siswa->kelas?->nama_kelas ?? '')),
+                'tahun_ajaran' => $taAktif?->tahun,
+                'semester' => $semester,
+                'semester_label' => $semester == '1' ? 'Ganjil' : 'Genap',
+            ],
+            'stats' => [
+                'gpa' => $gpa ? number_format($gpa, 2) : '-',
+                'persen_hadir' => $persenHadir,
+                'persen_tugas' => $persenTugas,
+                'hadir' => $hadir,
+                'sakit' => $sakit,
+                'izin' => $izin,
+                'alpha' => $alpha,
+                'total_absen' => $totalAbsen,
+                'total_tugas' => $totalTugas,
+                'selesai' => $selesai,
+                'bulan_label' => now()->format('F'),
+            ],
+            'subjectScores' => $subjectScores->map(fn (array $item) => [
+                'nama_mapel' => $item['nama_mapel'],
+                'rata' => $item['rata'],
+                'rata_label' => $item['rata'] !== null ? number_format($item['rata'], 2) : '-',
+            ])->values(),
+        ]);
     }
 }

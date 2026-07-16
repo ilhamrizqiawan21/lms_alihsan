@@ -6,12 +6,24 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Inertia\Inertia;
 
 class ProfilController extends Controller
 {
     public function edit()
     {
-        return view('guru.profil', ['user' => Auth::user()]);
+        $user = Auth::user();
+
+        return Inertia::render('Guru/Profil', [
+            'profile' => [
+                'username' => $user->username,
+                'nama_lengkap' => $user->nama_lengkap,
+                'nip_nis' => $user->nip_nis,
+                'role_label' => 'Guru',
+                'is_active' => $user->is_active,
+            ],
+            'updateUrl' => route('guru.profil.update'),
+        ]);
     }
     //Edit profil siswa atau guru
     public function update(Request $request)

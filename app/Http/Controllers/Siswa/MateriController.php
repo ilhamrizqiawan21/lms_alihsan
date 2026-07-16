@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\KelasMapel;
 use App\Models\Materi;
 use App\Models\Siswa;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class MateriController extends Controller
 {
@@ -24,7 +26,15 @@ class MateriController extends Controller
             ->aktif()
             ->get();
 
-        return view('siswa.materi.index', compact('kelasMapel'));
+        return Inertia::render('Siswa/Materi/Index', [
+            'kelasMapel' => $kelasMapel->map(fn (KelasMapel $item) => [
+                'id' => $item->id,
+                'mata_pelajaran' => $item->mataPelajaran?->nama_mapel ?? '-',
+                'guru' => $item->guru?->nama_lengkap ?? '-',
+                'initials' => strtoupper(substr($item->mataPelajaran?->nama_mapel ?? 'MP', 0, 2)),
+                'href' => route('siswa.materi.list', $item),
+            ])->values(),
+        ]);
     }
     //Daftar materi yang sudah di input guru
     public function list(KelasMapel $kelasMapel)
@@ -38,7 +48,21 @@ class MateriController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('siswa.materi.list', compact('kelasMapel', 'materi'));
+        return Inertia::render('Siswa/Materi/List', [
+            'kelasMapel' => [
+                'id' => $kelasMapel->id,
+                'mata_pelajaran' => $kelasMapel->mataPelajaran?->nama_mapel ?? '-',
+                'guru' => $kelasMapel->guru?->nama_lengkap ?? '-',
+                'back_url' => route('siswa.materi.index'),
+            ],
+            'materi' => $materi->map(fn (Materi $item) => [
+                'id' => $item->id,
+                'judul' => $item->judul,
+                'deskripsi' => $item->deskripsi ?: 'Tidak ada deskripsi',
+                'tanggal' => $item->created_at ? Carbon::parse($item->created_at)->format('d M Y') : '',
+                'download_url' => $item->file_path ? route('siswa.materi.download', [$kelasMapel, $item]) : null,
+            ])->values(),
+        ]);
     }
     //Unduh materi
     public function download(KelasMapel $kelasMapel, Materi $materi)

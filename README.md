@@ -9,7 +9,9 @@ Status produk: single-school LMS, bukan SaaS dan bukan multi-school.
 - PHP 8.3+
 - Laravel 13.x
 - MySQL 8.0 / MariaDB 10.6+
-- Blade, Bootstrap 5, Vite
+- Laravel Blade + Inertia.js + Vue 3
+- Bootstrap 5, Bootstrap Icons, Vite
+- Chart.js lazy-load untuk dashboard/statistik/progress
 - DomPDF untuk PDF
 - OpenSpout untuk import/export Excel
 
@@ -64,7 +66,7 @@ DB_PASSWORD=change-this-db-password
 
 Gunakan user database khusus aplikasi dengan privilege minimal pada database LMS. Hindari memakai user `root` untuk environment production.
 
-Jalankan setup database dan asset:
+Jalankan setup database dan asset produksi:
 
 ```bash
 php artisan migrate --seed
@@ -80,6 +82,14 @@ http://127.0.0.1:8000
 ```
 
 > Penting: file `.env` berisi konfigurasi lingkungan dan kredensial rahasia. File ini tidak diikutkan ke repositori agar data sensitif tidak bocor. Gunakan `.env.example` sebagai template.
+
+Untuk development frontend gunakan:
+
+```bash
+npm run dev
+```
+
+Untuk production selalu jalankan `npm run build` agar `public/build/manifest.json` tersedia. Frontend saat ini tidak lagi memakai Alpine.js, jQuery, Select2, atau DataTables.
 
 Panduan lengkap tersedia di [docs/INSTALLATION.md](docs/INSTALLATION.md).
 

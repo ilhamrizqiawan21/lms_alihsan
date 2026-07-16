@@ -10,6 +10,7 @@ use App\Models\Siswa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
 
 class AbsensiController extends Controller
 {
@@ -85,11 +86,49 @@ class AbsensiController extends Controller
             }
         }
 
-        return view('guru.absensi.index', compact(
-            'kelasMapel', 'kelasMapelId', 'kmData', 'siswaList',
-            'mingguCount', 'tanggalMinggu', 'absensiData',
-            'bulan', 'bulanNum', 'tahun', 'bulanIndo'
-        ));
+        $weeks = collect(range(1, $mingguCount))
+            ->map(fn (int $week) => [
+                'number' => $week,
+                'date' => $tanggalMinggu[$week] ?? null,
+                'label' => ($tanggalMinggu[$week] ?? null) ? date('d/m', strtotime($tanggalMinggu[$week])) : '-',
+            ])
+            ->values();
+
+        return Inertia::render('Guru/Absensi/Index', [
+            'kelasMapel' => $kelasMapel->map(fn (KelasMapel $item) => [
+                'id' => $item->id,
+                'label' => trim(($item->kelas?->nama_kelas ?? '-') . ' - ' . ($item->mataPelajaran?->nama_mapel ?? '-')),
+                'kelas' => $item->kelas?->nama_kelas ?? '-',
+                'mata_pelajaran' => $item->mataPelajaran?->nama_mapel ?? '-',
+            ])->values(),
+            'filters' => [
+                'kelas_mapel_id' => $kelasMapelId ? (string) $kelasMapelId : '',
+                'bulan' => $bulan,
+            ],
+            'selected' => $kmData ? [
+                'id' => $kmData->id,
+                'kelas' => $kmData->kelas?->nama_kelas ?? '-',
+                'mata_pelajaran' => $kmData->mataPelajaran?->nama_mapel ?? '-',
+                'store_url' => route('guru.absensi.store', $kmData),
+            ] : null,
+            'weeks' => $weeks,
+            'students' => $siswaList->values()->map(function (Siswa $siswa, int $index) use ($weeks, $absensiData) {
+                $weekly = [];
+
+                foreach ($weeks as $week) {
+                    $date = $week['date'];
+                    $weekly[(string) $week['number']] = $date ? ($absensiData[$siswa->id][$date] ?? '') : '';
+                }
+
+                return [
+                    'id' => $siswa->id,
+                    'no' => $index + 1,
+                    'nis' => $siswa->nis,
+                    'nama' => $siswa->user?->nama_lengkap ?? '-',
+                    'absensi' => $weekly,
+                ];
+            }),
+        ]);
     }
 
     public function create(KelasMapel $kelasMapel)

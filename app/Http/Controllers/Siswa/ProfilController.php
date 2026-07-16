@@ -6,13 +6,24 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Inertia\Inertia;
 
 class ProfilController extends Controller
 {
     public function edit()
     {
         $user = Auth::user()->load('siswa.kelas');
-        return view('siswa.profil', compact('user'));
+
+        return Inertia::render('Siswa/Profil', [
+            'profile' => [
+                'nis' => $user->siswa?->nis ?? '-',
+                'nama_lengkap' => $user->nama_lengkap,
+                'username' => $user->username,
+                'kelas' => trim(($user->siswa?->kelas?->tingkat ?? '') . ' ' . ($user->siswa?->kelas?->nama_kelas ?? '')) ?: '-',
+                'status' => $user->siswa?->status ?? '-',
+            ],
+            'updateUrl' => route('siswa.profil.update'),
+        ]);
     }
     //Update username dan password siswa
     public function update(Request $request)

@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
 
 class SikapController extends Controller
 {
@@ -22,7 +23,16 @@ class SikapController extends Controller
             ->aktif()
             ->get();
 
-        return view('guru.sikap.index', compact('kelasMapel'));
+        return Inertia::render('Guru/Sikap/Index', [
+            'kelasMapel' => $kelasMapel->map(fn (KelasMapel $item) => [
+                'id' => $item->id,
+                'kelas' => $item->kelas?->nama_kelas ?? '-',
+                'mata_pelajaran' => $item->mataPelajaran?->nama_mapel ?? '-',
+                'initials' => strtoupper(substr($item->mataPelajaran?->nama_mapel ?? 'MP', 0, 2)),
+                'semester' => $item->semester,
+                'href' => route('guru.sikap.input', $item),
+            ])->values(),
+        ]);
     }
     //Input nilai sikap  siswa
     public function input(KelasMapel $kelasMapel)
@@ -50,7 +60,36 @@ class SikapController extends Controller
             ->get()
             ->keyBy('siswa_id');
 
-        return view('guru.sikap.input', compact('kelasMapel', 'siswa', 'sikapSosial', 'sikapSpiritual', 'tahunAjaran', 'semester'));
+        $sosialFields = ['empati', 'kerjasama', 'toleransi', 'percaya_diri', 'komunikasi'];
+        $spiritualFields = ['taqwa', 'kejujuran', 'disiplin', 'sabar', 'syukur', 'tawadhu'];
+
+        return Inertia::render('Guru/Sikap/Input', [
+            'kelasMapel' => [
+                'id' => $kelasMapel->id,
+                'kelas' => $kelasMapel->kelas?->nama_kelas ?? '-',
+                'mata_pelajaran' => $kelasMapel->mataPelajaran?->nama_mapel ?? '-',
+                'store_url' => route('guru.sikap.store', $kelasMapel),
+                'back_url' => route('guru.sikap.index'),
+            ],
+            'tahunAjaran' => $tahunAjaran ? [
+                'id' => $tahunAjaran->id,
+                'tahun' => $tahunAjaran->tahun,
+            ] : null,
+            'semester' => (string) $semester,
+            'students' => $siswa->map(function (Siswa $student, int $index) use ($sikapSosial, $sikapSpiritual, $sosialFields, $spiritualFields) {
+                $sosial = $sikapSosial->get($student->id);
+                $spiritual = $sikapSpiritual->get($student->id);
+
+                return [
+                    'id' => $student->id,
+                    'no' => $index + 1,
+                    'nis' => $student->nis,
+                    'nama' => $student->user?->nama_lengkap ?? $student->nis,
+                    'sosial' => collect($sosialFields)->mapWithKeys(fn (string $field) => [$field => $sosial?->{$field}])->all(),
+                    'spiritual' => collect($spiritualFields)->mapWithKeys(fn (string $field) => [$field => $spiritual?->{$field}])->all(),
+                ];
+            })->values(),
+        ]);
     }
     //Simpan nilai sikap siswa
     public function store(Request $request, KelasMapel $kelasMapel)

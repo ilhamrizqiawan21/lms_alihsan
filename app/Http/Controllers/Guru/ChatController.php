@@ -7,8 +7,10 @@ use App\Models\ChatMessage;
 use App\Models\KelasMapel;
 use App\Models\Notifikasi;
 use App\Models\Siswa;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class ChatController extends Controller
 {
@@ -19,12 +21,22 @@ class ChatController extends Controller
             ->aktif()
             ->get();
 
-        return view('guru.chat.index', compact('kelasMapel'));
+        return Inertia::render('Guru/Chat/Index', [
+            'rooms' => $kelasMapel->map(fn (KelasMapel $item) => [
+                'id' => $item->id,
+                'title' => $item->mataPelajaran?->nama_mapel ?? '-',
+                'subtitle' => $item->kelas?->nama_kelas ?? '-',
+                'url' => route('guru.chat.show', $item),
+            ]),
+            'emptyMessage' => 'Anda belum memiliki penugasan.',
+        ]);
     }
     //Pengaturan chat sesuai dengan guru mata pelajaran dan kelas yang diampu
     public function chat(KelasMapel $kelasMapel)
     {
         $this->authorize('mengajar', $kelasMapel);
+
+        $kelasMapel->load(['kelas', 'mataPelajaran']);
 
         $messages = ChatMessage::with('user')
             ->where('kelas_mapel_id', $kelasMapel->id)
@@ -35,7 +47,22 @@ class ChatController extends Controller
             ->where('user_id', '!=', Auth::id())
             ->update(['is_read' => true]);
 
-        return view('guru.chat.show', compact('kelasMapel', 'messages'));
+        return Inertia::render('Guru/Chat/Show', [
+            'room' => [
+                'title' => $kelasMapel->mataPelajaran?->nama_mapel ?? '-',
+                'subtitle' => $kelasMapel->kelas?->nama_kelas ?? '-',
+            ],
+            'messages' => $messages->map(fn (ChatMessage $message) => [
+                'id' => $message->id,
+                'message' => $message->message,
+                'author' => $message->user?->nama_lengkap ?? 'Unknown',
+                'is_mine' => (int) $message->user_id === (int) Auth::id(),
+                'time' => $message->created_at ? Carbon::parse($message->created_at)->format('H:i') : '',
+            ]),
+            'sendUrl' => route('guru.chat.send', $kelasMapel),
+            'backUrl' => route('guru.chat.index'),
+            'emptyMessage' => 'Belum ada pesan. Mulai percakapan!',
+        ]);
     }
     //Kirim pesan
     public function send(Request $request, KelasMapel $kelasMapel)

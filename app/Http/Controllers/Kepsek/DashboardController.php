@@ -8,7 +8,9 @@ use App\Models\LogLogin;
 use App\Models\NilaiAkhir;
 use App\Models\Pengumuman;
 use App\Services\StatistikService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 //DashboardController untuk kepala sekolah, menampilkan statistik, absensi, nilai rata-rata, pengumuman, dan login terbaru
 class DashboardController extends Controller
 {
@@ -60,9 +62,36 @@ class DashboardController extends Controller
             ->take(10)
             ->get();
 
-        return view('kepsek.dashboard', compact(
-            'statistik', 'absensiMingguan', 'rataNilaiPerMapel',
-            'pengumuman', 'loginTerbaru'
-        ));
+        return Inertia::render('Kepsek/Dashboard', [
+            'statistik' => [
+                'total_siswa' => $statistik['total_siswa'] ?? 0,
+                'total_guru' => $statistik['total_guru'] ?? 0,
+                'total_kelas' => $statistik['total_kelas'] ?? 0,
+                'total_mapel' => $statistik['total_mapel'] ?? 0,
+            ],
+            'absensiMingguan' => $absensiMingguan->map(fn ($item) => [
+                'tanggal' => $item->tanggal,
+                'hadir' => (int) $item->hadir,
+                'sakit' => (int) $item->sakit,
+                'izin' => (int) $item->izin,
+                'alpha' => (int) $item->alpha,
+            ]),
+            'rataNilaiPerMapel' => $rataNilaiPerMapel->map(fn ($item) => [
+                'nama_mapel' => $item->nama_mapel,
+                'rata_rata' => round((float) $item->rata_rata, 2),
+            ]),
+            'pengumuman' => $pengumuman->map(fn (Pengumuman $item) => [
+                'id' => $item->id,
+                'judul' => $item->judul,
+                'created_at' => $item->created_at ? Carbon::parse($item->created_at)->format('d/m/Y') : '-',
+            ]),
+            'loginTerbaru' => $loginTerbaru->map(fn (LogLogin $item) => [
+                'id' => $item->id,
+                'nama_lengkap' => $item->nama_lengkap,
+                'role' => $item->role,
+                'login_time' => $item->login_time ? Carbon::parse($item->login_time)->diffForHumans() : '-',
+                'ip_address' => $item->ip_address,
+            ]),
+        ]);
     }
 }

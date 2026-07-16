@@ -7,13 +7,17 @@ use App\Models\Pengaturan;
 use App\Models\TahunAjaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class TahunAjaranController extends Controller
 {
     public function index()
     {
         $tahunAjaran = TahunAjaran::orderBy('tahun', 'desc')->get();
-        return view('admin.tahun-ajaran.index', compact('tahunAjaran'));
+
+        return Inertia::render('Admin/TahunAjaran/Index', [
+            'tahunAjaran' => $tahunAjaran,
+        ]);
     }
     //Menyimpan Tahun Ajaran Baru
     public function store(Request $request)

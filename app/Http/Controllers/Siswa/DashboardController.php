@@ -12,7 +12,10 @@ use App\Models\Pengumuman;
 use App\Models\Siswa;
 use App\Models\Tugas;
 use App\Services\StatistikService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
@@ -84,18 +87,40 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        return view('siswa.dashboard', compact(
-            'statistik',
-            'kelasMapel',
-            'pengumuman',
-            'notifikasi',
-            'absensiTerbaru',
-            'siswa',
-            'totalTugas',
-            'tugasSelesai',
-            'tugasBelum',
-            'totalMateri',
-            'tugasTerbaru'
-        ));
+        return Inertia::render('Siswa/Dashboard', [
+            'stats' => [
+                'total_tugas' => $totalTugas,
+                'tugas_selesai' => $tugasSelesai,
+                'tugas_belum' => $tugasBelum,
+                'total_materi' => $totalMateri,
+            ],
+            'tugasTerbaru' => $tugasTerbaru->map(function (Tugas $tugas) use ($siswa) {
+                $pengumpulan = $tugas->pengumpulan->where('siswa_id', $siswa->id)->first();
+
+                return [
+                    'id' => $tugas->id,
+                    'judul' => $tugas->judul,
+                    'mata_pelajaran' => $tugas->kelasMapel?->mataPelajaran?->nama_mapel ?? '-',
+                    'batas_waktu' => $tugas->batas_waktu ? Carbon::parse($tugas->batas_waktu)->format('d/m/Y H:i') : '-',
+                    'selesai' => (bool) $pengumpulan,
+                ];
+            })->values(),
+            'notifikasi' => $notifikasi->map(fn (Notifikasi $item) => [
+                'id' => $item->id,
+                'tipe' => $item->tipe,
+                'judul' => $item->judul,
+                'pesan' => Str::limit((string) $item->pesan, 60),
+                'is_read' => $item->is_read,
+                'created_at' => $item->created_at ? Carbon::parse($item->created_at)->diffForHumans() : '',
+            ])->values(),
+            'pengumuman' => $pengumuman->map(fn (Pengumuman $item) => [
+                'id' => $item->id,
+                'judul' => $item->judul,
+                'created_at' => $item->created_at ? Carbon::parse($item->created_at)->format('d/m/Y') : '-',
+            ])->values(),
+            'links' => [
+                'notifikasi' => route('siswa.notifikasi.index'),
+            ],
+        ]);
     }
 }

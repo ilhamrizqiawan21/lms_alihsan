@@ -8,6 +8,8 @@ use App\Models\Materi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
 
 class MateriController extends Controller
 {
@@ -18,7 +20,16 @@ class MateriController extends Controller
             ->aktif()
             ->get();
 
-        return view('guru.materi.index', compact('kelasMapel'));
+        return Inertia::render('Guru/Materi/Index', [
+            'kelasMapel' => $kelasMapel->map(fn (KelasMapel $item) => [
+                'id' => $item->id,
+                'kelas' => $item->kelas?->nama_kelas ?? '-',
+                'mata_pelajaran' => $item->mataPelajaran?->nama_mapel ?? '-',
+                'initials' => strtoupper(substr($item->mataPelajaran?->nama_mapel ?? 'MP', 0, 2)),
+                'semester' => $item->semester,
+                'href' => route('guru.materi.list', $item),
+            ])->values(),
+        ]);
     }
     //Daftar materi yang diupload oleh guru untuk kelas dan mata pelajaran tertentu
     public function list(KelasMapel $kelasMapel)
@@ -29,7 +40,24 @@ class MateriController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('guru.materi.list', compact('kelasMapel', 'materi'));
+        return Inertia::render('Guru/Materi/List', [
+            'kelasMapel' => [
+                'id' => $kelasMapel->id,
+                'kelas' => $kelasMapel->kelas?->nama_kelas ?? '-',
+                'mata_pelajaran' => $kelasMapel->mataPelajaran?->nama_mapel ?? '-',
+                'store_url' => route('guru.materi.store', $kelasMapel),
+                'back_url' => route('guru.materi.index'),
+            ],
+            'materi' => $materi->map(fn (Materi $item) => [
+                'id' => $item->id,
+                'judul' => $item->judul,
+                'deskripsi' => $item->deskripsi,
+                'deskripsi_ringkas' => Str::limit((string) $item->deskripsi, 60),
+                'tanggal' => $item->created_at?->format('d M Y') ?? '-',
+                'download_url' => $item->file_path ? route('guru.materi.download', [$kelasMapel, $item]) : null,
+                'delete_url' => route('guru.materi.destroy', [$kelasMapel, $item]),
+            ])->values(),
+        ]);
     }
     //Menyimpan materi baru
     public function store(Request $request, KelasMapel $kelasMapel)

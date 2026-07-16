@@ -1,0 +1,288 @@
+<script setup>
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { computed, reactive, watch } from 'vue';
+import PageHeader from '../../../Components/AppShell/PageHeader.vue';
+import { SearchableSelect, TextInput } from '../../../Components/Form';
+import AppShell from '../../../Layouts/AppShell.vue';
+import { Badge, Button, Card, EmptyState, TableWrapper } from '../../../Components/UI';
+
+const props = defineProps({
+    kelasMapel: { type: Array, default: () => [] },
+    filters: { type: Object, default: () => ({ kelas_mapel_id: '', bulan: '' }) },
+    selected: { type: Object, default: null },
+    weeks: { type: Array, default: () => [] },
+    students: { type: Array, default: () => [] },
+});
+
+const filterForm = reactive({
+    kelas_mapel_id: props.filters.kelas_mapel_id ?? '',
+    bulan: props.filters.bulan ?? '',
+});
+
+const form = useForm({
+    bulan: props.filters.bulan ?? '',
+    absensi: buildAbsensi(),
+});
+
+const statusOptions = [
+    { value: '', label: '-' },
+    { value: 'hadir', label: 'H' },
+    { value: 'sakit', label: 'S' },
+    { value: 'izin', label: 'I' },
+    { value: 'alpha', label: 'A' },
+];
+
+const weekNumbers = computed(() => props.weeks.map((week) => String(week.number)));
+
+watch(() => [props.filters.bulan, props.students], () => {
+    form.bulan = props.filters.bulan ?? '';
+    form.absensi = buildAbsensi();
+}, { deep: true });
+
+function buildAbsensi() {
+    return Object.fromEntries(props.students.map((student) => [
+        String(student.id),
+        { ...(student.absensi ?? {}) },
+    ]));
+}
+
+function applyFilters() {
+    router.get('/guru/absensi', cleanFilters(), {
+        preserveScroll: true,
+        replace: true,
+    });
+}
+
+function resetFilters() {
+    router.get('/guru/absensi', {}, {
+        preserveScroll: true,
+        replace: true,
+    });
+}
+
+function cleanFilters() {
+    return Object.fromEntries(Object.entries(filterForm).filter(([, value]) => value !== '' && value !== null));
+}
+
+function fillColumn(weekNumber, value) {
+    if (!value) {
+        return;
+    }
+
+    props.students.forEach((student) => {
+        if (form.absensi[String(student.id)] && weekHasDate(weekNumber)) {
+            form.absensi[String(student.id)][String(weekNumber)] = value;
+        }
+    });
+}
+
+function weekHasDate(weekNumber) {
+    return props.weeks.some((week) => String(week.number) === String(weekNumber) && week.date);
+}
+
+function counts(studentId) {
+    const row = form.absensi[String(studentId)] ?? {};
+
+    return weekNumbers.value.reduce((summary, weekNumber) => {
+        const status = row[weekNumber];
+
+        if (status === 'hadir') summary.hadir += 1;
+        if (status === 'sakit') summary.sakit += 1;
+        if (status === 'izin') summary.izin += 1;
+        if (status === 'alpha') summary.alpha += 1;
+
+        return summary;
+    }, { hadir: 0, sakit: 0, izin: 0, alpha: 0 });
+}
+
+function submit() {
+    if (!props.selected?.store_url) {
+        return;
+    }
+
+    form.post(props.selected.store_url, {
+        preserveScroll: true,
+    });
+}
+</script>
+
+<template>
+    <Head title="Absensi" />
+
+    <AppShell title="Absensi">
+        <PageHeader title="Absensi" icon="bi-clipboard-check-fill" />
+
+        <div class="row gy-4">
+            <div class="col-12">
+                <Card title="Filter Absensi" icon="bi-funnel-fill">
+                    <form class="row g-3 align-items-end" @submit.prevent="applyFilters">
+                        <div class="col-md-6">
+                            <SearchableSelect
+                                v-model="filterForm.kelas_mapel_id"
+                                name="kelas_mapel_id"
+                                label="Kelas & Mata Pelajaran"
+                                placeholder="-- Pilih --"
+                                search-placeholder="Cari kelas atau mapel..."
+                                wrapper-class="mb-0"
+                                :options="kelasMapel.map((item) => ({ value: item.id, label: item.label }))"
+                            />
+                        </div>
+                        <div class="col-md-3">
+                            <TextInput
+                                v-model="filterForm.bulan"
+                                type="month"
+                                name="bulan"
+                                label="Bulan"
+                                wrapper-class="mb-0"
+                            />
+                        </div>
+                        <div class="col-md-3 d-grid">
+                            <Button type="submit" color="primary" icon="bi-search">Tampilkan</Button>
+                        </div>
+                    </form>
+                </Card>
+            </div>
+
+            <div v-if="kelasMapel.length === 0" class="col-12">
+                <Card>
+                    <EmptyState
+                        title="Belum ada penugasan mengajar"
+                        message="Anda belum memiliki penugasan mengajar semester ini."
+                        icon="bi-clipboard-check"
+                    />
+                </Card>
+            </div>
+
+            <div v-else-if="selected" class="col-12">
+                <form @submit.prevent="submit">
+                    <Card
+                        :title="`Absensi ${selected.kelas} - ${selected.mata_pelajaran}`"
+                        icon="bi-table"
+                        body-class="p-0"
+                    >
+                        <div class="p-3 attendance-legend d-flex flex-wrap gap-2 align-items-center">
+                            <Badge color="success">H=Hadir</Badge>
+                            <Badge color="warning" class="text-dark">S=Sakit</Badge>
+                            <Badge color="info" class="text-dark">I=Izin</Badge>
+                            <Badge color="danger">A=Alpha</Badge>
+                        </div>
+
+                        <TableWrapper>
+                            <table class="table table-bordered table-hover mb-0 attendance-table">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center" style="width:44px;">No</th>
+                                        <th class="text-center" style="width:70px;">NIS</th>
+                                        <th>Nama</th>
+                                        <th
+                                            v-for="week in weeks"
+                                            :key="week.number"
+                                            class="text-center"
+                                            style="min-width:72px;"
+                                        >
+                                            Minggu {{ week.number }}<br>
+                                            <small class="text-muted">{{ week.label }}</small>
+                                        </th>
+                                        <th class="text-center" style="width:42px;">H</th>
+                                        <th class="text-center" style="width:42px;">S</th>
+                                        <th class="text-center" style="width:42px;">I</th>
+                                        <th class="text-center" style="width:42px;">A</th>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3"></td>
+                                        <td
+                                            v-for="week in weeks"
+                                            :key="`fill-${week.number}`"
+                                            class="text-center py-2"
+                                        >
+                                            <select
+                                                v-if="week.date"
+                                                class="form-select form-select-sm attendance-select"
+                                                @change="fillColumn(week.number, $event.target.value); $event.target.value = ''"
+                                            >
+                                                <option
+                                                    v-for="option in statusOptions"
+                                                    :key="option.value"
+                                                    :value="option.value"
+                                                >
+                                                    {{ option.label }}
+                                                </option>
+                                            </select>
+                                        </td>
+                                        <td colspan="4"></td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="student in students" :key="student.id">
+                                        <td class="text-center text-muted align-middle">{{ student.no }}</td>
+                                        <td class="align-middle">{{ student.nis }}</td>
+                                        <td class="align-middle"><strong>{{ student.nama }}</strong></td>
+                                        <td
+                                            v-for="week in weeks"
+                                            :key="`${student.id}-${week.number}`"
+                                            class="p-0 text-center align-middle"
+                                        >
+                                            <select
+                                                v-if="week.date"
+                                                v-model="form.absensi[String(student.id)][String(week.number)]"
+                                                class="form-select form-select-sm attendance-select"
+                                                :class="form.absensi[String(student.id)][String(week.number)]"
+                                            >
+                                                <option
+                                                    v-for="option in statusOptions"
+                                                    :key="option.value"
+                                                    :value="option.value"
+                                                >
+                                                    {{ option.label }}
+                                                </option>
+                                            </select>
+                                            <span v-else class="text-muted">-</span>
+                                        </td>
+                                        <td class="text-center align-middle text-success fw-bold">{{ counts(student.id).hadir }}</td>
+                                        <td class="text-center align-middle text-warning">{{ counts(student.id).sakit }}</td>
+                                        <td class="text-center align-middle text-info">{{ counts(student.id).izin }}</td>
+                                        <td class="text-center align-middle text-danger fw-bold">{{ counts(student.id).alpha }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </TableWrapper>
+
+                        <template #footer>
+                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
+                                <Button type="button" color="outline-secondary" icon="bi-arrow-left" @click="resetFilters">Reset</Button>
+                                <Button type="submit" color="success" icon="bi-save" :disabled="form.processing">
+                                    {{ form.processing ? 'Menyimpan...' : 'Simpan Absensi' }}
+                                </Button>
+                            </div>
+                        </template>
+                    </Card>
+                </form>
+            </div>
+
+            <div v-else class="col-12">
+                <Card>
+                    <EmptyState
+                        title="Pilih filter absensi"
+                        message="Pilih kelas dan bulan untuk menampilkan data absensi."
+                        icon="bi-info-circle"
+                    />
+                </Card>
+            </div>
+        </div>
+    </AppShell>
+</template>
+
+<style scoped>
+.attendance-select {
+    font-size:0.72rem;
+    min-width:70px;
+    padding:0.35rem 0.5rem;
+    text-align:center;
+}
+.attendance-select.hadir { background:#dcfce7; color:#166534; }
+.attendance-select.sakit { background:#fef3c7; color:#92400e; }
+.attendance-select.izin { background:#dbeafe; color:#1e40af; }
+.attendance-select.alpha { background:#fee2e2; color:#991b1b; }
+.attendance-legend .badge { font-size:0.78rem; }
+.attendance-table th { vertical-align: middle; }
+</style>

@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\CalendarEvent;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
 
 class KalenderController extends Controller
 {
@@ -23,24 +25,28 @@ class KalenderController extends Controller
         $daysInMonth = $firstDay->daysInMonth;
         $startDayOfWeek = $firstDay->dayOfWeek;
 
-        $events = CalendarEvent::whereYear('event_date', $year)
-            ->whereMonth('event_date', $month)
-            ->orderBy('event_date')
-            ->get()
-            ->groupBy(fn($e) => $e->event_date->format('Y-m-d'));
-
         $monthEvents = CalendarEvent::whereYear('event_date', $year)
             ->whereMonth('event_date', $month)
             ->orderBy('event_date')
             ->get();
-
         $prevMonth = $firstDay->copy()->subMonth();
         $nextMonth = $firstDay->copy()->addMonth();
 
-        return view('admin.kalender', compact(
-            'events', 'year', 'month', 'daysInMonth',
-            'startDayOfWeek', 'prevMonth', 'nextMonth', 'firstDay', 'monthEvents'
-        ));
+        $bulanIndo = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        $eventProps = $monthEvents->map(fn (CalendarEvent $event) => $this->eventProps($event))->values();
+
+        return Inertia::render('Admin/Kalender/Index', [
+            'calendar' => $this->calendarProps($year, $month, $daysInMonth, $startDayOfWeek, $prevMonth, $nextMonth, $eventProps, 'admin.kalender'),
+            'monthEvents' => $eventProps,
+            'storeUrl' => route('admin.kalender.store'),
+            'createTitle' => 'Tambah Event',
+            'scopeOptions' => [
+                ['value' => 'school', 'label' => 'Sekolah'],
+                ['value' => 'user', 'label' => 'Pribadi'],
+            ],
+            'pageTitle' => 'Kalender & Reminder',
+            'monthLabel' => $bulanIndo[(int) $month],
+        ]);
     }
     //Input Event
     public function store(Request $request)
@@ -84,5 +90,79 @@ class KalenderController extends Controller
     {
         $calendarEvent->delete();
         return back()->with('success', 'Event berhasil dihapus.');
+    }
+
+    private function calendarProps(int $year, int $month, int $daysInMonth, int $startDayOfWeek, Carbon $prevMonth, Carbon $nextMonth, $eventProps, string $routeName): array
+    {
+        $bulanIndo = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        $hariIndo = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+        $today = now()->toDateString();
+        $eventsByDate = $eventProps->groupBy('event_date')->map->values();
+        $weeks = [];
+        $day = 1;
+        $done = false;
+
+        for ($row = 0; $row < 6; $row++) {
+            $week = [];
+
+            for ($col = 0; $col < 7; $col++) {
+                $index = $row * 7 + $col;
+                $cellDate = null;
+
+                if ($index >= $startDayOfWeek && !$done && $day <= $daysInMonth) {
+                    $cellDate = sprintf('%04d-%02d-%02d', $year, $month, $day);
+                    $day++;
+                } elseif ($day > $daysInMonth) {
+                    $done = true;
+                }
+
+                $week[] = [
+                    'date' => $cellDate,
+                    'day' => $cellDate ? (int) substr($cellDate, 8, 2) : null,
+                    'is_today' => $cellDate === $today,
+                    'events' => $cellDate ? ($eventsByDate[$cellDate] ?? collect())->values() : [],
+                ];
+            }
+
+            $weeks[] = $week;
+
+            if ($done && $day > $daysInMonth) {
+                break;
+            }
+        }
+
+        return [
+            'year' => $year,
+            'month' => $month,
+            'month_label' => $bulanIndo[(int) $month],
+            'title' => $bulanIndo[(int) $month] . ' ' . $year,
+            'today' => $today,
+            'today_url' => route($routeName, ['year' => now()->year, 'month' => now()->month]),
+            'prev_url' => route($routeName, ['year' => $prevMonth->year, 'month' => $prevMonth->month]),
+            'prev_label' => $bulanIndo[$prevMonth->month],
+            'next_url' => route($routeName, ['year' => $nextMonth->year, 'month' => $nextMonth->month]),
+            'next_label' => $bulanIndo[$nextMonth->month],
+            'weekdays' => $hariIndo,
+            'weeks' => $weeks,
+        ];
+    }
+
+    private function eventProps(CalendarEvent $event): array
+    {
+        return [
+            'id' => $event->id,
+            'title' => $event->title,
+            'title_short' => Str::limit($event->title, 18),
+            'description' => $event->description,
+            'event_date' => $event->event_date?->format('Y-m-d'),
+            'event_date_label' => $event->event_date?->format('d M Y') ?? '-',
+            'is_holiday' => $event->is_holiday,
+            'is_done' => $event->is_done,
+            'scope' => $event->scope,
+            'can_manage' => true,
+            'update_url' => route('admin.kalender.update', $event),
+            'delete_url' => route('admin.kalender.destroy', $event),
+            'toggle_done_url' => null,
+        ];
     }
 }

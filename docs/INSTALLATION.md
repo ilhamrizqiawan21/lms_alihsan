@@ -6,10 +6,12 @@ Panduan ini menjelaskan instalasi LMS Sekolah dari nol untuk satu sekolah.
 
 - PHP 8.3 atau lebih baru
 - Composer
-- Node.js 20+ dan npm
+- Node.js 20+ atau 22+ dan npm
 - MySQL 8.0 / MariaDB 10.6+
 - Web server Nginx/Apache untuk production
 - Extension PHP: `bcmath`, `ctype`, `curl`, `dom`, `fileinfo`, `filter`, `gd`, `hash`, `json`, `mbstring`, `openssl`, `pcre`, `pdo`, `pdo_mysql`, `session`, `tokenizer`, `xml`, `zip`
+
+> Catatan: Vite, `@vitejs/plugin-vue`, dan Laravel Vite Plugin tidak menargetkan Node 19. Gunakan Node 20 LTS atau 22 LTS agar `npm install`/`npm run build` tidak memunculkan warning engine.
 
 ## Clone Project
 
@@ -35,6 +37,17 @@ composer install --no-dev --optimize-autoloader
 ```bash
 npm install
 ```
+
+Dependency frontend aktif:
+
+- `@inertiajs/vue3`
+- `vue`
+- `@vitejs/plugin-vue`
+- `bootstrap`
+- `bootstrap-icons`
+- `chart.js`
+
+Dependency lama seperti Alpine.js, jQuery, Select2, dan DataTables sudah tidak dipakai.
 
 ## Siapkan Environment
 
@@ -100,11 +113,29 @@ php artisan migrate:fresh --seeder=EmptyProductSeeder
 
 ## Build Asset
 
+Untuk development dengan hot reload:
+
+```bash
+npm run dev
+```
+
+Untuk production:
+
 ```bash
 npm run build
 ```
 
-Untuk production, pastikan `public/build/manifest.json` terbentuk setelah command ini. Layout aplikasi akan memakai asset lokal dari Vite jika manifest tersedia; CDN hanya dipakai sebagai fallback saat build belum ada.
+Pastikan `public/build/manifest.json` terbentuk setelah command ini. Layout aplikasi akan memakai asset lokal dari Vite jika manifest tersedia. Fallback CDN hanya memuat Bootstrap saat build belum tersedia; plugin lama seperti jQuery, Select2, dan DataTables tidak lagi dimuat.
+
+Asset entry utama:
+
+```text
+resources/css/app.css
+resources/js/app.js
+resources/js/inertia.js
+```
+
+`resources/js/app.js` dipakai layout Blade legacy untuk Bootstrap, sidebar, confirm dialog, dan loading submit. `resources/js/inertia.js` memuat app Inertia + Vue untuk halaman yang sudah dimigrasikan.
 
 ## Storage Link
 
@@ -166,6 +197,10 @@ Setelah login admin:
 - Set `APP_DEBUG=false`
 - Gunakan `APP_KEY` baru hasil `php artisan key:generate`
 - Gunakan database dan user database khusus aplikasi
+- Jalankan `composer install --no-dev --optimize-autoloader`
+- Jalankan `npm install` lalu `npm run build`
+- Pastikan `public/build/manifest.json` ikut terdeploy
+- Jalankan `php artisan storage:link`
 - Jalankan `php artisan optimize`
 - Pastikan backup database aktif
 - Pastikan `DEFAULT_ADMIN_PASSWORD` sudah diganti dari nilai contoh sebelum menjalankan `EmptyProductSeeder`

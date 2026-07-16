@@ -7,11 +7,12 @@ use App\Models\KelasMapel;
 use App\Models\PengumpulanFile;
 use App\Models\PengumpulanTugas;
 use App\Models\Siswa;
-use App\Models\TahunAjaran;
 use App\Models\Tugas;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class TugasController extends Controller
 {
@@ -26,8 +27,6 @@ class TugasController extends Controller
             return redirect()->route('login')->with('error', 'Data siswa tidak ditemukan.');
         }
 
-        $taAktif = TahunAjaran::getAktif();
-
         $tugas = Tugas::with(['kelasMapel.mataPelajaran', 'pengumpulan' => function ($q) use ($siswa) {
             $q->where('siswa_id', $siswa->id);
         }])
@@ -38,7 +37,21 @@ class TugasController extends Controller
             ->orderBy('batas_waktu', 'desc')
             ->get();
 
-        return view('siswa.tugas.index', compact('tugas', 'siswa'));
+        return Inertia::render('Siswa/Tugas/Index', [
+            'tugas' => $tugas->map(function (Tugas $item) use ($siswa) {
+                $pengumpulan = $item->pengumpulan->where('siswa_id', $siswa->id)->first();
+
+                return [
+                    'id' => $item->id,
+                    'judul' => $item->judul,
+                    'mata_pelajaran' => $item->kelasMapel?->mataPelajaran?->nama_mapel ?? '-',
+                    'batas_waktu' => $item->batas_waktu ? Carbon::parse($item->batas_waktu)->format('d/m/Y H:i') : '-',
+                    'status' => $pengumpulan?->status,
+                    'nilai' => $pengumpulan?->nilai ?? '-',
+                    'show_url' => route('siswa.tugas.show', $item),
+                ];
+            })->values(),
+        ]);
     }
 
     public function show(Tugas $tugas)
@@ -54,7 +67,38 @@ class TugasController extends Controller
             ->where('siswa_id', $siswa->id)
             ->first();
 
-        return view('siswa.tugas.show', compact('tugas', 'pengumpulan', 'siswa'));
+        $tugas->loadMissing(['kelasMapel.mataPelajaran', 'kelasMapel.guru', 'kelasMapel.kelas']);
+
+        return Inertia::render('Siswa/Tugas/Show', [
+            'tugas' => [
+                'id' => $tugas->id,
+                'judul' => $tugas->judul,
+                'kategori_nilai' => $tugas->kategori_nilai ?? 'NH',
+                'mata_pelajaran' => $tugas->kelasMapel?->mataPelajaran?->nama_mapel ?? '-',
+                'guru' => $tugas->kelasMapel?->guru?->nama_lengkap ?? '-',
+                'kelas' => trim(($tugas->kelasMapel?->kelas?->tingkat ? $tugas->kelasMapel?->kelas?->tingkat . ' ' : '') . ($tugas->kelasMapel?->kelas?->nama_kelas ?? '')),
+                'batas_waktu' => $tugas->batas_waktu ? Carbon::parse($tugas->batas_waktu)->format('d M Y H:i') : '-',
+                'is_late' => $tugas->batas_waktu ? now()->gt($tugas->batas_waktu) : false,
+                'deskripsi' => $tugas->deskripsi ?? 'Tidak ada deskripsi',
+                'store_url' => route('siswa.tugas.kumpul', $tugas),
+                'back_url' => route('siswa.tugas.index'),
+            ],
+            'pengumpulan' => $pengumpulan ? [
+                'id' => $pengumpulan->id,
+                'status' => $pengumpulan->status,
+                'tanggal_kumpul' => $pengumpulan->tanggal_kumpul ? Carbon::parse($pengumpulan->tanggal_kumpul)->format('d M Y H:i') : '-',
+                'nilai' => $pengumpulan->nilai,
+                'teks_jawaban' => $pengumpulan->teks_jawaban,
+                'catatan' => $pengumpulan->catatan,
+                'legacy_file_url' => $pengumpulan->file_upload ? route('siswa.tugas.pengumpulan.download', [$tugas, $pengumpulan]) : null,
+                'files' => $pengumpulan->files->map(fn (PengumpulanFile $file) => [
+                    'id' => $file->id,
+                    'name' => $file->file_name,
+                    'url' => route('siswa.tugas.file.download', [$tugas, $file]),
+                ])->values(),
+            ] : null,
+            'canSubmit' => !$pengumpulan || $pengumpulan->status === 'belum',
+        ]);
     }
 
     public function store(Request $request, Tugas $tugas)

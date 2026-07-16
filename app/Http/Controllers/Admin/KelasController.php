@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Kelas;
 use App\Models\Siswa;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class KelasController extends Controller
 {
@@ -18,7 +19,9 @@ class KelasController extends Controller
             $q->where('status', 'aktif');
         }])->orderBy('tingkat')->orderBy('nama_kelas')->get();
 
-        return view('admin.kelas.index', compact('kelas'));
+        return Inertia::render('Admin/Kelas/Index', [
+            'kelas' => $kelas,
+        ]);
     }
 
     /**

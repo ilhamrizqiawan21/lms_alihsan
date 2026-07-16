@@ -1,5 +1,56 @@
 @import 'bootstrap/dist/css/bootstrap.min.css';
 @import 'bootstrap-icons/font/bootstrap-icons.css';
-@import 'datatables.net-bs5/css/dataTables.bootstrap5.min.css';
-@import 'select2/dist/css/select2.min.css';
-@import 'select2-bootstrap-5-theme/dist/select2-bootstrap-5-theme.min.css';
+
+.searchable-select {
+    position: relative;
+}
+
+.searchable-select-toggle {
+    display: flex;
+    align-items: center;
+    min-height: 38px;
+    text-align: left;
+}
+
+.searchable-select-menu {
+    position: absolute;
+    z-index: 1055;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    padding: 0.5rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius);
+    background: var(--bs-body-bg);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.12);
+}
+
+.searchable-select-options {
+    max-height: 220px;
+    margin-top: 0.5rem;
+    overflow-y: auto;
+}
+
+.searchable-select-option {
+    display: block;
+    width: 100%;
+    padding: 0.45rem 0.5rem;
+    border: 0;
+    border-radius: 0.25rem;
+    background: transparent;
+    color: var(--bs-body-color);
+    text-align: left;
+}
+
+.searchable-select-option:hover,
+.searchable-select-option:focus,
+.searchable-select-option.active {
+    background: var(--bs-primary-bg-subtle);
+    color: var(--bs-primary-text-emphasis);
+}
+
+.searchable-select-empty {
+    padding: 0.75rem 0.5rem;
+    color: var(--bs-secondary-color);
+    text-align: center;
+}

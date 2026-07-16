@@ -7,6 +7,7 @@ use App\Models\NilaiAkhir;
 use App\Models\Siswa;
 use App\Services\NilaiService;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class NilaiController extends Controller
 {
@@ -35,6 +36,23 @@ class NilaiController extends Controller
                 return $item->tahunAjaran?->tahun . ' - Semester ' . $item->semester;
             });
 
-        return view('siswa.nilai.index', compact('nilaiList', 'siswa'));
+        return Inertia::render('Siswa/Nilai/Index', [
+            'nilaiGroups' => $nilaiList->map(fn ($items, string $periode) => [
+                'periode' => $periode,
+                'nilai' => $items->map(fn (NilaiAkhir $item) => [
+                    'id' => $item->id,
+                    'mata_pelajaran' => $item->kelasMapel?->mataPelajaran?->nama_mapel ?? '-',
+                    'sum1' => $item->sum1,
+                    'sum2' => $item->sum2,
+                    'sum3' => $item->sum3,
+                    'sum4' => $item->sum4,
+                    'nilai_harian' => $item->nilai_harian,
+                    'sts' => $item->sts,
+                    'sas' => $item->sas,
+                    'sat' => $item->sat,
+                    'rata_akhir' => $item->rata_akhir,
+                ])->values(),
+            ])->values(),
+        ]);
     }
 }

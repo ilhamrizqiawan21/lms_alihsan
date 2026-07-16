@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Kalender & Reminder')
+@section('title', 'Kalender dan Reminder')
 
 @php
 $bulanIndo = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\MataPelajaran;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class MataPelajaranController extends Controller
 {
@@ -14,7 +15,15 @@ class MataPelajaranController extends Controller
     public function index()
     {
         $mapel = MataPelajaran::orderBy('urutan')->get();
-        return view('admin.mata-pelajaran.index', compact('mapel'));
+
+        return Inertia::render('Admin/MataPelajaran/Index', [
+            'mapel' => $mapel->map(fn (MataPelajaran $item) => [
+                'id' => $item->id,
+                'kode' => $item->kode,
+                'nama_mapel' => $item->nama_mapel,
+                'urutan' => $item->urutan,
+            ])->values(),
+        ]);
     }
 
     /**

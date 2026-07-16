@@ -7,9 +7,11 @@ use App\Models\ChatMessage;
 use App\Models\KelasMapel;
 use App\Models\Notifikasi;
 use App\Models\Siswa;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
 
 class ChatController extends Controller
 {
@@ -27,7 +29,15 @@ class ChatController extends Controller
             ->aktif()
             ->get();
 
-        return view('siswa.chat.index', compact('kelasMapel'));
+        return Inertia::render('Siswa/Chat/Index', [
+            'rooms' => $kelasMapel->map(fn (KelasMapel $item) => [
+                'id' => $item->id,
+                'title' => $item->mataPelajaran?->nama_mapel ?? '-',
+                'subtitle' => $item->guru?->nama_lengkap ?? '-',
+                'url' => route('siswa.chat.show', $item),
+            ]),
+            'emptyMessage' => 'Belum ada mata pelajaran.',
+        ]);
     }
     //Tampilan chat yang difilter sesuai dengan guru dan mapel yang dipilih oleh siswa, dan menampilkan pesan yang sudah dibaca dan belum dibaca
     public function show(KelasMapel $kelasMapel)
@@ -36,6 +46,8 @@ class ChatController extends Controller
         $siswa = $user->siswa;
 
         $this->ensureKelasMapelAktifUntukSiswa($kelasMapel, $siswa);
+
+        $kelasMapel->load(['guru', 'mataPelajaran']);
 
         $messages = ChatMessage::with('user')
             ->where('kelas_mapel_id', $kelasMapel->id)
@@ -46,7 +58,22 @@ class ChatController extends Controller
             ->where('user_id', '!=', Auth::id())
             ->update(['is_read' => true]);
 
-        return view('siswa.chat.show', compact('kelasMapel', 'messages'));
+        return Inertia::render('Siswa/Chat/Show', [
+            'room' => [
+                'title' => $kelasMapel->mataPelajaran?->nama_mapel ?? '-',
+                'subtitle' => $kelasMapel->guru?->nama_lengkap ?? '-',
+            ],
+            'messages' => $messages->map(fn (ChatMessage $message) => [
+                'id' => $message->id,
+                'message' => $message->message,
+                'author' => $message->user?->nama_lengkap ?? 'Unknown',
+                'is_mine' => (int) $message->user_id === (int) Auth::id(),
+                'time' => $message->created_at ? Carbon::parse($message->created_at)->format('H:i') : '',
+            ]),
+            'sendUrl' => route('siswa.chat.send', $kelasMapel),
+            'backUrl' => route('siswa.chat.index'),
+            'emptyMessage' => 'Belum ada pesan.',
+        ]);
     }
     //Kirim Pesan
     public function send(Request $request, KelasMapel $kelasMapel)

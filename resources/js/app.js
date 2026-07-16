@@ -1,19 +1,29 @@
-import $ from 'jquery';
-import Alpine from 'alpinejs';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
-window.$ = window.jQuery = $;
-window.Alpine = Alpine;
+function initLegacySidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const toggle = document.querySelector('[data-sidebar-toggle]');
 
-Alpine.data('appShell', () => ({
-    sidebarOpen: window.innerWidth >= 992,
-    toggleSidebar() {
-        this.sidebarOpen = !this.sidebarOpen;
-    },
-    closeSidebar() {
-        this.sidebarOpen = false;
-    },
-}));
+    if (!sidebar || !overlay || !toggle) {
+        return;
+    }
+
+    const setOpen = (open) => {
+        sidebar.classList.toggle('sidebar-open', open);
+        overlay.classList.toggle('show', open);
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    };
+
+    setOpen(window.innerWidth >= 992);
+    toggle.addEventListener('click', () => setOpen(!sidebar.classList.contains('sidebar-open')));
+    overlay.addEventListener('click', () => setOpen(false));
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            setOpen(false);
+        }
+    });
+}
 
 function escapeHtml(value) {
     return String(value).replace(/[&<>"']/g, (match) => ({
@@ -24,48 +34,6 @@ function escapeHtml(value) {
         "'": '&#39;',
     }[match]));
 }
-
-window.showToast = function (message, type = 'success') {
-    const icons = {
-        success: 'bi-check-circle-fill',
-        error: 'bi-x-circle-fill',
-        warning: 'bi-exclamation-triangle-fill',
-        info: 'bi-info-circle-fill',
-    };
-    const container = document.getElementById('toastContainer');
-
-    if (!container) {
-        return;
-    }
-
-    const el = document.createElement('div');
-    el.className = `toast-item ${type}`;
-    el.setAttribute('role', type === 'error' ? 'alert' : 'status');
-    el.innerHTML = `<i class="bi ${icons[type] || icons.info}" aria-hidden="true"></i><span>${escapeHtml(message)}</span>`;
-    container.appendChild(el);
-
-    setTimeout(() => {
-        el.classList.add('removing');
-        setTimeout(() => {
-            if (el.parentNode) {
-                el.remove();
-            }
-        }, 400);
-    }, 4000);
-};
-
-window.renderChart = async function (target, config) {
-    const canvas = typeof target === 'string' ? document.getElementById(target) : target;
-
-    if (!canvas) {
-        return null;
-    }
-
-    const { Chart, registerables } = await import('chart.js');
-    Chart.register(...registerables);
-
-    return new Chart(canvas, config);
-};
 
 window.confirmAction = function (message, callback, options = {}) {
     const title = options.title || 'Konfirmasi';
@@ -220,44 +188,6 @@ document.addEventListener('submit', (event) => {
     setFormLoading(event.target);
 });
 
-$(document).ready(async () => {
-    if ($('.select2').length > 0) {
-        const select2Module = await import('select2');
-        const registerSelect2 = select2Module.default || select2Module;
-        registerSelect2(window, $);
-        $('.select2').select2({ theme: 'bootstrap-5', width: '100%' });
-    }
-
-    if ($('.datatable').length > 0) {
-        await import('datatables.net-bs5');
-
-        $('.datatable').each(function () {
-            const hasServerPagination = $(this).closest('.card').find('.pagination').length > 0;
-
-            if (!hasServerPagination) {
-                $(this).DataTable({
-                    language: {
-                        search: 'Cari:',
-                        lengthMenu: 'Tampilkan _MENU_ data',
-                        info: 'Menampilkan _START_ sampai _END_ dari _TOTAL_ data',
-                        infoEmpty: 'Menampilkan 0 sampai 0 dari 0 data',
-                        infoFiltered: '(difilter dari _MAX_ total data)',
-                        zeroRecords: 'Tidak ada data yang cocok',
-                        emptyTable: 'Tidak ada data tersedia',
-                        paginate: {
-                            first: 'Pertama',
-                            previous: 'Sebelumnya',
-                            next: 'Berikutnya',
-                            last: 'Terakhir',
-                        },
-                    },
-                    pageLength: 25,
-                    lengthMenu: [10, 25, 50, 100],
-                    dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>t<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
-                });
-            }
-        });
-    }
+document.addEventListener('DOMContentLoaded', async () => {
+    initLegacySidebar();
 });
-
-Alpine.start();

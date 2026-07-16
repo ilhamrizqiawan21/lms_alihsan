@@ -13,7 +13,7 @@
                     @csrf
                     <div class="mb-3">
                         <label class="form-label">Kelas <span class="text-danger">*</span></label>
-                        <select name="kelas_id" class="form-select select2 @error('kelas_id') is-invalid @enderror" required>
+                        <select name="kelas_id" class="form-select @error('kelas_id') is-invalid @enderror" required>
                             <option value="">-- Pilih Kelas --</option>
                             @foreach($kelas as $k)
                                     <option value="{{ $k->id }}" @selected(old('kelas_id') == $k->id)>{{ $k->tingkat }} {{ $k->nama_kelas }}</option>
@@ -23,7 +23,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Mata Pelajaran <span class="text-danger">*</span></label>
-                        <select name="mapel_id" class="form-select select2 @error('mapel_id') is-invalid @enderror" required>
+                        <select name="mapel_id" class="form-select @error('mapel_id') is-invalid @enderror" required>
                             <option value="">-- Pilih Mapel --</option>
                             @foreach($mapel as $m)
                                     <option value="{{ $m->id }}" @selected(old('mapel_id') == $m->id)>{{ $m->kode }} - {{ $m->nama_mapel }}</option>
@@ -33,7 +33,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Guru <span class="text-danger">*</span></label>
-                        <select name="guru_id" class="form-select select2 @error('guru_id') is-invalid @enderror" required>
+                        <select name="guru_id" class="form-select @error('guru_id') is-invalid @enderror" required>
                             <option value="">-- Pilih Guru --</option>
                             @foreach($guru as $g)
                                     <option value="{{ $g->id }}" @selected(old('guru_id') == $g->id)>{{ $g->nama_lengkap }}</option>
@@ -122,7 +122,7 @@
                     @csrf
                     <div class="mb-3">
                         <label class="form-label">Kelas <span class="text-danger">*</span></label>
-                        <select name="kelas_id" class="form-select select2 @error('kelas_id') is-invalid @enderror" required>
+                        <select name="kelas_id" class="form-select @error('kelas_id') is-invalid @enderror" required>
                             <option value="">-- Pilih Kelas --</option>
                             @foreach($kelas as $k)
                                 <option value="{{ $k->id }}" @selected(old('kelas_id') == $k->id)>{{ $k->tingkat }} {{ $k->nama_kelas }}</option>
@@ -132,7 +132,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Guru Wali Kelas <span class="text-danger">*</span></label>
-                        <select name="guru_id" class="form-select select2 @error('guru_id') is-invalid @enderror" required>
+                        <select name="guru_id" class="form-select @error('guru_id') is-invalid @enderror" required>
                             <option value="">-- Pilih Guru --</option>
                             @foreach($guru as $g)
                                 <option value="{{ $g->id }}" @selected(old('guru_id') == $g->id)>{{ $g->nama_lengkap }}</option>

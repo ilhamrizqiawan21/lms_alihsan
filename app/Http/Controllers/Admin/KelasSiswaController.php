@@ -14,12 +14,16 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Inertia\Inertia;
 
 class KelasSiswaController extends Controller
 {
     public function index(Request $request)
     {
-        $kelasList = Kelas::orderBy('tingkat')->orderBy('nama_kelas')->get();
+        $kelasList = Kelas::withCount(['siswa' => fn ($query) => $query->where('status', 'aktif')])
+            ->orderBy('tingkat')
+            ->orderBy('nama_kelas')
+            ->get();
         //Urutan User berdasarkan NIS/Kode Guru
         $query = Siswa::with(['user', 'kelas'])
             ->whereHas('user')
@@ -36,9 +40,33 @@ class KelasSiswaController extends Controller
             });
         }
 
-        $siswa = $query->paginate(25)->appends($request->query());
+        $siswa = $query->paginate(25)
+            ->withQueryString()
+            ->through(fn (Siswa $siswa) => [
+                'id' => $siswa->id,
+                'nis' => $siswa->nis,
+                'kelas_id' => $siswa->kelas_id,
+                'kelas' => trim(($siswa->kelas?->tingkat ? $siswa->kelas->tingkat . ' ' : '') . ($siswa->kelas?->nama_kelas ?? '')),
+                'status' => $siswa->status,
+                'tinggal_kelas' => (bool) $siswa->tinggal_kelas,
+                'nama_lengkap' => $siswa->user?->nama_lengkap,
+                'jenis_kelamin' => $siswa->user?->jenis_kelamin,
+            ]);
 
-        return view('admin.kelas-siswa.index', compact('kelasList', 'siswa'));
+        return Inertia::render('Admin/KelasSiswa/Index', [
+            'kelasList' => $kelasList->map(fn (Kelas $kelas) => [
+                'id' => $kelas->id,
+                'tingkat' => $kelas->tingkat,
+                'nama_kelas' => $kelas->nama_kelas,
+                'label' => "{$kelas->tingkat} {$kelas->nama_kelas}",
+                'siswa_count' => $kelas->siswa_count,
+            ]),
+            'siswa' => $siswa,
+            'filters' => $request->only(['kelas_id', 'search']),
+            'importErrors' => session('import_errors', []),
+            'studentPassword' => session('student_password'),
+            'templateUrl' => route('admin.kelas-siswa.import.template'),
+        ]);
     }
 
     public function downloadTemplate(SiswaTemplateService $templateService)

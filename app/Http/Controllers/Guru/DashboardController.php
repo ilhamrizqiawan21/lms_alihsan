@@ -7,7 +7,9 @@ use App\Models\KelasMapel;
 use App\Models\Notifikasi;
 use App\Models\Pengumuman;
 use App\Services\StatistikService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
@@ -47,6 +49,27 @@ class DashboardController extends Controller
             ->where('is_read', false)
             ->count();
 
-        return view('guru.dashboard', compact('statistik', 'kelasMapel', 'pengumuman', 'notifikasi', 'unreadNotifCount'));
+        return Inertia::render('Guru/Dashboard', [
+            'statistik' => $statistik,
+            'kelasMapel' => $kelasMapel->map(fn (KelasMapel $item) => [
+                'id' => $item->id,
+                'kelas' => $item->kelas?->nama_kelas ?? '-',
+                'mata_pelajaran' => $item->mataPelajaran?->nama_mapel ?? '-',
+                'semester' => $item->semester === '1' ? 'Ganjil' : 'Genap',
+            ])->values(),
+            'pengumuman' => $pengumuman->map(fn (Pengumuman $item) => [
+                'id' => $item->id,
+                'judul' => $item->judul,
+                'created_at' => $item->created_at ? Carbon::parse($item->created_at)->format('d M Y') : null,
+            ])->values(),
+            'notifikasi' => $notifikasi->map(fn (Notifikasi $item) => [
+                'id' => $item->id,
+                'judul' => $item->judul,
+                'pesan' => $item->pesan,
+                'is_read' => (bool) $item->is_read,
+                'created_at' => $item->created_at ? Carbon::parse($item->created_at)->diffForHumans() : null,
+            ])->values(),
+            'unreadNotifCount' => $unreadNotifCount,
+        ]);
     }
 }

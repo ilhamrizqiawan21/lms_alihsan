@@ -9,6 +9,7 @@ use App\Models\NilaiAkhir;
 use App\Models\Siswa;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class StatistikController extends Controller
 {
@@ -44,8 +45,25 @@ class StatistikController extends Controller
             'kurang' => NilaiAkhir::where('rata_akhir', '<', 75)->count(),
         ];
 
-        return view('kepsek.statistik.index', compact(
-            'siswaPerKelas', 'totalGuru', 'absensiBulanan', 'distribusiNilai'
-        ));
+        return Inertia::render('Kepsek/Statistik/Index', [
+            'siswaPerKelas' => $siswaPerKelas->map(fn (Kelas $kelas) => [
+                'id' => $kelas->id,
+                'label' => trim(($kelas->tingkat ?? '') . ' ' . ($kelas->nama_kelas ?? '')) ?: '-',
+                'jumlah' => (int) $kelas->siswa_count,
+            ]),
+            'totalGuru' => $totalGuru,
+            'absensiBulanan' => $absensiBulanan->map(fn ($item) => [
+                'bulan' => $item->bulan,
+                'hadir' => (int) $item->hadir,
+                'total' => (int) $item->total,
+                'persentase' => (int) $item->total > 0 ? round(((int) $item->hadir / (int) $item->total) * 100, 1) : 0,
+            ]),
+            'distribusiNilai' => [
+                ['label' => 'Sangat Baik', 'value' => $distribusiNilai['sangat_baik'], 'color' => '#198754'],
+                ['label' => 'Baik', 'value' => $distribusiNilai['baik'], 'color' => '#0d6efd'],
+                ['label' => 'Cukup', 'value' => $distribusiNilai['cukup'], 'color' => '#ffc107'],
+                ['label' => 'Kurang', 'value' => $distribusiNilai['kurang'], 'color' => '#dc3545'],
+            ],
+        ]);
     }
 }

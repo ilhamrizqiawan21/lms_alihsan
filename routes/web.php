@@ -39,6 +39,7 @@ use App\Http\Controllers\Kepsek\StatistikController;
 use App\Http\Controllers\Kepsek\KalenderController as KepsekKalenderController;
 use App\Http\Controllers\ExportController;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 // ────────────────────────────────────────────
 // AUTH
@@ -53,6 +54,7 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 // ────────────────────────────────────────────
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/inertia-test', fn () => Inertia::render('InertiaTest'))->name('inertia-test');
 
     // Users
     Route::get('/users/import-siswa/template', [UserController::class, 'downloadSiswaTemplate'])->name('users.import-siswa.template');

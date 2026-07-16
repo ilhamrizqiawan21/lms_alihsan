@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
 use App\Models\Notifikasi;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
 
 class NotifikasiController extends Controller
 {
@@ -22,7 +25,21 @@ class NotifikasiController extends Controller
             ->where('is_read', false)
             ->count();
 
-        return view('guru.notifikasi.index', compact('notifikasi', 'unreadCount'));
+        return Inertia::render('Guru/Notifikasi/Index', [
+            'notifikasi' => $notifikasi->through(fn (Notifikasi $item) => [
+                'id' => $item->id,
+                'tipe' => $item->tipe,
+                'judul' => $item->judul,
+                'pesan' => $item->pesan,
+                'pesan_ringkas' => Str::limit((string) $item->pesan, 80),
+                'link' => $item->link,
+                'is_read' => $item->is_read,
+                'created_at' => $item->created_at ? Carbon::parse($item->created_at)->diffForHumans() : '-',
+                'mark_read_url' => route('guru.notifikasi.mark-read', $item),
+            ]),
+            'unreadCount' => $unreadCount,
+            'markAllReadUrl' => route('guru.notifikasi.mark-all-read'),
+        ]);
     }
 
     /**
@@ -37,6 +54,10 @@ class NotifikasiController extends Controller
         $notifikasi->update(['is_read' => true]);
 
         if ($notifikasi->link) {
+            if (request()->header('X-Inertia')) {
+                return Inertia::location($notifikasi->link);
+            }
+
             return redirect($notifikasi->link);
         }
 

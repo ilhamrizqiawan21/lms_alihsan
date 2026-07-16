@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
 
 class UserController extends Controller
 {
@@ -37,10 +38,38 @@ class UserController extends Controller
             });
         }
 
-        $users = $query->orderBy('created_at', 'desc')->paginate(20);
+        $users = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
         $roles = $this->staffRoles();
 
-        return view('admin.users.index', compact('users', 'roles'));
+        return Inertia::render('Admin/Users/Index', [
+            'users' => [
+                'data' => $users->getCollection()->map(fn (User $user) => [
+                    'id' => $user->id,
+                    'username' => $user->username,
+                    'nama_lengkap' => $user->nama_lengkap,
+                    'email' => $user->email,
+                    'role' => [
+                        'id' => $user->role?->id,
+                        'nama_role' => $user->role?->nama_role,
+                    ],
+                    'is_active' => (bool) $user->is_active,
+                ])->values(),
+                'links' => $users->linkCollection(),
+                'meta' => [
+                    'from' => $users->firstItem(),
+                    'to' => $users->lastItem(),
+                    'total' => $users->total(),
+                ],
+            ],
+            'roles' => $roles->map(fn (Role $role) => [
+                'id' => $role->id,
+                'nama_role' => $role->nama_role,
+            ])->values(),
+            'filters' => [
+                'search' => $request->string('search')->toString(),
+                'role_id' => $request->string('role_id')->toString(),
+            ],
+        ]);
     }
 
     /**

@@ -12,6 +12,7 @@ use App\Services\NilaiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
 
 class NilaiController extends Controller
 {
@@ -29,7 +30,16 @@ class NilaiController extends Controller
             ->aktif()
             ->get();
 
-        return view('guru.nilai.index', compact('kelasMapel'));
+        return Inertia::render('Guru/Nilai/Index', [
+            'kelasMapel' => $kelasMapel->map(fn (KelasMapel $item) => [
+                'id' => $item->id,
+                'kelas' => $item->kelas?->nama_kelas ?? '-',
+                'mata_pelajaran' => $item->mataPelajaran?->nama_mapel ?? '-',
+                'initials' => strtoupper(substr($item->mataPelajaran?->nama_mapel ?? 'MP', 0, 2)),
+                'semester' => $item->semester,
+                'href' => route('guru.nilai.input', $item),
+            ])->values(),
+        ]);
     }
     //Input nilai
     public function input(KelasMapel $kelasMapel)
@@ -51,7 +61,36 @@ class NilaiController extends Controller
             ->get()
             ->keyBy('siswa_id');
 
-        return view('guru.nilai.input', compact('kelasMapel', 'siswa', 'nilaiList', 'tahunAjaran', 'semester'));
+        $fields = ['sum1', 'sum2', 'sum3', 'sum4', 'nilai_harian', 'sts', 'sas', 'sat'];
+
+        return Inertia::render('Guru/Nilai/Input', [
+            'kelasMapel' => [
+                'id' => $kelasMapel->id,
+                'kelas' => $kelasMapel->kelas?->nama_kelas ?? '-',
+                'mata_pelajaran' => $kelasMapel->mataPelajaran?->nama_mapel ?? '-',
+                'store_url' => route('guru.nilai.store', $kelasMapel),
+            ],
+            'tahunAjaran' => $tahunAjaran ? [
+                'id' => $tahunAjaran->id,
+                'tahun' => $tahunAjaran->tahun,
+            ] : null,
+            'semester' => $semester,
+            'students' => $siswa->values()->map(function (Siswa $student, int $index) use ($nilaiList, $fields) {
+                $nilai = $nilaiList->get($student->id);
+                $scores = collect($fields)
+                    ->mapWithKeys(fn (string $field) => [$field => $nilai?->$field])
+                    ->all();
+
+                return [
+                    'id' => $student->id,
+                    'no' => $index + 1,
+                    'nis' => $student->nis,
+                    'nama' => $student->user?->nama_lengkap ?? $student->nis,
+                    'scores' => $scores,
+                    'rata_akhir' => $nilai?->rata_akhir,
+                ];
+            }),
+        ]);
     }
     //Simpan nilai
     public function store(Request $request, KelasMapel $kelasMapel)

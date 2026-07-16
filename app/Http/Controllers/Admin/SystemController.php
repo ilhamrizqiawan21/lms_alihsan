@@ -10,6 +10,7 @@ use App\Models\SchoolSetting;
 use App\Models\SystemError;
 use App\Models\TahunAjaran;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class SystemController extends Controller
 {
@@ -23,9 +24,22 @@ class SystemController extends Controller
             $query->where(fn($q) => $q->where('username', 'like', "%{$s}%")->orWhere('nama_lengkap', 'like', "%{$s}%"));
         }
 
-        $logs = $query->paginate(25);
+        $logs = $query->paginate(25)
+            ->withQueryString()
+            ->through(fn (LogLogin $log) => [
+                'id' => $log->id,
+                'login_time' => optional($log->login_time)->format('d M Y H:i:s'),
+                'username' => $log->username,
+                'nama_lengkap' => $log->nama_lengkap,
+                'role' => $log->role,
+                'ip_address' => $log->ip_address,
+                'user_agent' => $log->user_agent,
+            ]);
 
-        return view('admin.log-login', compact('logs'));
+        return Inertia::render('Admin/LogLogin/Index', [
+            'logs' => $logs,
+            'filters' => $request->only(['search']),
+        ]);
     }
     //Menampilkan riwayat login sistem
     public function logError(Request $request)
@@ -36,10 +50,24 @@ class SystemController extends Controller
             $query->where('error_level', $request->level);
         }
 
-        $errors = $query->paginate(25);
+        $errors = $query->paginate(25)
+            ->withQueryString()
+            ->through(fn (SystemError $error) => [
+                'id' => $error->id,
+                'error_level' => $error->error_level,
+                'created_at' => optional($error->created_at)->format('d/m H:i'),
+                'message' => $error->message,
+                'file' => $error->file,
+                'line' => $error->line,
+                'url' => $error->url,
+            ]);
         $levels = SystemError::select('error_level')->distinct()->pluck('error_level');
 
-        return view('admin.log-error', compact('errors', 'levels'));
+        return Inertia::render('Admin/LogError/Index', [
+            'errors' => $errors,
+            'levels' => $levels,
+            'filters' => $request->only(['level']),
+        ]);
     }
     //Pengaturan sistem seperti warna tema, nama sekolah, semester aktif, tahun ajaran aktif, dan mode kenaikan kelas
     public function pengaturan()
