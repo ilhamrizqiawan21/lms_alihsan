@@ -51,16 +51,22 @@ class KelasSiswaController extends Controller
 
         $siswa = $query->paginate(25)
             ->withQueryString()
-            ->through(fn (Siswa $siswa) => [
-                'id' => $siswa->id,
-                'nis' => $siswa->nis,
-                'kelas_id' => $siswa->kelas_id,
-                'kelas' => trim(($siswa->kelas?->tingkat ? $siswa->kelas->tingkat . ' ' : '') . ($siswa->kelas?->nama_kelas ?? '')),
-                'status' => $siswa->status,
-                'tinggal_kelas' => (bool) $siswa->tinggal_kelas,
-                'nama_lengkap' => $siswa->user?->nama_lengkap,
-                'jenis_kelamin' => $siswa->user?->jenis_kelamin,
-            ]);
+            ->through(function (Siswa $siswa) {
+                $passwordIsDefault = (bool) $siswa->user?->is_password_default;
+
+                return [
+                    'id' => $siswa->id,
+                    'nis' => $siswa->nis,
+                    'kelas_id' => $siswa->kelas_id,
+                    'kelas' => trim(($siswa->kelas?->tingkat ? $siswa->kelas->tingkat . ' ' : '') . ($siswa->kelas?->nama_kelas ?? '')),
+                    'status' => $siswa->status,
+                    'tinggal_kelas' => (bool) $siswa->tinggal_kelas,
+                    'nama_lengkap' => $siswa->user?->nama_lengkap,
+                    'jenis_kelamin' => $siswa->user?->jenis_kelamin,
+                    'password_is_default' => $passwordIsDefault,
+                    'password_status' => $passwordIsDefault ? 'Masih default' : 'Sudah diubah',
+                ];
+            });
 
         return Inertia::render('Admin/KelasSiswa/Index', [
             'kelasList' => $kelasList->map(fn (Kelas $kelas) => [
@@ -104,41 +110,39 @@ class KelasSiswaController extends Controller
 
         $writer = new Writer();
         $filePath = tempnam(sys_get_temp_dir(), 'siswa_');
-        $filename = 'data_siswa_' . date('Ymd_His') . '.xlsx';
+        $filename = 'status_password_siswa_' . date('Ymd_His') . '.xlsx';
 
         $writer->openToFile($filePath);
-        $writer->getCurrentSheet()->setColumnWidth(6, 1);
-        $writer->getCurrentSheet()->setColumnWidth(15, 2, 3);
-        $writer->getCurrentSheet()->setColumnWidth(30, 4);
-        $writer->getCurrentSheet()->setColumnWidthForRange(18, 5, 8);
+        $writer->getCurrentSheet()->setColumnWidth(22, 1);
+        $writer->getCurrentSheet()->setColumnWidth(32, 2);
+        $writer->getCurrentSheet()->setColumnWidth(18, 3);
+        $writer->getCurrentSheet()->setColumnWidth(18, 4);
+        $writer->getCurrentSheet()->setColumnWidth(24, 5);
 
         $styles = $this->excelStyles();
         $writer->addRow(Row::fromValuesWithStyle([school_setting('school_name', 'Nama Sekolah')], $styles['school'], 24));
-        $writer->addRow(Row::fromValuesWithStyle(['DATA SISWA'], $styles['title'], 24));
+        $writer->addRow(Row::fromValuesWithStyle(['STATUS PASSWORD SISWA'], $styles['title'], 24));
         $writer->addRow(Row::fromValuesWithStyle(['Tanggal Export', now()->format('d/m/Y H:i')], $styles['meta'], 18));
         $writer->addRow(Row::fromValues([]));
         $writer->addRow(Row::fromValuesWithStyle([
-            'No',
-            'NIS',
             'Username',
-            'Nama Lengkap',
-            'Jenis Kelamin',
+            'Nama',
             'Kelas',
-            'Status',
-            'Tinggal Kelas',
+            'Password Default',
+            'Status Password',
         ], $styles['tableHeader'], 24));
 
-        $query->get()->values()->each(function (Siswa $siswa, int $index) use ($writer) {
+        $query->get()->values()->each(function (Siswa $siswa, int $index) use ($writer, $styles) {
+            $user = $siswa->user;
+            $isDefaultPassword = (bool) $user?->is_password_default;
+
             $writer->addRow(Row::fromValuesWithStyle([
-                $index + 1,
-                $siswa->nis,
-                $siswa->user?->username ?? '-',
-                $siswa->user?->nama_lengkap ?? '-',
-                ['L' => 'Laki-laki', 'P' => 'Perempuan'][$siswa->user?->jenis_kelamin] ?? '-',
+                $user?->username ?? '-',
+                $user?->nama_lengkap ?? '-',
                 trim(($siswa->kelas?->tingkat ? $siswa->kelas->tingkat . ' ' : '') . ($siswa->kelas?->nama_kelas ?? '')) ?: '-',
-                ucfirst((string) $siswa->status),
-                $siswa->tinggal_kelas ? 'Ya' : 'Tidak',
-            ], $index % 2 === 0 ? $this->excelStyles()['row'] : $this->excelStyles()['alternateRow'], 20));
+                User::DEFAULT_PASSWORD,
+                $isDefaultPassword ? 'Masih default' : 'Sudah diubah',
+            ], $index % 2 === 0 ? $styles['row'] : $styles['alternateRow'], 20));
         });
 
         $writer->close();
@@ -195,6 +199,7 @@ class KelasSiswaController extends Controller
                 $user = User::create([
                     'username' => $validated['nis'],
                     'password' => Hash::make($password),
+                    'is_password_default' => true,
                     'nama_lengkap' => $validated['nama_lengkap'],
                     'role_id' => $siswaRoleId,
                     'jenis_kelamin' => $validated['jenis_kelamin'],
@@ -261,7 +266,10 @@ class KelasSiswaController extends Controller
     {
         $password = $this->generateInitialPassword();
 
-        $siswa->user->update(['password' => Hash::make($password)]);
+        $siswa->user->update([
+            'password' => Hash::make($password),
+            'is_password_default' => true,
+        ]);
 
         return back()
             ->with('success', 'Password siswa berhasil direset.')

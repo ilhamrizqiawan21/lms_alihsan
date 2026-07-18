@@ -35,7 +35,10 @@ class ProfilController extends Controller
             'password' => 'required|string|min:8|confirmed',
         ]);
 
-        $user->update(['password' => Hash::make($validated['password'])]);
+        $user->update([
+            'password' => Hash::make($validated['password']),
+            'is_password_default' => false,
+        ]);
 
         return back()->with('success', 'Password berhasil diperbarui.');
     }

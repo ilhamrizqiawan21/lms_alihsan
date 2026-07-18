@@ -40,6 +40,18 @@ class HandleInertiaRequests extends Middleware
                 'sidebar' => '#0e7490',
                 'navbar' => '#0891b2',
             ],
+            'indigo' => [
+                'primary' => '#4f46e5',
+                'secondary' => '#06b6d4',
+                'sidebar' => '#3730a3',
+                'navbar' => '#4338ca',
+            ],
+            'marun' => [
+                'primary' => '#be123c',
+                'secondary' => '#f59e0b',
+                'sidebar' => '#881337',
+                'navbar' => '#be123c',
+            ],
         ];
         $activeTheme = $themeColors[$theme] ?? $themeColors['hijau'];
 

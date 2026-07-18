@@ -79,13 +79,11 @@
 
     <div class="printed">Dicetak pada: {{ date('d/m/Y H:i') }}</div>
     <div class="signature">
-        Kepala Sekolah,
+        {{ $signer['role'] ?? 'Kepala Sekolah' }},
         <div class="signature-space"></div>
-        <strong>{{ $reportSchool['principal_name'] }}</strong><br>
-        @if($reportSchool['principal_nip'])
-            NIP. {{ $reportSchool['principal_nip'] }}
-        @elseif($reportSchool['principal_nuptk'])
-            NUPTK. {{ $reportSchool['principal_nuptk'] }}
+        <strong>{{ $signer['name'] ?? ($reportSchool['principal_name'] ?? '-') }}</strong><br>
+        @if(!empty($signer['id_label']) && !empty($signer['id_value']))
+            {{ $signer['id_label'] }}. {{ $signer['id_value'] }}
         @endif
     </div>
 </body>

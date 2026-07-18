@@ -13,6 +13,16 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Common\Entity\Style\Border;
+use OpenSpout\Common\Entity\Style\BorderName;
+use OpenSpout\Common\Entity\Style\BorderPart;
+use OpenSpout\Common\Entity\Style\BorderWidth;
+use OpenSpout\Common\Entity\Style\CellAlignment;
+use OpenSpout\Common\Entity\Style\CellVerticalAlignment;
+use OpenSpout\Common\Entity\Style\Color;
+use OpenSpout\Common\Entity\Style\Style;
+use OpenSpout\Writer\XLSX\Writer;
 
 class UserController extends Controller
 {
@@ -53,6 +63,10 @@ class UserController extends Controller
                         'nama_role' => $user->role?->nama_role,
                     ],
                     'is_active' => (bool) $user->is_active,
+                    'password_is_default' => (bool) $user->is_password_default,
+                    'password_status' => $user->is_password_default
+                        ? 'Masih default'
+                        : 'Sudah diubah',
                 ])->values(),
                 'links' => $users->linkCollection(),
                 'meta' => [
@@ -69,7 +83,73 @@ class UserController extends Controller
                 'search' => $request->string('search')->toString(),
                 'role_id' => $request->string('role_id')->toString(),
             ],
+            'exportUrl' => route('admin.users.export.excel'),
         ]);
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $request->validate([
+            'role_id' => 'nullable|exists:roles,id',
+            'search' => 'nullable|string|max:100',
+        ]);
+
+        $query = User::with('role')
+            ->whereHas('role', fn ($query) => $query->where('nama_role', '!=', 'siswa'));
+
+        if ($request->filled('role_id')) {
+            $query->where('role_id', $request->role_id);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('username', 'like', "%{$search}%")
+                    ->orWhere('nama_lengkap', 'like', "%{$search}%");
+            });
+        }
+
+        $writer = new Writer();
+        $filePath = tempnam(sys_get_temp_dir(), 'guru_staf_');
+        $filename = 'status_password_guru_staf_' . date('Ymd_His') . '.xlsx';
+
+        $writer->openToFile($filePath);
+        $writer->getCurrentSheet()->setColumnWidth(22, 1);
+        $writer->getCurrentSheet()->setColumnWidth(32, 2);
+        $writer->getCurrentSheet()->setColumnWidth(18, 3);
+        $writer->getCurrentSheet()->setColumnWidth(18, 4);
+        $writer->getCurrentSheet()->setColumnWidth(24, 5);
+
+        $styles = $this->excelStyles();
+        $writer->addRow(Row::fromValuesWithStyle([school_setting('school_name', 'Nama Sekolah')], $styles['school'], 24));
+        $writer->addRow(Row::fromValuesWithStyle(['STATUS PASSWORD GURU & STAF'], $styles['title'], 24));
+        $writer->addRow(Row::fromValuesWithStyle(['Tanggal Export', now()->format('d/m/Y H:i')], $styles['meta'], 18));
+        $writer->addRow(Row::fromValues([]));
+        $writer->addRow(Row::fromValuesWithStyle([
+            'Username',
+            'Nama',
+            'Role',
+            'Password Default',
+            'Status Password',
+        ], $styles['tableHeader'], 24));
+
+        $query->orderBy('nama_lengkap')->get()->values()->each(function (User $user, int $index) use ($writer, $styles) {
+            $isDefaultPassword = (bool) $user->is_password_default;
+
+            $writer->addRow(Row::fromValuesWithStyle([
+                $user->username,
+                $user->nama_lengkap,
+                $user->role?->nama_role ? str_replace('_', ' ', ucwords($user->role->nama_role, '_')) : '-',
+                User::DEFAULT_PASSWORD,
+                $isDefaultPassword ? 'Masih default' : 'Sudah diubah',
+            ], $index % 2 === 0 ? $styles['row'] : $styles['alternateRow'], 20));
+        });
+
+        $writer->close();
+
+        return response()
+            ->download($filePath, $filename)
+            ->deleteFileAfterSend(true);
     }
 
     /**
@@ -99,7 +179,9 @@ class UserController extends Controller
         $role = Role::findOrFail($validated['role_id']);
         $this->ensureStaffRole($role);
 
-        $validated['password'] = Hash::make($request->filled('password') ? $validated['password'] : User::DEFAULT_PASSWORD);
+        $plainPassword = $request->filled('password') ? $validated['password'] : User::DEFAULT_PASSWORD;
+        $validated['password'] = Hash::make($plainPassword);
+        $validated['is_password_default'] = $plainPassword === User::DEFAULT_PASSWORD;
         $validated['is_active'] = $request->boolean('is_active');
 
         DB::transaction(fn () => User::create($validated));
@@ -189,6 +271,7 @@ class UserController extends Controller
 
         if ($request->filled('password')) {
             $validated['password'] = Hash::make($request->password);
+            $validated['is_password_default'] = $request->password === User::DEFAULT_PASSWORD;
         } else {
             unset($validated['password']);
         }
@@ -251,7 +334,10 @@ class UserController extends Controller
     {
         $this->ensureNotSiswaUser($user);
 
-        $user->update(['password' => Hash::make(User::DEFAULT_PASSWORD)]);
+        $user->update([
+            'password' => Hash::make(User::DEFAULT_PASSWORD),
+            'is_password_default' => true,
+        ]);
 
         return back()->with('success', "Password {$user->nama_lengkap} berhasil direset ke " . User::DEFAULT_PASSWORD . '.');
     }
@@ -284,5 +370,50 @@ class UserController extends Controller
         if ($user->isSiswa()) {
             abort(404);
         }
+    }
+
+    private function excelStyles(): array
+    {
+        $border = new Border(
+            new BorderPart(BorderName::TOP, 'CBD5E1', BorderWidth::THIN),
+            new BorderPart(BorderName::RIGHT, 'CBD5E1', BorderWidth::THIN),
+            new BorderPart(BorderName::BOTTOM, 'CBD5E1', BorderWidth::THIN),
+            new BorderPart(BorderName::LEFT, 'CBD5E1', BorderWidth::THIN),
+        );
+
+        $base = (new Style())
+            ->withFontName('Arial')
+            ->withFontSize(10)
+            ->withShouldWrapText(true)
+            ->withCellVerticalAlignment(CellVerticalAlignment::CENTER);
+
+        return [
+            'school' => $base
+                ->withFontBold(true)
+                ->withFontSize(14)
+                ->withFontColor('0F172A')
+                ->withCellAlignment(CellAlignment::CENTER),
+            'title' => $base
+                ->withFontBold(true)
+                ->withFontSize(13)
+                ->withFontColor(Color::WHITE)
+                ->withBackgroundColor('1D4ED8')
+                ->withCellAlignment(CellAlignment::CENTER),
+            'meta' => $base
+                ->withFontColor('475569')
+                ->withBackgroundColor('F8FAFC'),
+            'tableHeader' => $base
+                ->withFontBold(true)
+                ->withFontColor(Color::WHITE)
+                ->withBackgroundColor('334155')
+                ->withCellAlignment(CellAlignment::CENTER)
+                ->withBorder($border),
+            'row' => $base
+                ->withBackgroundColor(Color::WHITE)
+                ->withBorder($border),
+            'alternateRow' => $base
+                ->withBackgroundColor('F8FAFC')
+                ->withBorder($border),
+        ];
     }
 }

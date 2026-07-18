@@ -9,6 +9,7 @@ import { Badge, Button, Card, EmptyState, Pagination, TableWrapper } from '../..
 const props = defineProps({
     logs: { type: Object, default: () => ({ data: [], links: [] }) },
     filters: { type: Object, default: () => ({}) },
+    exportUrl: { type: String, required: true },
 });
 
 const filterForm = reactive({
@@ -32,6 +33,14 @@ function resetFilters() {
     });
 }
 
+function exportExcelUrl() {
+    const params = new URLSearchParams();
+    if (filterForm.search) params.set('search', filterForm.search);
+
+    const query = params.toString();
+    return query ? `${props.exportUrl}?${query}` : props.exportUrl;
+}
+
 function roleLabel(role) {
     return role ? role.replaceAll('_', ' ') : '-';
 }
@@ -50,10 +59,13 @@ function truncate(value, length = 56) {
 
         <Card title="Daftar Login" icon="bi-list-ul" body-class="p-0">
             <template #actions>
-                <form class="d-flex gap-2" @submit.prevent="applyFilters">
+                <form class="d-flex flex-wrap gap-2" @submit.prevent="applyFilters">
                     <TextInput v-model="filterForm.search" name="search" wrapper-class="mb-0" placeholder="Cari user..." />
                     <Button type="submit" color="primary" icon="bi-search" aria-label="Cari riwayat login" />
                     <Button type="button" color="outline-secondary" icon="bi-arrow-clockwise" aria-label="Reset filter" @click="resetFilters" />
+                    <a :href="exportExcelUrl()" class="btn btn-outline-success btn-sm">
+                        <i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i> Excel
+                    </a>
                 </form>
             </template>
 

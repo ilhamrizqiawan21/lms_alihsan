@@ -166,11 +166,8 @@ async function destroyClass(kelas) {
     });
 }
 
-function statusColor(status) {
-    return {
-        aktif: 'success',
-        lulus: 'info text-dark',
-    }[status] ?? 'secondary';
+function passwordStatusColor(isDefault) {
+    return isDefault ? 'warning text-dark' : 'success';
 }
 </script>
 
@@ -291,7 +288,7 @@ function statusColor(status) {
             <TableWrapper v-if="siswa.data?.length">
                 <table class="table table-hover mb-0">
                     <thead>
-                        <tr><th>NIS</th><th>Nama</th><th>JK</th><th>Kelas</th><th>Status</th><th class="table-action-column">Aksi</th></tr>
+                        <tr><th>NIS</th><th>Nama</th><th>JK</th><th>Kelas</th><th>Status Password</th><th class="table-action-column">Aksi</th></tr>
                     </thead>
                     <tbody>
                         <template v-for="item in siswa.data" :key="item.id">
@@ -301,7 +298,9 @@ function statusColor(status) {
                                 <td>{{ item.jenis_kelamin ?? '-' }}</td>
                                 <td>{{ item.kelas || '-' }}</td>
                                 <td>
-                                    <Badge :color="statusColor(item.status)">{{ item.status }}</Badge>
+                                    <Badge :color="passwordStatusColor(item.password_is_default)">
+                                        {{ item.password_status }}
+                                    </Badge>
                                     <Badge v-if="item.tinggal_kelas" color="warning text-dark" class="ms-1">Tinggal Kelas</Badge>
                                 </td>
                                 <td class="table-action-column">

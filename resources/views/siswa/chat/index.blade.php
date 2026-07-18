@@ -10,20 +10,16 @@
 <div class="card">
     <div class="card-header"><i class="bi bi-book me-2"></i> Pilih Kelas</div>
     <div class="card-body">
-        <div class="row">
+        <div style="max-width:560px;">
+            <label for="chat-room-select" class="form-label">Kelas Chat</label>
+            <select id="chat-room-select" class="form-select" onchange="if (this.value) window.location.href = this.value;">
+                <option value="" selected disabled>-- Pilih Kelas --</option>
             @foreach($kelasMapel as $km)
-            <div class="col-md-4 mb-3">
-                <a href="{{ route('siswa.chat.show', $km) }}" class="text-decoration-none">
-                    <div class="card border h-100" style="transition:all 0.2s;">
-                        <div class="card-body text-center">
-                            <div style="font-size:2rem;color:var(--primary-500);"><i class="bi bi-chat-dots-fill"></i></div>
-                            <strong>{{ $km->mataPelajaran?->nama_mapel ?? '-' }}</strong>
-                            <div class="text-muted" style="font-size:0.8rem;">{{ $km->guru?->nama_lengkap ?? '-' }}</div>
-                        </div>
-                    </div>
-                </a>
-            </div>
+                <option value="{{ route('siswa.chat.show', $km) }}">
+                    {{ $km->mataPelajaran?->nama_mapel ?? '-' }} - {{ $km->guru?->nama_lengkap ?? '-' }}
+                </option>
             @endforeach
+            </select>
         </div>
     </div>
 </div>

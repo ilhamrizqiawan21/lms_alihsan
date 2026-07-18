@@ -82,7 +82,7 @@ async function destroy(item) {
                         />
                         <TextInput
                             v-model="form.batas_waktu"
-                            type="datetime-local"
+                            type="date"
                             name="batas_waktu"
                             label="Deadline"
                             required

@@ -217,7 +217,7 @@ class LaporanController extends Controller
                 'mapel' => $item->kelasMapel?->mataPelajaran?->nama_mapel ?? '-',
                 'kelas' => $item->kelasMapel?->kelas?->nama_kelas ?? '-',
                 'guru' => $item->kelasMapel?->guru?->nama_lengkap ?? '-',
-                'batas_waktu' => $item->batas_waktu?->format('d M Y H:i'),
+                'batas_waktu' => $item->batas_waktu?->format('d M Y'),
                 'is_past_due' => $item->batas_waktu ? $item->batas_waktu->isPast() : false,
                 'total_siswa' => (int) $item->total_siswa,
                 'sudah_kumpul' => (int) $item->sudah_kumpul,

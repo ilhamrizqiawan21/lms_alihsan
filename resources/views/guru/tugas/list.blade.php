@@ -43,7 +43,7 @@
                             @foreach($tugas as $t)
                         <tr>
                             <td><strong>{{ $t->judul }}</strong></td>
-                            <td style="white-space:nowrap;font-size:0.82rem;">{{ $t->batas_waktu ? \Carbon\Carbon::parse($t->batas_waktu)->format('d M Y H:i') : '-' }}</td>
+                            <td style="white-space:nowrap;font-size:0.82rem;">{{ $t->batas_waktu ? \Carbon\Carbon::parse($t->batas_waktu)->format('d M Y') : '-' }}</td>
                             <td>{{ $t->sudah_mengumpulkan ?? 0 }}/{{ $totalSiswa ?? 0 }}</td>
                             <td>
                                 <a href="{{ route('guru.tugas.pengumpulan', [$kelasMapel, $t]) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye" aria-hidden="true"></i> Nilai</a>

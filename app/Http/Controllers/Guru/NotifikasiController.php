@@ -47,7 +47,7 @@ class NotifikasiController extends Controller
      */
     public function markRead(Notifikasi $notifikasi)
     {
-        if ($notifikasi->user_id !== Auth::id()) {
+        if ((int) $notifikasi->user_id !== (int) Auth::id()) {
             abort(403);
         }
 

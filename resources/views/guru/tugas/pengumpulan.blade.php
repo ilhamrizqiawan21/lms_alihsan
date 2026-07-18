@@ -9,7 +9,7 @@
         <span>
             <i class="bi bi-journal-fill me-1"></i>
             Pengumpulan: <strong>{{ $tugas->judul }}</strong>
-            <small class="text-muted ms-2">(Deadline: {{ $tugas->batas_waktu ? \Carbon\Carbon::parse($tugas->batas_waktu)->format('d/m/Y H:i') : '-' }})</small>
+            <small class="text-muted ms-2">(Deadline: {{ $tugas->batas_waktu ? \Carbon\Carbon::parse($tugas->batas_waktu)->format('d/m/Y') : '-' }})</small>
         </span>
         <a href="{{ route('guru.tugas.list', $kelasMapel) }}" class="btn btn-sm btn-secondary">
             <i class="bi bi-arrow-left"></i> Kembali
@@ -72,7 +72,7 @@
                             @endif
                         </td>
                         <td>
-                            <form action="{{ route('guru.tugas.nilai', [$kelasMapel, $tugas, $p]) }}" method="POST" class="d-inline">
+                            <form action="{{ route('guru.tugas.nilai', [$kelasMapel, $tugas, $p->siswa]) }}" method="POST" class="d-inline">
                                 @csrf
                                 <div class="input-group input-group-sm" style="width:130px">
                                     <input type="number" name="nilai" class="form-control form-control-sm"
@@ -128,7 +128,7 @@
                                     @endif
                                 </div>
                                 <div class="modal-footer">
-                                    <form action="{{ route('guru.tugas.nilai', [$kelasMapel, $tugas, $p]) }}" method="POST" class="w-100">
+                                    <form action="{{ route('guru.tugas.nilai', [$kelasMapel, $tugas, $p->siswa]) }}" method="POST" class="w-100">
                                         @csrf
                                         <div class="row">
                                             <div class="col-md-4">

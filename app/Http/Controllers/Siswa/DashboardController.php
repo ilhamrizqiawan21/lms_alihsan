@@ -101,7 +101,7 @@ class DashboardController extends Controller
                     'id' => $tugas->id,
                     'judul' => $tugas->judul,
                     'mata_pelajaran' => $tugas->kelasMapel?->mataPelajaran?->nama_mapel ?? '-',
-                    'batas_waktu' => $tugas->batas_waktu ? Carbon::parse($tugas->batas_waktu)->format('d/m/Y H:i') : '-',
+                    'batas_waktu' => $tugas->batas_waktu ? Carbon::parse($tugas->batas_waktu)->format('d/m/Y') : '-',
                     'selesai' => (bool) $pengumpulan,
                 ];
             })->values(),

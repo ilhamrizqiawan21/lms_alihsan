@@ -17,7 +17,7 @@ const fieldGroups = [
     { key: 'sum2', label: 'SUM2' },
     { key: 'sum3', label: 'SUM3' },
     { key: 'sum4', label: 'SUM4' },
-    { key: 'nilai_harian', label: 'Nilai' },
+    { key: 'nilai_harian', label: 'Dari Tugas', readonly: true },
     { key: 'sts', label: 'Nilai' },
     { key: 'sas', label: 'Nilai' },
     { key: 'sat', label: 'Nilai' },
@@ -145,7 +145,16 @@ function submit() {
                                 <td><code>{{ student.nis }}</code></td>
                                 <td>{{ student.nama }}</td>
                                 <td v-for="field in fieldGroups" :key="`${student.id}-${field.key}`" class="text-center">
+                                    <span
+                                        v-if="field.readonly"
+                                        class="score-result readonly-score"
+                                        :class="scoreClass(form.nilai[String(student.id)][field.key])"
+                                        :title="'Nilai harian dihitung otomatis dari nilai tugas'"
+                                    >
+                                        {{ formatScore(form.nilai[String(student.id)][field.key]) ?? '-' }}
+                                    </span>
                                     <input
+                                        v-else
                                         v-model="form.nilai[String(student.id)][field.key]"
                                         type="number"
                                         class="form-control form-control-sm score-input"
@@ -195,3 +204,17 @@ function submit() {
         </form>
     </AppShell>
 </template>
+
+<style scoped>
+.readonly-score {
+    display: inline-flex;
+    min-width: 68px;
+    min-height: 31px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    background: #f8f9fa;
+    font-weight: 700;
+}
+</style>

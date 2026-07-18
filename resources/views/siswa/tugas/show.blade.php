@@ -20,7 +20,7 @@
                     <div class="col-md-6">
                         <small class="text-muted">Batas Waktu</small>
                         <p class="fw-bold mb-0 {{ $tugas->batas_waktu && now()->gt($tugas->batas_waktu) ? 'text-danger' : '' }}">
-                            {{ $tugas->batas_waktu ? \Carbon\Carbon::parse($tugas->batas_waktu)->format('d M Y H:i') : '-' }}
+                            {{ $tugas->batas_waktu ? \Carbon\Carbon::parse($tugas->batas_waktu)->format('d M Y') : '-' }}
                             @if($tugas->batas_waktu && now()->gt($tugas->batas_waktu))
                                 <span class="badge bg-danger ms-1">Terlambat</span>
                             @endif

@@ -40,6 +40,7 @@ class SiswaImportService
                 $user = User::create([
                     'username' => $row['username'],
                     'password' => Hash::make($row['password'] ?: User::DEFAULT_PASSWORD),
+                    'is_password_default' => $row['password'] === '' || $row['password'] === User::DEFAULT_PASSWORD,
                     'nama_lengkap' => $row['nama_lengkap'],
                     'nip_nis' => $row['nis'],
                     'jenis_kelamin' => $row['jenis_kelamin'] ?: null,

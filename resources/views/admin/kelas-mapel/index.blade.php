@@ -109,6 +109,9 @@
                     </table>
                 </div>
             </div>
+            @if($kelasMapel->hasPages())
+                <div class="card-footer">{{ $kelasMapel->links() }}</div>
+            @endif
         </div>
     </div>
 </div>

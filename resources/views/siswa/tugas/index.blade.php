@@ -28,7 +28,7 @@
                     <tr>
                         <td><a href="{{ route('siswa.tugas.show', $t->id) }}" class="text-decoration-none fw-bold">{{ $t->judul }}</a></td>
                         <td>{{ $t->kelasMapel?->mataPelajaran?->nama_mapel ?? '-' }}</td>
-                        <td>{{ $t->batas_waktu ? \Carbon\Carbon::parse($t->batas_waktu)->format('d/m/Y H:i') : '-' }}</td>
+                        <td>{{ $t->batas_waktu ? \Carbon\Carbon::parse($t->batas_waktu)->format('d/m/Y') : '-' }}</td>
                         <td>
                             @if($pengumpulan)
                                 @php

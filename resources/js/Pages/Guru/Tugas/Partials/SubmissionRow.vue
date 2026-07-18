@@ -13,7 +13,11 @@ defineEmits(['detail']);
 
 <template>
     <tr>
-        <td>{{ item.siswa }}</td>
+        <td class="text-center text-muted">{{ item.no }}</td>
+        <td>
+            <strong>{{ item.siswa }}</strong>
+            <div class="text-muted small">{{ item.nis }}</div>
+        </td>
         <td><Badge :color="statusColor(item.status)">{{ statusLabel(item.status) }}</Badge></td>
         <td>{{ item.tanggal_kumpul ?? '-' }}</td>
         <td>

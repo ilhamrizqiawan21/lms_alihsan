@@ -26,18 +26,18 @@ class WaliKelasController extends Controller
                 'pertemuan',
                 'penangananSiswa as penanganan_aktif_count' => fn($q) => $q->whereIn('status', ['baru', 'proses']),
             ])
-            ->get();
+            ->first();
 
         return Inertia::render('Guru/WaliKelas/Index', [
-            'waliKelas' => $waliKelas->map(fn (WaliKelas $item) => [
-                ...$this->waliKelasProps($item),
-                'absensi_count' => $item->absensi_count ?? 0,
-                'pertemuan_count' => $item->pertemuan_count ?? 0,
-                'penanganan_aktif_count' => $item->penanganan_aktif_count ?? 0,
-                'absensi_url' => route('guru.wali-kelas.absensi', $item),
-                'pertemuan_url' => route('guru.wali-kelas.pertemuan', $item),
-                'penanganan_url' => route('guru.wali-kelas.penanganan', $item),
-            ])->values(),
+            'waliKelas' => $waliKelas ? [
+                ...$this->waliKelasProps($waliKelas),
+                'absensi_count' => $waliKelas->absensi_count ?? 0,
+                'pertemuan_count' => $waliKelas->pertemuan_count ?? 0,
+                'penanganan_aktif_count' => $waliKelas->penanganan_aktif_count ?? 0,
+                'absensi_url' => route('guru.wali-kelas.absensi', $waliKelas),
+                'pertemuan_url' => route('guru.wali-kelas.pertemuan', $waliKelas),
+                'penanganan_url' => route('guru.wali-kelas.penanganan', $waliKelas),
+            ] : null,
         ]);
     }
 

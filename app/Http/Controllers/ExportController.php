@@ -208,7 +208,7 @@ class ExportController extends Controller
                 $t->judul,
                 $t->kelasMapel?->mataPelajaran?->nama_mapel ?? '-',
                 $t->kelasMapel?->guru?->nama_lengkap ?? '-',
-                $t->batas_waktu ? date('d/m/Y H:i', strtotime($t->batas_waktu)) : '-',
+                $t->batas_waktu ? date('d/m/Y', strtotime($t->batas_waktu)) : '-',
                 $t->kategori_nilai ?? 'NH',
                 $t->sudah_kumpul,
                 $totalSiswa,
@@ -427,7 +427,16 @@ class ExportController extends Controller
     public function guruNilaiPdf(Request $request, KelasMapel $kelasMapel)
     {
         $dataset = $this->guruNilaiDataset($kelasMapel);
-        return $this->tablePdf('nilai_' . $dataset['slug'] . '.pdf', 'DAFTAR NILAI', $dataset['context'], $dataset['headers'], $dataset['rows'], $dataset['taAktif'], $dataset['semester']);
+        return $this->tablePdf(
+            'nilai_' . $dataset['slug'] . '.pdf',
+            'DAFTAR NILAI',
+            $dataset['context'],
+            $dataset['headers'],
+            $dataset['rows'],
+            $dataset['taAktif'],
+            $dataset['semester'],
+            $this->teacherSigner($request)
+        );
     }
 
     public function guruAbsensiExcel(Request $request, KelasMapel $kelasMapel)
@@ -439,7 +448,7 @@ class ExportController extends Controller
     public function guruAbsensiPdf(Request $request, KelasMapel $kelasMapel)
     {
         $dataset = $this->guruAbsensiDataset($request, $kelasMapel);
-        return $this->tablePdf('absensi_' . $dataset['slug'] . '.pdf', 'DAFTAR ABSENSI', $dataset['context'], $dataset['headers'], $dataset['rows']);
+        return $this->tablePdf('absensi_' . $dataset['slug'] . '.pdf', 'DAFTAR ABSENSI', $dataset['context'], $dataset['headers'], $dataset['rows'], null, null, $this->teacherSigner($request));
     }
 
     public function guruSikapExcel(Request $request, KelasMapel $kelasMapel)
@@ -451,7 +460,7 @@ class ExportController extends Controller
     public function guruSikapPdf(Request $request, KelasMapel $kelasMapel)
     {
         $dataset = $this->guruSikapDataset($kelasMapel);
-        return $this->tablePdf('sikap_' . $dataset['slug'] . '.pdf', 'DAFTAR SIKAP', $dataset['context'], $dataset['headers'], $dataset['rows'], $dataset['taAktif'], $dataset['semester']);
+        return $this->tablePdf('sikap_' . $dataset['slug'] . '.pdf', 'DAFTAR SIKAP', $dataset['context'], $dataset['headers'], $dataset['rows'], $dataset['taAktif'], $dataset['semester'], $this->teacherSigner($request));
     }
 
     public function guruTugasExcel(Request $request, KelasMapel $kelasMapel)
@@ -463,7 +472,7 @@ class ExportController extends Controller
     public function guruTugasPdf(Request $request, KelasMapel $kelasMapel)
     {
         $dataset = $this->guruTugasDataset($kelasMapel);
-        return $this->tablePdf('tugas_' . $dataset['slug'] . '.pdf', 'DAFTAR TUGAS', $dataset['context'], $dataset['headers'], $dataset['rows']);
+        return $this->tablePdf('tugas_' . $dataset['slug'] . '.pdf', 'DAFTAR TUGAS', $dataset['context'], $dataset['headers'], $dataset['rows'], null, null, $this->teacherSigner($request));
     }
 
     public function guruPengumpulanTugasExcel(Request $request, KelasMapel $kelasMapel, Tugas $tugas)
@@ -475,7 +484,7 @@ class ExportController extends Controller
     public function guruPengumpulanTugasPdf(Request $request, KelasMapel $kelasMapel, Tugas $tugas)
     {
         $dataset = $this->guruPengumpulanTugasDataset($kelasMapel, $tugas);
-        return $this->tablePdf('pengumpulan_' . $dataset['slug'] . '.pdf', 'PENGUMPULAN TUGAS', $dataset['context'], $dataset['headers'], $dataset['rows']);
+        return $this->tablePdf('pengumpulan_' . $dataset['slug'] . '.pdf', 'PENGUMPULAN TUGAS', $dataset['context'], $dataset['headers'], $dataset['rows'], null, null, $this->teacherSigner($request));
     }
 
     private function mapelListUntukKelas(int|string|null $kelasId, int|string|null $tahunAjaranId, string $semester)
@@ -682,7 +691,7 @@ class ExportController extends Controller
                 $item->kelasMapel?->kelas?->nama_kelas ?? '-',
                 $item->kelasMapel?->mataPelajaran?->nama_mapel ?? '-',
                 $item->kelasMapel?->guru?->nama_lengkap ?? '-',
-                $item->batas_waktu?->format('d/m/Y H:i') ?? '-',
+                $item->batas_waktu?->format('d/m/Y') ?? '-',
                 $total,
                 $sudah,
                 $total - $sudah,
@@ -881,7 +890,7 @@ class ExportController extends Controller
             ->map(fn(Tugas $tugas, int $index) => [
                 $index + 1,
                 $tugas->judul,
-                $tugas->batas_waktu?->format('d/m/Y H:i') ?? '-',
+                $tugas->batas_waktu?->format('d/m/Y') ?? '-',
                 $tugas->sudah_mengumpulkan ?? 0,
                 $totalSiswa,
                 $totalSiswa > 0 ? round((($tugas->sudah_mengumpulkan ?? 0) / $totalSiswa) * 100) . '%' : '-',
@@ -899,19 +908,30 @@ class ExportController extends Controller
     {
         abort_unless((int) $tugas->kelas_mapel_id === (int) $kelasMapel->id, 403);
 
-        $rows = PengumpulanTugas::with(['siswa.user', 'files'])
+        $pengumpulan = PengumpulanTugas::with(['siswa.user', 'files'])
             ->where('tugas_id', $tugas->id)
             ->get()
+            ->keyBy('siswa_id');
+
+        $rows = Siswa::with('user')
+            ->where('kelas_id', $kelasMapel->kelas_id)
+            ->where('status', 'aktif')
+            ->orderBy('nis')
+            ->get()
             ->values()
-            ->map(fn(PengumpulanTugas $item, int $index) => [
+            ->map(function (Siswa $siswa, int $index) use ($pengumpulan) {
+                $item = $pengumpulan->get($siswa->id);
+
+                return [
                 $index + 1,
-                $item->siswa?->user?->nama_lengkap ?? '-',
-                ucfirst((string) $item->status),
-                $item->tanggal_kumpul?->format('d/m/Y H:i') ?? '-',
-                $item->nilai ?? '-',
-                $item->catatan ?? '-',
-                $item->files->count() + ($item->file_upload ? 1 : 0),
-            ])->all();
+                $siswa->user?->nama_lengkap ?? $siswa->nis,
+                ucfirst((string) ($item?->status ?? 'belum')),
+                $item?->tanggal_kumpul?->format('d/m/Y H:i') ?? '-',
+                $item?->nilai ?? '-',
+                $item?->catatan ?? '-',
+                ($item?->files->count() ?? 0) + ($item?->file_upload ? 1 : 0),
+                ];
+            })->all();
 
         return [
             'headers' => ['No', 'Siswa', 'Status', 'Tanggal Kumpul', 'Nilai', 'Catatan', 'Jumlah File'],
@@ -939,13 +959,36 @@ class ExportController extends Controller
         return response()->download($filePath, $filename)->deleteFileAfterSend(true);
     }
 
-    private function tablePdf(string $filename, string $title, string $context, array $headers, array $rows, ?TahunAjaran $tahunAjaran = null, ?string $semester = null)
+    private function tablePdf(string $filename, string $title, string $context, array $headers, array $rows, ?TahunAjaran $tahunAjaran = null, ?string $semester = null, ?array $signer = null)
     {
         $reportSchool = $this->reportSchool($tahunAjaran ?? TahunAjaran::getAktif(), $semester ?? Pengaturan::getValue('semester_aktif', '1'));
-        $pdf = Pdf::loadView('exports.pdf.table', compact('title', 'context', 'headers', 'rows', 'reportSchool'));
+        $signer ??= $this->principalSigner($reportSchool);
+        $pdf = Pdf::loadView('exports.pdf.table', compact('title', 'context', 'headers', 'rows', 'reportSchool', 'signer'));
         $pdf->setPaper('A4', count($headers) > 8 ? 'landscape' : 'portrait');
 
         return $pdf->download($filename);
+    }
+
+    private function teacherSigner(Request $request): array
+    {
+        $user = $request->user();
+
+        return [
+            'role' => 'Guru Mata Pelajaran',
+            'name' => $user?->nama_lengkap ?? $user?->username ?? '-',
+            'id_label' => filled($user?->nip_nis) ? 'NIP' : null,
+            'id_value' => $user?->nip_nis,
+        ];
+    }
+
+    private function principalSigner(array $reportSchool): array
+    {
+        return [
+            'role' => 'Kepala Sekolah',
+            'name' => $reportSchool['principal_name'] ?? '-',
+            'id_label' => ($reportSchool['principal_nip'] ?? null) ? 'NIP' : (($reportSchool['principal_nuptk'] ?? null) ? 'NUPTK' : null),
+            'id_value' => $reportSchool['principal_nip'] ?: ($reportSchool['principal_nuptk'] ?? null),
+        ];
     }
 
     private function kelasMapelDatasetBase(KelasMapel $kelasMapel, ?TahunAjaran $tahunAjaran, string $semester): array

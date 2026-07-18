@@ -53,6 +53,7 @@ function statusLabel(status) {
                 <table class="table table-hover mb-0">
                     <thead>
                         <tr>
+                            <th>#</th>
                             <th>Siswa</th>
                             <th>Status</th>
                             <th>Tanggal Kumpul</th>
@@ -66,7 +67,7 @@ function statusLabel(status) {
                     <tbody>
                         <SubmissionRow
                             v-for="item in pengumpulan"
-                            :key="item.id"
+                            :key="item.key"
                             :item="item"
                             :status-color="statusColor"
                             :status-label="statusLabel"

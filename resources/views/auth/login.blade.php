@@ -27,75 +27,95 @@
     @endif
 
     <style>
+        :root {
+            --login-primary: #198754;
+            --login-primary-dark: #166534;
+            --login-primary-deep: #0f3f2a;
+            --login-accent: #fbbf24;
+            --login-surface: #ffffff;
+            --login-surface-muted: #f8fafc;
+            --login-border: #d9e2e7;
+            --login-text: #1f2937;
+            --login-text-muted: #64748b;
+            --login-danger-bg: #fee2e2;
+            --login-danger-text: #991b1b;
+            --login-success-bg: #dcfce7;
+            --login-success-text: #166534;
+        }
         @keyframes fadeInUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes pulse { 0%,100% { box-shadow:0 0 0 0 rgba(34,197,94,0.3); } 50% { box-shadow:0 0 0 10px rgba(34,197,94,0); } }
+        @keyframes pulse { 0%,100% { box-shadow:0 0 0 0 rgba(245,158,11,0.24); } 50% { box-shadow:0 0 0 10px rgba(245,158,11,0); } }
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
             font-family:'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif;
-            background:linear-gradient(135deg, #166534 0%, #145c32 40%, #0d3625 100%);
+            background:linear-gradient(135deg, var(--login-primary-dark) 0%, var(--login-primary-deep) 58%, #0b2419 100%);
             min-height:100vh; display:flex; align-items:center; justify-content:center;
             padding:20px;
+            color:var(--login-text);
         }
         body::before {
             content:''; position:fixed; top:-50%; left:-50%; width:200%; height:200%;
-            background:radial-gradient(circle at 30% 20%, rgba(251,191,36,0.08) 0%, transparent 50%),
-                       radial-gradient(circle at 70% 80%, rgba(34,197,94,0.12) 0%, transparent 50%);
+            background:radial-gradient(circle at 30% 20%, rgba(251,191,36,0.10) 0%, transparent 46%),
+                       radial-gradient(circle at 70% 80%, rgba(255,255,255,0.08) 0%, transparent 48%);
             pointer-events:none; animation:pulse 4s ease-in-out infinite;
         }
         .login-wrapper { position:relative; width:100%; max-width:440px; animation:fadeInUp 0.5s ease; }
         .login-header { text-align:center; color:white; margin-bottom:20px; }
         .login-header .logo-circle {
-            width:80px; height:80px; background:rgba(255,255,255,0.15);
+            width:80px; height:80px; background:rgba(255,255,255,0.16);
             border-radius:50%; display:flex; align-items:center; justify-content:center;
             margin:0 auto 12px; font-size:2.2rem;
-            border:3px solid rgba(251,191,36,0.5);
+            border:3px solid rgba(251,191,36,0.45);
             box-shadow:0 0 30px rgba(251,191,36,0.15);
         }
         .login-header h3 { font-weight:800; font-size:1.4rem; margin-bottom:4px; }
-        .login-header p { opacity:0.75; font-size:0.85rem; }
+        .login-header p { opacity:0.86; font-size:0.85rem; }
         .login-header .product-name {
             display:inline-flex; align-items:center; justify-content:center;
             padding:4px 10px; margin-bottom:8px;
-            background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.18);
-            border-radius:999px; color:rgba(255,255,255,0.9);
+            background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.22);
+            border-radius:999px; color:rgba(255,255,255,0.95);
             font-weight:700; font-size:0.74rem; letter-spacing:0.02em;
         }
-        .login-header .school-motto { max-width:360px; margin:0 auto 6px; color:rgba(255,255,255,0.78); font-size:0.84rem; line-height:1.45; }
-        .login-header .school-address { max-width:360px; margin:0 auto; color:rgba(255,255,255,0.62); font-size:0.74rem; line-height:1.4; }
+        .login-header .school-motto { max-width:360px; margin:0 auto 6px; color:rgba(255,255,255,0.88); font-size:0.84rem; line-height:1.45; }
+        .login-header .school-address { max-width:360px; margin:0 auto; color:rgba(255,255,255,0.76); font-size:0.74rem; line-height:1.4; }
         .login-card {
-            background:white; border-radius:18px; padding:35px 30px;
-            box-shadow:0 20px 60px rgba(0,0,0,0.3);
+            background:var(--login-surface); border-radius:18px; padding:35px 30px;
+            border:1px solid rgba(255,255,255,0.72);
+            box-shadow:0 20px 60px rgba(4,31,20,0.28);
         }
-        .login-card .form-label { font-weight:600; font-size:0.84rem; color:#4b5563; margin-bottom:5px; }
+        .login-card .form-label { font-weight:700; font-size:0.84rem; color:#334155; margin-bottom:5px; }
         .login-card .input-group-text {
-            background:#f9fafb; border:1px solid #e5e7eb; border-right:none;
-            color:#9ca3af; border-radius:10px 0 0 10px;
+            background:var(--login-surface-muted); border:1px solid var(--login-border); border-right:none;
+            color:var(--login-text-muted); border-radius:10px 0 0 10px;
         }
         .login-card .form-control {
-            border:1px solid #e5e7eb; border-left:none; border-radius:0 10px 10px 0;
+            border:1px solid var(--login-border); border-left:none; border-radius:0 10px 10px 0;
             padding:12px 16px; font-size:0.92rem; font-family:inherit;
+            color:var(--login-text); background:#fff;
             transition:all 0.2s ease;
         }
-        .login-card .input-group:focus-within .input-group-text { border-color:#22c55e; color:#22c55e; }
-        .login-card .form-control:focus { box-shadow:none; border-color:#22c55e; }
+        .login-card .form-control::placeholder { color:#94a3b8; }
+        .login-card .input-group:focus-within .input-group-text { border-color:var(--login-primary); color:var(--login-primary); background:#f0fdf4; }
+        .login-card .form-control:focus { box-shadow:none; border-color:var(--login-primary); }
         .btn-login {
             width:100%; padding:14px; border-radius:12px; border:none;
-            background:linear-gradient(135deg, #22c55e, #16a34a);
+            background:linear-gradient(135deg, var(--login-primary), var(--login-primary-dark));
             color:white; font-weight:700; font-size:0.95rem;
             transition:all 0.3s ease; cursor:pointer;
             font-family:inherit; letter-spacing:0.02em;
         }
         .btn-login:hover {
             transform:translateY(-2px);
-            box-shadow:0 8px 25px rgba(22,163,74,0.35);
-            background:linear-gradient(135deg, #16a34a, #15803d);
+            box-shadow:0 8px 25px rgba(22,101,52,0.32);
+            background:linear-gradient(135deg, var(--login-primary-dark), var(--login-primary-deep));
         }
         .alert { border:none; border-radius:10px; font-size:0.85rem; padding:12px 16px; margin-bottom:20px; }
-        .alert-danger { background:#fee2e2; color:#991b1b; }
-        .alert-success { background:#dcfce7; color:#166534; }
-        .form-check-input:checked { background-color:#22c55e; border-color:#22c55e; }
-        .login-footer { text-align:center; margin-top:20px; color:rgba(255,255,255,0.6); font-size:0.78rem; }
-        .login-footer span { color:rgba(251,191,36,0.8); }
+        .alert-danger { background:var(--login-danger-bg); color:var(--login-danger-text); }
+        .alert-success { background:var(--login-success-bg); color:var(--login-success-text); }
+        .form-check-input { border-color:#cbd5e1; }
+        .form-check-input:checked { background-color:var(--login-primary); border-color:var(--login-primary); }
+        .login-footer { text-align:center; margin-top:20px; color:rgba(255,255,255,0.78); font-size:0.78rem; }
+        .login-footer span { color:rgba(253,224,71,0.92); font-weight:700; }
         @media(max-width:480px) { .login-card { padding:25px 20px; } }
     </style>
 </head>
@@ -126,11 +146,11 @@
         <form action="{{ route('login.post') }}" method="POST">
             @csrf
             <div class="mb-3">
-                <label class="form-label">Username atau Email</label>
+                <label class="form-label">Username</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
                     <input type="text" name="username" class="form-control @error('username') is-invalid @enderror"
-                           value="{{ old('username') }}" placeholder="Masukkan username atau email" required autofocus>
+                           value="{{ old('username') }}" placeholder="Masukkan username" required autofocus>
                 </div>
                 @error('username')<div class="text-danger" style="font-size:0.75rem;margin-top:4px;">{{ $message }}</div>@enderror
             </div>

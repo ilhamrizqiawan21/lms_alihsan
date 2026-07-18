@@ -20,15 +20,17 @@ class MateriController extends Controller
             ->aktif()
             ->get();
 
+        $materi = Materi::with(['kelasMapel.kelas', 'kelasMapel.mataPelajaran'])
+            ->whereHas('kelasMapel', fn ($query) => $query
+                ->where('guru_id', Auth::id())
+                ->aktif())
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return Inertia::render('Guru/Materi/Index', [
-            'kelasMapel' => $kelasMapel->map(fn (KelasMapel $item) => [
-                'id' => $item->id,
-                'kelas' => $item->kelas?->nama_kelas ?? '-',
-                'mata_pelajaran' => $item->mataPelajaran?->nama_mapel ?? '-',
-                'initials' => strtoupper(substr($item->mataPelajaran?->nama_mapel ?? 'MP', 0, 2)),
-                'semester' => $item->semester,
-                'href' => route('guru.materi.list', $item),
-            ])->values(),
+            'kelasMapel' => $this->formatKelasMapelOptions($kelasMapel),
+            'materi' => $materi->map(fn (Materi $item) => $this->formatMateri($item))->values(),
+            'storeUrl' => route('guru.materi.store.bulk'),
         ]);
     }
     //Daftar materi yang diupload oleh guru untuk kelas dan mata pelajaran tertentu
@@ -58,6 +60,38 @@ class MateriController extends Controller
                 'delete_url' => route('guru.materi.destroy', [$kelasMapel, $item]),
             ])->values(),
         ]);
+    }
+
+    public function storeBulk(Request $request)
+    {
+        $validated = $request->validate([
+            'kelas_mapel_ids' => 'required|array|min:1',
+            'kelas_mapel_ids.*' => 'integer',
+            'judul' => 'required|string|max:200',
+            'deskripsi' => 'nullable|string',
+            'file_materi' => 'required|file|mimes:jpg,jpeg,pdf|extensions:jpg,jpeg,pdf|max:5120',
+        ]);
+
+        $kelasMapel = $this->assignedKelasMapelQuery()
+            ->whereIn('id', $validated['kelas_mapel_ids'])
+            ->get();
+
+        if ($kelasMapel->count() !== count(array_unique($validated['kelas_mapel_ids']))) {
+            return back()->withInput()->with('error', 'Pilihan kelas tidak valid.');
+        }
+
+        $file = $request->file('file_materi');
+        foreach ($kelasMapel as $item) {
+            Materi::create([
+                'kelas_mapel_id' => $item->id,
+                'judul' => $validated['judul'],
+                'deskripsi' => $validated['deskripsi'] ?? null,
+                'file_path' => $file->store('materi/' . $item->id, 'public'),
+            ]);
+        }
+
+        return redirect()->route('guru.materi.index')
+            ->with('success', 'Materi berhasil diupload ke kelas yang dipilih.');
     }
     //Menyimpan materi baru
     public function store(Request $request, KelasMapel $kelasMapel)
@@ -109,12 +143,48 @@ class MateriController extends Controller
 
         $materi->delete();
 
-        return redirect()->route('guru.materi.list', $kelasMapel)
+        return redirect()->route('guru.materi.index')
             ->with('success', 'Materi berhasil dihapus.');
     }
 
     private function ensureMateriBelongsToKelasMapel(Materi $materi, KelasMapel $kelasMapel): void
     {
         abort_unless((int) $materi->kelas_mapel_id === (int) $kelasMapel->id, 403);
+    }
+
+    private function assignedKelasMapelQuery()
+    {
+        return KelasMapel::with(['kelas', 'mataPelajaran', 'tahunAjaran'])
+            ->where('guru_id', Auth::id())
+            ->aktif();
+    }
+
+    private function formatKelasMapelOptions($kelasMapel)
+    {
+        return $kelasMapel->map(fn (KelasMapel $item) => [
+            'id' => $item->id,
+            'kelas' => trim(($item->kelas?->tingkat ? $item->kelas->tingkat . ' ' : '') . ($item->kelas?->nama_kelas ?? '-')),
+            'mata_pelajaran' => $item->mataPelajaran?->nama_mapel ?? '-',
+            'semester' => $item->semester,
+            'label' => trim(($item->kelas?->tingkat ? $item->kelas->tingkat . ' ' : '') . ($item->kelas?->nama_kelas ?? '-') . ' - ' . ($item->mataPelajaran?->nama_mapel ?? '-') . ' (Sem. ' . $item->semester . ')'),
+            'href' => route('guru.materi.list', $item),
+        ])->values();
+    }
+
+    private function formatMateri(Materi $item): array
+    {
+        $kelasMapel = $item->kelasMapel;
+
+        return [
+            'id' => $item->id,
+            'judul' => $item->judul,
+            'deskripsi' => $item->deskripsi,
+            'deskripsi_ringkas' => Str::limit((string) $item->deskripsi, 60),
+            'tanggal' => $item->created_at?->format('d M Y') ?? '-',
+            'kelas' => trim(($kelasMapel?->kelas?->tingkat ? $kelasMapel->kelas->tingkat . ' ' : '') . ($kelasMapel?->kelas?->nama_kelas ?? '-')),
+            'mata_pelajaran' => $kelasMapel?->mataPelajaran?->nama_mapel ?? '-',
+            'download_url' => $item->file_path && $kelasMapel ? route('guru.materi.download', [$kelasMapel, $item]) : null,
+            'delete_url' => $kelasMapel ? route('guru.materi.destroy', [$kelasMapel, $item]) : null,
+        ];
     }
 }

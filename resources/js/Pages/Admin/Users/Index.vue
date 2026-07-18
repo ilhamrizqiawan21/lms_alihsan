@@ -10,6 +10,7 @@ const props = defineProps({
     users: { type: Object, default: () => ({ data: [], links: [], meta: {} }) },
     roles: { type: Array, default: () => [] },
     filters: { type: Object, default: () => ({}) },
+    exportUrl: { type: String, required: true },
 });
 
 const filterForm = reactive({
@@ -19,6 +20,10 @@ const filterForm = reactive({
 
 function roleLabel(role) {
     return role ? role.replaceAll('_', ' ').replace(/\b\w/g, (char) => char.toUpperCase()) : '-';
+}
+
+function passwordStatusColor(isDefault) {
+    return isDefault ? 'warning text-dark' : 'success';
 }
 
 function applyFilters() {
@@ -41,6 +46,13 @@ function resetFilters() {
 
 function cleanFilters() {
     return Object.fromEntries(Object.entries(filterForm).filter(([, value]) => value !== '' && value !== null));
+}
+
+function exportExcelUrl() {
+    const params = new URLSearchParams(cleanFilters());
+    const query = params.toString();
+
+    return query ? `${props.exportUrl}?${query}` : props.exportUrl;
 }
 
 async function toggleActive(user) {
@@ -106,6 +118,9 @@ async function destroy(user) {
 
         <Card title="Daftar Guru & Staf" icon="bi-people-fill">
             <template #actions>
+                <a :href="exportExcelUrl()" class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i> Excel
+                </a>
                 <a href="/admin/users/create" class="btn btn-success btn-sm">
                     <i class="bi bi-plus-lg me-1" aria-hidden="true"></i> Tambah Guru/Staf
                 </a>
@@ -149,7 +164,7 @@ async function destroy(user) {
                             <th>Nama Lengkap</th>
                             <th>Email</th>
                             <th>Role</th>
-                            <th>Status</th>
+                            <th>Status Password</th>
                             <th class="table-action-column">Aksi</th>
                         </tr>
                     </thead>
@@ -160,8 +175,8 @@ async function destroy(user) {
                             <td>{{ user.email ?? '-' }}</td>
                             <td><Badge color="primary">{{ roleLabel(user.role?.nama_role) }}</Badge></td>
                             <td>
-                                <Badge :color="user.is_active ? 'success' : 'danger'">
-                                    {{ user.is_active ? 'Aktif' : 'Nonaktif' }}
+                                <Badge :color="passwordStatusColor(user.password_is_default)">
+                                    {{ user.password_status }}
                                 </Badge>
                             </td>
                             <td class="table-action-column">

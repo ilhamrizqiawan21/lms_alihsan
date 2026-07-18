@@ -59,6 +59,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Users
     Route::get('/users/import-siswa/template', [UserController::class, 'downloadSiswaTemplate'])->name('users.import-siswa.template');
     Route::post('/users/import-siswa', [UserController::class, 'importSiswa'])->name('users.import-siswa');
+    Route::get('/users/export/excel', [UserController::class, 'exportExcel'])->name('users.export.excel');
     Route::resource('users', UserController::class)->except(['show']);
     Route::post('/users/{user}/toggle-active', [UserController::class, 'toggleActive'])->name('users.toggle-active');
     Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
@@ -131,6 +132,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/school-settings', [SchoolSettingController::class, 'index'])->name('school-settings.index');
     Route::put('/school-settings', [SchoolSettingController::class, 'update'])->name('school-settings.update');
     Route::get('/log-login', [SystemController::class, 'logLogin'])->name('log-login');
+    Route::get('/log-login/export/excel', [SystemController::class, 'exportLogLoginExcel'])->name('log-login.export.excel');
     Route::get('/log-error', [SystemController::class, 'logError'])->name('log-error');
     Route::get('/pengaturan', [SystemController::class, 'pengaturan'])->name('pengaturan');
     Route::post('/pengaturan', [SystemController::class, 'savePengaturan'])->name('pengaturan.save');
@@ -165,6 +167,7 @@ Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(f
 
     // Materi
     Route::get('/materi', [GuruMateriController::class, 'index'])->name('materi.index');
+    Route::post('/materi/store', [GuruMateriController::class, 'storeBulk'])->name('materi.store.bulk');
     Route::get('/materi/{kelasMapel}/list', [GuruMateriController::class, 'list'])->name('materi.list')->middleware('can:mengajar,kelasMapel');
     Route::post('/materi/{kelasMapel}/store', [GuruMateriController::class, 'store'])->name('materi.store')->middleware('can:mengajar,kelasMapel');
     Route::get('/materi/{kelasMapel}/{materi}/download', [GuruMateriController::class, 'download'])->name('materi.download')->middleware('can:mengajar,kelasMapel');
@@ -172,6 +175,7 @@ Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(f
 
     // Tugas
     Route::get('/tugas', [GuruTugasController::class, 'index'])->name('tugas.index');
+    Route::post('/tugas/store', [GuruTugasController::class, 'storeBulk'])->name('tugas.store.bulk');
     Route::get('/tugas/{kelasMapel}/list', [GuruTugasController::class, 'list'])->name('tugas.list')->middleware('can:mengajar,kelasMapel');
     Route::get('/tugas/{kelasMapel}/export/excel', [ExportController::class, 'guruTugasExcel'])->name('tugas.export.excel')->middleware('can:mengajar,kelasMapel');
     Route::get('/tugas/{kelasMapel}/export/pdf', [ExportController::class, 'guruTugasPdf'])->name('tugas.export.pdf')->middleware('can:mengajar,kelasMapel');
@@ -181,11 +185,12 @@ Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(f
     Route::get('/tugas/{kelasMapel}/{tugas}/pengumpulan/export/pdf', [ExportController::class, 'guruPengumpulanTugasPdf'])->name('tugas.pengumpulan.export.pdf')->middleware('can:mengajar,kelasMapel');
     Route::get('/tugas/{kelasMapel}/{tugas}/pengumpulan/{file}/download', [GuruTugasController::class, 'downloadFile'])->name('tugas.file.download')->middleware('can:mengajar,kelasMapel');
     Route::get('/tugas/{kelasMapel}/{tugas}/pengumpulan/{pengumpulan}/legacy-download', [GuruTugasController::class, 'downloadLegacyFile'])->name('tugas.pengumpulan.download')->middleware('can:mengajar,kelasMapel');
-    Route::post('/tugas/{kelasMapel}/{tugas}/{pengumpulan}/nilai', [GuruTugasController::class, 'nilai'])->name('tugas.nilai')->middleware('can:mengajar,kelasMapel');
+    Route::post('/tugas/{kelasMapel}/{tugas}/siswa/{siswa}/nilai', [GuruTugasController::class, 'nilai'])->name('tugas.nilai')->middleware('can:mengajar,kelasMapel');
     Route::delete('/tugas/{tugas}', [GuruTugasController::class, 'destroy'])->name('tugas.destroy');
 
     // Nilai
     Route::get('/nilai', [NilaiController::class, 'index'])->name('nilai.index');
+    Route::post('/nilai/store', [NilaiController::class, 'storeBulk'])->name('nilai.store.bulk');
     Route::get('/nilai/{kelasMapel}/input', [NilaiController::class, 'input'])->name('nilai.input')->middleware('can:mengajar,kelasMapel');
     Route::get('/nilai/{kelasMapel}/export/excel', [ExportController::class, 'guruNilaiExcel'])->name('nilai.export.excel')->middleware('can:mengajar,kelasMapel');
     Route::get('/nilai/{kelasMapel}/export/pdf', [ExportController::class, 'guruNilaiPdf'])->name('nilai.export.pdf')->middleware('can:mengajar,kelasMapel');
@@ -193,6 +198,7 @@ Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(f
 
     // Sikap
     Route::get('/sikap', [SikapController::class, 'index'])->name('sikap.index');
+    Route::post('/sikap/store', [SikapController::class, 'storeBulk'])->name('sikap.store.bulk');
     Route::get('/sikap/{kelasMapel}/input', [SikapController::class, 'input'])->name('sikap.input')->middleware('can:mengajar,kelasMapel');
     Route::get('/sikap/{kelasMapel}/export/excel', [ExportController::class, 'guruSikapExcel'])->name('sikap.export.excel')->middleware('can:mengajar,kelasMapel');
     Route::get('/sikap/{kelasMapel}/export/pdf', [ExportController::class, 'guruSikapPdf'])->name('sikap.export.pdf')->middleware('can:mengajar,kelasMapel');

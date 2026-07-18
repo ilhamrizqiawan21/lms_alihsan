@@ -46,6 +46,7 @@ class ProfilController extends Controller
 
         if ($request->filled('password')) {
             $data['password'] = Hash::make($validated['password']);
+            $data['is_password_default'] = false;
         }
 
         $user->update($data);

@@ -9,9 +9,8 @@ class Notifikasi extends Model
 {
     protected $table = 'notifikasi';
 
-    public $timestamps = false;
-
     const CREATED_AT = 'created_at';
+    const UPDATED_AT = null;
 
     protected $fillable = [
         'user_id',

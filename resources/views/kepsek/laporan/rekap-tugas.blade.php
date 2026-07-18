@@ -63,7 +63,7 @@
                     <i class="bi bi-person me-1"></i> {{ $t->kelasMapel->guru->nama_lengkap ?? '—' }}
                     @if($t->batas_waktu)
                     <span class="mx-1">•</span>
-                    <i class="bi bi-clock me-1"></i> {{ $t->batas_waktu->format('d M Y H:i') }}
+                    <i class="bi bi-clock me-1"></i> {{ $t->batas_waktu->format('d M Y') }}
                     @endif
                 </div>
                 <hr class="my-1">

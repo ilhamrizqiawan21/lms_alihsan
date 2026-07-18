@@ -59,7 +59,7 @@ function submit() {
 
                 <form @submit.prevent="submit">
                     <div class="mb-3">
-                        <label for="username" class="form-label">Username atau Email</label>
+                        <label for="username" class="form-label">Username</label>
                         <div class="input-group">
                             <span class="input-group-text">
                                 <i class="bi bi-person-fill" aria-hidden="true"></i>
@@ -71,7 +71,7 @@ function submit() {
                                 name="username"
                                 class="form-control"
                                 :class="{ 'is-invalid': form.errors.username }"
-                                placeholder="Masukkan username atau email"
+                                placeholder="Masukkan username"
                                 required
                                 autofocus
                                 autocomplete="username"
@@ -132,13 +132,26 @@ function submit() {
 <style scoped>
 .login-page {
     position: relative;
+    --login-primary: var(--app-primary, #198754);
+    --login-primary-dark: var(--app-primary-dark, #166534);
+    --login-primary-deep: var(--primary-800, #0f3f2a);
+    --login-accent: var(--gold-500, #f59e0b);
+    --login-surface: var(--surface-card, #ffffff);
+    --login-surface-muted: var(--surface-muted, #f8fafc);
+    --login-border: var(--gray-200, #e5e7eb);
+    --login-text: var(--text-strong, #1f2937);
+    --login-text-muted: var(--text-muted, #64748b);
+    --login-danger-bg: var(--status-danger-bg, #fee2e2);
+    --login-danger-text: var(--status-danger-text, #991b1b);
+    --login-success-bg: var(--status-success-bg, #dcfce7);
+    --login-success-text: var(--status-success-text, #166534);
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 20px;
     overflow: hidden;
-    background: linear-gradient(135deg, #166534 0%, #145c32 40%, #0d3625 100%);
+    background: linear-gradient(135deg, var(--login-primary-dark) 0%, var(--login-primary-deep) 58%, #0b2419 100%);
     font-family: var(--font-sans);
 }
 
@@ -147,8 +160,8 @@ function submit() {
     position: fixed;
     inset: -50%;
     background:
-        radial-gradient(circle at 30% 20%, rgba(251, 191, 36, 0.08) 0%, transparent 50%),
-        radial-gradient(circle at 70% 80%, rgba(34, 197, 94, 0.12) 0%, transparent 50%);
+        radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--login-accent) 11%, transparent) 0%, transparent 46%),
+        radial-gradient(circle at 70% 80%, color-mix(in srgb, var(--login-primary) 14%, transparent) 0%, transparent 50%);
     pointer-events: none;
 }
 
@@ -172,10 +185,10 @@ function submit() {
     align-items: center;
     justify-content: center;
     margin: 0 auto 12px;
-    border: 3px solid rgba(251, 191, 36, 0.5);
+    border: 3px solid color-mix(in srgb, var(--login-accent) 48%, transparent);
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 0 30px rgba(251, 191, 36, 0.15);
+    box-shadow: 0 0 30px color-mix(in srgb, var(--login-accent) 16%, transparent);
 }
 
 .logo-circle img {
@@ -208,7 +221,7 @@ function submit() {
 .school-motto {
     max-width: 360px;
     margin: 0 auto 6px;
-    color: rgba(255, 255, 255, 0.78);
+    color: rgba(255, 255, 255, 0.84);
     font-size: 0.84rem;
     line-height: 1.45;
 }
@@ -216,66 +229,67 @@ function submit() {
 .school-address {
     max-width: 360px;
     margin: 0 auto;
-    color: rgba(255, 255, 255, 0.62);
+    color: rgba(255, 255, 255, 0.70);
     font-size: 0.74rem;
     line-height: 1.4;
 }
 
 .login-card {
     border-radius: 18px;
-    background: white;
+    background: var(--login-surface);
     padding: 35px 30px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 20px 60px rgba(4, 31, 20, 0.28);
 }
 
 .form-label {
     font-weight: 600;
     font-size: 0.84rem;
-    color: #4b5563;
+    color: var(--login-text);
     margin-bottom: 5px;
 }
 
 .input-group-text {
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--login-border);
     border-right: 0;
     border-radius: 10px 0 0 10px;
-    background: #f9fafb;
-    color: #9ca3af;
+    background: var(--login-surface-muted);
+    color: var(--login-text-muted);
 }
 
 .form-control {
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--login-border);
     border-left: 0;
     border-radius: 0 10px 10px 0;
     padding: 12px 16px;
+    color: var(--login-text);
     font-size: 0.92rem;
 }
 
 .input-group:focus-within .input-group-text {
-    border-color: #22c55e;
-    color: #22c55e;
+    border-color: var(--login-primary);
+    color: var(--login-primary);
 }
 
 .form-control:focus {
-    border-color: #22c55e;
+    border-color: var(--login-primary);
     box-shadow: none;
 }
 
 .form-check-label {
-    color: #6b7280;
+    color: var(--login-text-muted);
     font-size: 0.85rem;
 }
 
 .form-check-input:checked {
-    border-color: #22c55e;
-    background-color: #22c55e;
+    border-color: var(--login-primary);
+    background-color: var(--login-primary);
 }
 
 .btn-login {
     width: 100%;
     border: 0;
     border-radius: 12px;
-    background: linear-gradient(135deg, #22c55e, #16a34a);
+    background: linear-gradient(135deg, var(--login-primary), var(--login-primary-dark));
     color: white;
     padding: 14px;
     font: inherit;
@@ -286,8 +300,8 @@ function submit() {
 
 .btn-login:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(22, 163, 74, 0.35);
-    background: linear-gradient(135deg, #16a34a, #15803d);
+    box-shadow: 0 8px 25px rgba(22, 101, 52, 0.32);
+    background: linear-gradient(135deg, var(--login-primary-dark), var(--login-primary-deep));
 }
 
 .btn-login:disabled {
@@ -304,13 +318,13 @@ function submit() {
 }
 
 .alert-danger {
-    background: #fee2e2;
-    color: #991b1b;
+    background: var(--login-danger-bg);
+    color: var(--login-danger-text);
 }
 
 .alert-success {
-    background: #dcfce7;
-    color: #166534;
+    background: var(--login-success-bg);
+    color: var(--login-success-text);
 }
 
 .login-error {
@@ -322,12 +336,13 @@ function submit() {
 .login-footer {
     text-align: center;
     margin-top: 20px;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.68);
     font-size: 0.78rem;
 }
 
 .login-footer span {
-    color: rgba(251, 191, 36, 0.8);
+    color: color-mix(in srgb, var(--login-accent) 90%, white);
+    font-weight: 700;
 }
 
 @keyframes fadeInUp {

@@ -27,6 +27,18 @@
                 'sidebar' => '#0e7490',
                 'navbar' => '#0891b2',
             ],
+            'indigo' => [
+                'primary' => '#4f46e5',
+                'secondary' => '#06b6d4',
+                'sidebar' => '#3730a3',
+                'navbar' => '#4338ca',
+            ],
+            'marun' => [
+                'primary' => '#be123c',
+                'secondary' => '#f59e0b',
+                'sidebar' => '#881337',
+                'navbar' => '#be123c',
+            ],
         ];
         $layoutActiveTheme = $layoutThemeColors[$layoutTheme] ?? $layoutThemeColors['hijau'];
         $layoutPrimaryColor = $layoutActiveTheme['primary'];
@@ -153,7 +165,7 @@
             --badge-padding-x: 10px;
             --bs-primary: var(--app-primary);
             --bs-success: var(--app-primary);
-            --bs-warning: var(--app-accent);
+            --bs-warning: var(--gold-500);
             --bs-link-color: var(--primary-600);
             --bs-link-hover-color: var(--primary-700);
         }

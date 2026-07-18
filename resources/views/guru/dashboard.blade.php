@@ -25,6 +25,78 @@
         <div class="stat-icon"><i class="bi bi-journal-fill"></i></div>
         <div><div class="stat-label">Total Tugas</div><div class="stat-number">{{ $statistik['total_tugas'] ?? 0 }}</div></div>
     </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-exclamation-circle-fill"></i></div>
+        <div><div class="stat-label">Belum Mengumpulkan</div><div class="stat-number">{{ collect($tugasBelumDikumpulkan ?? [])->sum('belum') }}</div></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-pencil-square"></i></div>
+        <div><div class="stat-label">Perlu Dinilai</div><div class="stat-number">{{ collect($tugasPerluDinilai ?? [])->sum('total') }}</div></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-person-exclamation"></i></div>
+        <div><div class="stat-label">Kehadiran Rendah</div><div class="stat-number">{{ collect($siswaJarangMasuk ?? [])->count() }}</div></div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-exclamation-circle me-2"></i> Belum Mengumpulkan</div>
+            <div class="card-body p-0">
+                @forelse(($tugasBelumDikumpulkan ?? []) as $item)
+                    <a href="{{ $item['url'] }}" class="d-flex justify-content-between gap-3 p-3 border-bottom text-decoration-none" style="color:var(--text-body);">
+                        <span class="d-flex flex-column">
+                            <strong style="font-size:0.86rem;color:var(--text-strong);">{{ $item['judul'] }}</strong>
+                            <span class="text-muted" style="font-size:0.76rem;">{{ $item['kelas'] }} - {{ $item['mata_pelajaran'] }}</span>
+                            <small class="text-muted">Deadline {{ $item['batas_waktu'] }}</small>
+                        </span>
+                        <span class="badge bg-warning align-self-center">{{ $item['belum'] }}/{{ $item['total_siswa'] }}</span>
+                    </a>
+                @empty
+                    <p class="text-muted text-center py-4 mb-0">Tidak ada tunggakan tugas.</p>
+                @endforelse
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-person-exclamation me-2"></i> Siswa Perlu Perhatian</div>
+            <div class="card-body p-0">
+                @forelse(($siswaJarangMasuk ?? []) as $item)
+                    <a href="{{ $item['url'] }}" class="d-flex justify-content-between gap-3 p-3 border-bottom text-decoration-none" style="color:var(--text-body);">
+                        <span class="d-flex flex-column">
+                            <strong style="font-size:0.86rem;color:var(--text-strong);">{{ $item['nama'] }}</strong>
+                            <span class="text-muted" style="font-size:0.76rem;">{{ $item['kelas'] }} - NIS {{ $item['nis'] }}</span>
+                            <small class="text-muted">{{ $item['total_absensi'] }} catatan absensi, {{ $item['total_alpha'] }} alpha</small>
+                        </span>
+                        <span class="badge bg-{{ $item['persen_hadir'] < 60 ? 'danger' : 'warning' }} align-self-center">{{ $item['persen_hadir'] }}%</span>
+                    </a>
+                @empty
+                    <p class="text-muted text-center py-4 mb-0">Kehadiran siswa masih aman.</p>
+                @endforelse
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-pencil-square me-2"></i> Perlu Dinilai</div>
+            <div class="card-body p-0">
+                @forelse(($tugasPerluDinilai ?? []) as $item)
+                    <a href="{{ $item['url'] }}" class="d-flex justify-content-between gap-3 p-3 border-bottom text-decoration-none" style="color:var(--text-body);">
+                        <span class="d-flex flex-column">
+                            <strong style="font-size:0.86rem;color:var(--text-strong);">{{ $item['judul'] }}</strong>
+                            <span class="text-muted" style="font-size:0.76rem;">{{ $item['kelas'] }} - {{ $item['mata_pelajaran'] }}</span>
+                            <small class="text-muted">Sudah masuk, belum dinilai</small>
+                        </span>
+                        <span class="badge bg-info align-self-center">{{ $item['total'] }}</span>
+                    </a>
+                @empty
+                    <p class="text-muted text-center py-4 mb-0">Tidak ada antrean nilai.</p>
+                @endforelse
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="row">

@@ -55,7 +55,7 @@
                 <td class="judul">{{ $t->judul }}</td>
                 <td>{{ $t->kelasMapel?->mataPelajaran?->nama_mapel ?? '-' }}</td>
                 <td>{{ $t->kelasMapel?->guru?->nama_lengkap ?? '-' }}</td>
-                <td>{{ $t->batas_waktu ? date('d/m/Y H:i', strtotime($t->batas_waktu)) : '-' }}</td>
+                <td>{{ $t->batas_waktu ? date('d/m/Y', strtotime($t->batas_waktu)) : '-' }}</td>
                 <td>{{ $t->kategori_nilai ?? 'NH' }}</td>
                 <td>{{ $t->sudah_kumpul }}</td>
                 <td>{{ $totalSiswa }}</td>

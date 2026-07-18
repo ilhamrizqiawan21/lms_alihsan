@@ -28,6 +28,7 @@ class User extends Authenticatable
         'username',
         'email',
         'password',
+        'is_password_default',
         'nama_lengkap',
         'nip_nis',
         'jenis_kelamin',
@@ -46,6 +47,7 @@ class User extends Authenticatable
         return [
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'is_password_default' => 'boolean',
         ];
     }
 

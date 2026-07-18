@@ -4,10 +4,16 @@ namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
 use App\Models\KelasMapel;
+use App\Models\NilaiAkhir;
+use App\Models\Pengaturan;
 use App\Models\PengumpulanFile;
 use App\Models\PengumpulanTugas;
+use App\Models\Siswa;
+use App\Models\TahunAjaran;
 use App\Models\Tugas;
+use App\Services\NilaiService;
 use App\Services\NotifikasiService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -17,10 +23,12 @@ use Inertia\Inertia;
 class TugasController extends Controller
 {
     protected NotifikasiService $notifikasiService;
+    protected NilaiService $nilaiService;
 
-    public function __construct(NotifikasiService $notifikasiService)
+    public function __construct(NotifikasiService $notifikasiService, NilaiService $nilaiService)
     {
         $this->notifikasiService = $notifikasiService;
+        $this->nilaiService = $nilaiService;
     }
 
     public function index()
@@ -30,15 +38,27 @@ class TugasController extends Controller
             ->aktif()
             ->get();
 
+        $totalSiswaByKelas = Siswa::whereIn('kelas_id', $kelasMapel->pluck('kelas_id')->unique())
+            ->where('status', 'aktif')
+            ->selectRaw('kelas_id, count(*) as total')
+            ->groupBy('kelas_id')
+            ->pluck('total', 'kelas_id');
+
+        $tugas = Tugas::with(['kelasMapel.kelas', 'kelasMapel.mataPelajaran'])
+            ->whereIn('kelas_mapel_id', $kelasMapel->pluck('id'))
+            ->withCount(['pengumpulan as sudah_mengumpulkan' => function ($q) {
+                $q->whereIn('status', ['sudah', 'terlambat', 'dinilai']);
+            }])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return Inertia::render('Guru/Tugas/Index', [
-            'kelasMapel' => $kelasMapel->map(fn (KelasMapel $item) => [
-                'id' => $item->id,
-                'kelas' => $item->kelas?->nama_kelas ?? '-',
-                'mata_pelajaran' => $item->mataPelajaran?->nama_mapel ?? '-',
-                'initials' => strtoupper(substr($item->mataPelajaran?->nama_mapel ?? 'MP', 0, 2)),
-                'semester' => $item->semester,
-                'href' => route('guru.tugas.list', $item),
-            ])->values(),
+            'kelasMapel' => $this->formatKelasMapelOptions($kelasMapel),
+            'tugas' => $tugas->map(fn (Tugas $item) => $this->formatTugas(
+                $item,
+                (int) ($totalSiswaByKelas[$item->kelasMapel?->kelas_id] ?? 0)
+            ))->values(),
+            'storeUrl' => route('guru.tugas.store.bulk'),
         ]);
     }
 
@@ -73,7 +93,7 @@ class TugasController extends Controller
                 'id' => $item->id,
                 'judul' => $item->judul,
                 'deskripsi' => Str::limit((string) $item->deskripsi, 80),
-                'batas_waktu' => $item->batas_waktu?->format('d M Y H:i'),
+                'batas_waktu' => $item->batas_waktu?->format('d M Y'),
                 'sudah_mengumpulkan' => $item->sudah_mengumpulkan ?? 0,
                 'pengumpulan_url' => route('guru.tugas.pengumpulan', [$kelasMapel, $item]),
                 'delete_url' => route('guru.tugas.destroy', $item),
@@ -89,14 +109,16 @@ class TugasController extends Controller
         $validated = $request->validate([
             'judul' => 'required|string|max:200',
             'deskripsi' => 'nullable|string',
-            'batas_waktu' => 'required|date|after:now',
+            'batas_waktu' => 'required|date|after_or_equal:today',
         ]);
+
+        $batasWaktu = Carbon::parse($validated['batas_waktu'])->endOfDay();
 
         $tugas = Tugas::create([
             'kelas_mapel_id' => $kelasMapel->id,
             'judul' => $validated['judul'],
             'deskripsi' => $validated['deskripsi'],
-            'batas_waktu' => $validated['batas_waktu'],
+            'batas_waktu' => $batasWaktu,
         ]);
 
         $this->notifikasiService->notifikasiKelasMapel(
@@ -111,6 +133,47 @@ class TugasController extends Controller
             ->with('success', 'Tugas berhasil ditambahkan.');
     }
 
+    public function storeBulk(Request $request)
+    {
+        $validated = $request->validate([
+            'kelas_mapel_ids' => 'required|array|min:1',
+            'kelas_mapel_ids.*' => 'integer',
+            'judul' => 'required|string|max:200',
+            'deskripsi' => 'nullable|string',
+            'batas_waktu' => 'required|date|after_or_equal:today',
+        ]);
+
+        $kelasMapel = $this->assignedKelasMapelQuery()
+            ->whereIn('id', $validated['kelas_mapel_ids'])
+            ->get();
+
+        if ($kelasMapel->count() !== count(array_unique($validated['kelas_mapel_ids']))) {
+            return back()->withInput()->with('error', 'Pilihan kelas tidak valid.');
+        }
+
+        $batasWaktu = Carbon::parse($validated['batas_waktu'])->endOfDay();
+
+        foreach ($kelasMapel as $item) {
+            $tugas = Tugas::create([
+                'kelas_mapel_id' => $item->id,
+                'judul' => $validated['judul'],
+                'deskripsi' => $validated['deskripsi'] ?? null,
+                'batas_waktu' => $batasWaktu,
+            ]);
+
+            $this->notifikasiService->notifikasiKelasMapel(
+                $item->id,
+                'tugas_baru',
+                'Tugas Baru',
+                "Tugas '{$tugas->judul}' telah diberikan.",
+                route('siswa.tugas.show', $tugas->id)
+            );
+        }
+
+        return redirect()->route('guru.tugas.index')
+            ->with('success', 'Tugas berhasil ditambahkan ke kelas yang dipilih.');
+    }
+
     public function pengumpulan(KelasMapel $kelasMapel, Tugas $tugas)
     {
         $this->authorize('mengajar', $kelasMapel);
@@ -118,6 +181,13 @@ class TugasController extends Controller
 
         $pengumpulan = PengumpulanTugas::with(['siswa.user', 'files'])
             ->where('tugas_id', $tugas->id)
+            ->get()
+            ->keyBy('siswa_id');
+
+        $siswa = Siswa::with('user')
+            ->where('kelas_id', $kelasMapel->kelas_id)
+            ->where('status', 'aktif')
+            ->orderBy('nis')
             ->get();
 
         return Inertia::render('Guru/Tugas/Pengumpulan', [
@@ -125,54 +195,67 @@ class TugasController extends Controller
                 'id' => $kelasMapel->id,
                 'kelas' => $kelasMapel->kelas?->nama_kelas ?? '-',
                 'mata_pelajaran' => $kelasMapel->mataPelajaran?->nama_mapel ?? '-',
-                'back_url' => route('guru.tugas.list', $kelasMapel),
+                'back_url' => route('guru.tugas.index'),
                 'export_excel_url' => route('guru.tugas.pengumpulan.export.excel', [$kelasMapel, $tugas]),
                 'export_pdf_url' => route('guru.tugas.pengumpulan.export.pdf', [$kelasMapel, $tugas]),
             ],
             'tugas' => [
                 'id' => $tugas->id,
                 'judul' => $tugas->judul,
-                'batas_waktu' => $tugas->batas_waktu?->format('d/m/Y H:i'),
+                'batas_waktu' => $tugas->batas_waktu?->format('d/m/Y'),
             ],
-            'pengumpulan' => $pengumpulan->map(function (PengumpulanTugas $item) use ($kelasMapel, $tugas) {
+            'pengumpulan' => $siswa->map(function (Siswa $student, int $index) use ($pengumpulan, $kelasMapel, $tugas) {
+                $item = $pengumpulan->get($student->id);
+
                 return [
-                    'id' => $item->id,
-                    'siswa' => $item->siswa?->user?->nama_lengkap ?? '-',
-                    'status' => $item->status,
-                    'tanggal_kumpul' => $item->tanggal_kumpul?->format('d/m/Y H:i'),
-                    'teks_jawaban' => $item->teks_jawaban,
-                    'catatan' => $item->catatan,
-                    'nilai' => $item->nilai,
-                    'nilai_url' => route('guru.tugas.nilai', [$kelasMapel, $tugas, $item]),
-                    'legacy_file_url' => $item->file_upload ? route('guru.tugas.pengumpulan.download', [$kelasMapel, $tugas, $item]) : null,
-                    'files' => $item->files->map(fn (PengumpulanFile $file) => [
+                    'id' => $item?->id,
+                    'key' => $item?->id ? 'pengumpulan-' . $item->id : 'siswa-' . $student->id,
+                    'no' => $index + 1,
+                    'siswa' => $student->user?->nama_lengkap ?? $student->nis,
+                    'nis' => $student->nis,
+                    'status' => $item?->status ?? 'belum',
+                    'tanggal_kumpul' => $item?->tanggal_kumpul?->format('d/m/Y H:i'),
+                    'teks_jawaban' => $item?->teks_jawaban,
+                    'catatan' => $item?->catatan,
+                    'nilai' => $item?->nilai,
+                    'nilai_url' => route('guru.tugas.nilai', [$kelasMapel, $tugas, $student]),
+                    'legacy_file_url' => $item?->file_upload ? route('guru.tugas.pengumpulan.download', [$kelasMapel, $tugas, $item]) : null,
+                    'files' => $item?->files->map(fn (PengumpulanFile $file) => [
                         'id' => $file->id,
                         'name' => $file->file_name,
                         'url' => route('guru.tugas.file.download', [$kelasMapel, $tugas, $file]),
-                    ])->values(),
+                    ])->values() ?? [],
                 ];
             })->values(),
         ]);
     }
 
-    public function nilai(Request $request, KelasMapel $kelasMapel, Tugas $tugas, PengumpulanTugas $pengumpulan)
+    public function nilai(Request $request, KelasMapel $kelasMapel, Tugas $tugas, Siswa $siswa)
     {
         $this->authorize('mengajar', $kelasMapel);
         $this->ensureTugasBelongsToKelasMapel($tugas, $kelasMapel);
-        $this->ensurePengumpulanBelongsToTugas($pengumpulan, $tugas);
+        $this->ensureSiswaBelongsToKelasMapel($siswa, $kelasMapel);
 
         $validated = $request->validate([
             'nilai' => 'required|numeric|min:0|max:100',
             'catatan' => 'nullable|string|max:500',
         ]);
 
-        $pengumpulan->update([
-            'nilai' => $validated['nilai'],
-            'catatan' => $validated['catatan'] ?? null,
-            'status' => 'dinilai',
-        ]);
+        PengumpulanTugas::updateOrCreate(
+            [
+                'tugas_id' => $tugas->id,
+                'siswa_id' => $siswa->id,
+            ],
+            [
+                'nilai' => $validated['nilai'],
+                'catatan' => $validated['catatan'] ?? null,
+                'status' => 'dinilai',
+            ]
+        );
 
-        return back()->with('success', 'Nilai berhasil diberikan.');
+        $this->syncNilaiHarian($kelasMapel, $siswa);
+
+        return back()->with('success', 'Nilai tugas berhasil disimpan dan nilai harian diperbarui.');
     }
 
     public function downloadFile(KelasMapel $kelasMapel, Tugas $tugas, PengumpulanFile $file)
@@ -206,7 +289,7 @@ class TugasController extends Controller
 
         $tugas->delete();
 
-        return redirect()->route('guru.tugas.list', $kelasMapel)
+        return redirect()->route('guru.tugas.index')
             ->with('success', 'Tugas berhasil dihapus.');
     }
 
@@ -220,6 +303,57 @@ class TugasController extends Controller
         abort_unless((int) $pengumpulan->tugas_id === (int) $tugas->id, 403);
     }
 
+    private function ensureSiswaBelongsToKelasMapel(Siswa $siswa, KelasMapel $kelasMapel): void
+    {
+        abort_unless(
+            (int) $siswa->kelas_id === (int) $kelasMapel->kelas_id && $siswa->status === 'aktif',
+            403
+        );
+    }
+
+    private function syncNilaiHarian(KelasMapel $kelasMapel, Siswa $siswa): void
+    {
+        $tahunAjaran = TahunAjaran::getAktif();
+
+        if (!$tahunAjaran) {
+            return;
+        }
+
+        $semester = Pengaturan::getValue('semester_aktif', '1');
+        $average = PengumpulanTugas::where('siswa_id', $siswa->id)
+            ->whereNotNull('nilai')
+            ->whereHas('tugas', fn ($query) => $query
+                ->where('kelas_mapel_id', $kelasMapel->id)
+                ->where('kategori_nilai', 'NH'))
+            ->avg('nilai');
+
+        $existing = NilaiAkhir::where([
+            'siswa_id' => $siswa->id,
+            'kelas_mapel_id' => $kelasMapel->id,
+            'tahun_ajaran_id' => $tahunAjaran->id,
+            'semester' => $semester,
+        ])->first();
+
+        if ($average === null && !$existing) {
+            return;
+        }
+
+        $this->nilaiService->simpanNilai([
+            'siswa_id' => $siswa->id,
+            'kelas_mapel_id' => $kelasMapel->id,
+            'tahun_ajaran_id' => $tahunAjaran->id,
+            'semester' => $semester,
+            'sum1' => $existing?->sum1,
+            'sum2' => $existing?->sum2,
+            'sum3' => $existing?->sum3,
+            'sum4' => $existing?->sum4,
+            'nilai_harian' => $average !== null ? round((float) $average, 2) : null,
+            'sts' => $existing?->sts,
+            'sas' => $existing?->sas,
+            'sat' => $existing?->sat,
+        ]);
+    }
+
     private function downloadPengumpulanPath(?string $path, string $downloadName)
     {
         abort_unless($path, 404);
@@ -231,6 +365,43 @@ class TugasController extends Controller
         abort_unless($disk->exists($path), 404);
 
         return response()->download($disk->path($path), $downloadName);
+    }
+
+    private function assignedKelasMapelQuery()
+    {
+        return KelasMapel::with(['kelas', 'mataPelajaran', 'tahunAjaran'])
+            ->where('guru_id', Auth::id())
+            ->aktif();
+    }
+
+    private function formatKelasMapelOptions($kelasMapel)
+    {
+        return $kelasMapel->map(fn (KelasMapel $item) => [
+            'id' => $item->id,
+            'kelas' => trim(($item->kelas?->tingkat ? $item->kelas->tingkat . ' ' : '') . ($item->kelas?->nama_kelas ?? '-')),
+            'mata_pelajaran' => $item->mataPelajaran?->nama_mapel ?? '-',
+            'semester' => $item->semester,
+            'label' => trim(($item->kelas?->tingkat ? $item->kelas->tingkat . ' ' : '') . ($item->kelas?->nama_kelas ?? '-') . ' - ' . ($item->mataPelajaran?->nama_mapel ?? '-') . ' (Sem. ' . $item->semester . ')'),
+            'href' => route('guru.tugas.list', $item),
+        ])->values();
+    }
+
+    private function formatTugas(Tugas $item, int $totalSiswa): array
+    {
+        $kelasMapel = $item->kelasMapel;
+
+        return [
+            'id' => $item->id,
+            'judul' => $item->judul,
+            'deskripsi' => Str::limit((string) $item->deskripsi, 80),
+            'batas_waktu' => $item->batas_waktu?->format('d M Y'),
+            'sudah_mengumpulkan' => $item->sudah_mengumpulkan ?? 0,
+            'total_siswa' => $totalSiswa,
+            'kelas' => trim(($kelasMapel?->kelas?->tingkat ? $kelasMapel->kelas->tingkat . ' ' : '') . ($kelasMapel?->kelas?->nama_kelas ?? '-')),
+            'mata_pelajaran' => $kelasMapel?->mataPelajaran?->nama_mapel ?? '-',
+            'pengumpulan_url' => $kelasMapel ? route('guru.tugas.pengumpulan', [$kelasMapel, $item]) : null,
+            'delete_url' => route('guru.tugas.destroy', $item),
+        ];
     }
 
     private function deletePengumpulanPath(?string $path): void

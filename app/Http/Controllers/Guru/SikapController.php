@@ -4,18 +4,21 @@ namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
 use App\Models\KelasMapel;
+use App\Models\Pengaturan;
 use App\Models\SikapSosial;
 use App\Models\SikapSpiritual;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class SikapController extends Controller
 {
+    private array $sosialFields = ['empati', 'kerjasama', 'toleransi', 'percaya_diri', 'komunikasi'];
+    private array $spiritualFields = ['taqwa', 'kejujuran', 'disiplin', 'sabar', 'syukur', 'tawadhu'];
+
     public function index()
     {
         $kelasMapel = KelasMapel::with(['kelas', 'mataPelajaran'])
@@ -23,15 +26,18 @@ class SikapController extends Controller
             ->aktif()
             ->get();
 
+        $tahunAjaran = TahunAjaran::getAktif();
+        $semester = Pengaturan::getValue('semester_aktif', '1');
+
         return Inertia::render('Guru/Sikap/Index', [
-            'kelasMapel' => $kelasMapel->map(fn (KelasMapel $item) => [
-                'id' => $item->id,
-                'kelas' => $item->kelas?->nama_kelas ?? '-',
-                'mata_pelajaran' => $item->mataPelajaran?->nama_mapel ?? '-',
-                'initials' => strtoupper(substr($item->mataPelajaran?->nama_mapel ?? 'MP', 0, 2)),
-                'semester' => $item->semester,
-                'href' => route('guru.sikap.input', $item),
-            ])->values(),
+            'kelasMapel' => $this->formatKelasMapelOptions($kelasMapel),
+            'tahunAjaran' => $tahunAjaran ? [
+                'id' => $tahunAjaran->id,
+                'tahun' => $tahunAjaran->tahun,
+            ] : null,
+            'semester' => (string) $semester,
+            'groups' => $kelasMapel->map(fn (KelasMapel $item) => $this->buildSikapGroup($item, $tahunAjaran, (string) $semester))->values(),
+            'storeUrl' => route('guru.sikap.store.bulk'),
         ]);
     }
     //Input nilai sikap  siswa
@@ -40,7 +46,7 @@ class SikapController extends Controller
         $this->authorize('mengajar', $kelasMapel);
 
         $tahunAjaran = TahunAjaran::getAktif();
-        $semester = \App\Models\Pengaturan::getValue('semester_aktif', '1');
+        $semester = Pengaturan::getValue('semester_aktif', '1');
 
         $siswa = Siswa::with('user')
             ->where('kelas_id', $kelasMapel->kelas_id)
@@ -60,9 +66,6 @@ class SikapController extends Controller
             ->get()
             ->keyBy('siswa_id');
 
-        $sosialFields = ['empati', 'kerjasama', 'toleransi', 'percaya_diri', 'komunikasi'];
-        $spiritualFields = ['taqwa', 'kejujuran', 'disiplin', 'sabar', 'syukur', 'tawadhu'];
-
         return Inertia::render('Guru/Sikap/Input', [
             'kelasMapel' => [
                 'id' => $kelasMapel->id,
@@ -78,7 +81,7 @@ class SikapController extends Controller
                 'tahun' => $tahunAjaran->tahun,
             ] : null,
             'semester' => (string) $semester,
-            'students' => $siswa->map(function (Siswa $student, int $index) use ($sikapSosial, $sikapSpiritual, $sosialFields, $spiritualFields) {
+            'students' => $siswa->map(function (Siswa $student, int $index) use ($sikapSosial, $sikapSpiritual) {
                 $sosial = $sikapSosial->get($student->id);
                 $spiritual = $sikapSpiritual->get($student->id);
 
@@ -87,8 +90,8 @@ class SikapController extends Controller
                     'no' => $index + 1,
                     'nis' => $student->nis,
                     'nama' => $student->user?->nama_lengkap ?? $student->nis,
-                    'sosial' => collect($sosialFields)->mapWithKeys(fn (string $field) => [$field => $sosial?->{$field}])->all(),
-                    'spiritual' => collect($spiritualFields)->mapWithKeys(fn (string $field) => [$field => $spiritual?->{$field}])->all(),
+                    'sosial' => collect($this->sosialFields)->mapWithKeys(fn (string $field) => [$field => $sosial?->{$field}])->all(),
+                    'spiritual' => collect($this->spiritualFields)->mapWithKeys(fn (string $field) => [$field => $spiritual?->{$field}])->all(),
                 ];
             })->values(),
         ]);
@@ -115,54 +118,61 @@ class SikapController extends Controller
             'spiritual.*.tawadhu' => 'nullable|integer|min:1|max:5',
         ]);
 
-        $tahunAjaran = TahunAjaran::getAktif();
-        if (!$tahunAjaran) {
-            return back()
-                ->withInput()
-                ->with('error', 'Tahun ajaran aktif belum diatur.');
-        }
-
-        $validSiswaIds = Siswa::where('kelas_id', $kelasMapel->kelas_id)
-            ->where('status', 'aktif')
-            ->pluck('id')
-            ->map(fn($id) => (string) $id);
-
-        $submittedSiswaIds = collect(array_keys($request->input('sosial', [])))
-            ->merge(array_keys($request->input('spiritual', [])))
-            ->unique();
-
-        if ($submittedSiswaIds->diff($validSiswaIds)->isNotEmpty()) {
-            throw ValidationException::withMessages([
-                'sosial' => 'Data sikap berisi siswa yang tidak termasuk kelas ini.',
-            ]);
-        }
-
-        foreach ($request->input('sosial', []) as $siswaId => $data) {
-            SikapSosial::updateOrCreate(
-                [
-                    'siswa_id' => $siswaId,
-                    'kelas_mapel_id' => $kelasMapel->id,
-                    'tahun_ajaran_id' => $tahunAjaran->id,
-                    'semester' => $request->semester,
-                ],
-                $data
-            );
-        }
-
-        foreach ($request->input('spiritual', []) as $siswaId => $data) {
-            SikapSpiritual::updateOrCreate(
-                [
-                    'siswa_id' => $siswaId,
-                    'kelas_mapel_id' => $kelasMapel->id,
-                    'tahun_ajaran_id' => $tahunAjaran->id,
-                    'semester' => $request->semester,
-                ],
-                $data
-            );
-        }
+        $this->saveSikapForKelasMapel(
+            $kelasMapel,
+            $request->semester,
+            $request->input('sosial', []),
+            $request->input('spiritual', [])
+        );
 
         return redirect()->route('guru.sikap.input', $kelasMapel)
             ->with('success', 'Nilai sikap berhasil disimpan.');
+    }
+
+    public function storeBulk(Request $request)
+    {
+        $request->validate([
+            'semester' => 'required|in:1,2',
+            'kelas_mapel_ids' => 'required|array|min:1',
+            'kelas_mapel_ids.*' => 'integer',
+            'sosial' => 'required|array',
+            'sosial.*' => 'array',
+            'sosial.*.*.empati' => 'nullable|integer|min:1|max:5',
+            'sosial.*.*.kerjasama' => 'nullable|integer|min:1|max:5',
+            'sosial.*.*.toleransi' => 'nullable|integer|min:1|max:5',
+            'sosial.*.*.percaya_diri' => 'nullable|integer|min:1|max:5',
+            'sosial.*.*.komunikasi' => 'nullable|integer|min:1|max:5',
+            'spiritual' => 'required|array',
+            'spiritual.*' => 'array',
+            'spiritual.*.*.taqwa' => 'nullable|integer|min:1|max:5',
+            'spiritual.*.*.kejujuran' => 'nullable|integer|min:1|max:5',
+            'spiritual.*.*.disiplin' => 'nullable|integer|min:1|max:5',
+            'spiritual.*.*.sabar' => 'nullable|integer|min:1|max:5',
+            'spiritual.*.*.syukur' => 'nullable|integer|min:1|max:5',
+            'spiritual.*.*.tawadhu' => 'nullable|integer|min:1|max:5',
+        ]);
+
+        $kelasMapel = KelasMapel::with(['kelas', 'mataPelajaran'])
+            ->where('guru_id', Auth::id())
+            ->aktif()
+            ->whereIn('id', $request->input('kelas_mapel_ids', []))
+            ->get();
+
+        if ($kelasMapel->count() !== count(array_unique($request->input('kelas_mapel_ids', [])))) {
+            return back()->withInput()->with('error', 'Pilihan kelas tidak valid.');
+        }
+
+        foreach ($kelasMapel as $item) {
+            $this->saveSikapForKelasMapel(
+                $item,
+                $request->semester,
+                $request->input('sosial.' . $item->id, []),
+                $request->input('spiritual.' . $item->id, [])
+            );
+        }
+
+        return redirect()->route('guru.sikap.index')
+            ->with('success', 'Nilai sikap berhasil disimpan untuk kelas yang dipilih.');
     }
     //Bahan untuk merekap nilai sikap siswa per kelas dan mata pelajaran yang diampu oleh guru
     public function rekap(Request $request)
@@ -178,7 +188,7 @@ class SikapController extends Controller
             ->get();
 
         $tahunAjaran = TahunAjaran::getAktif();
-        $semester = $request->input('semester', \App\Models\Pengaturan::getValue('semester_aktif', '1'));
+        $semester = $request->input('semester', Pengaturan::getValue('semester_aktif', '1'));
 
         $kmId = $request->input('kelas_mapel_id');
 
@@ -217,5 +227,113 @@ class SikapController extends Controller
         })->values();
 
         return view('guru.rekap-sikap', compact('sikapSosial', 'sikapSpiritual', 'kelasMapel', 'semester'));
+    }
+
+    private function buildSikapGroup(KelasMapel $kelasMapel, ?TahunAjaran $tahunAjaran, string $semester): array
+    {
+        $siswa = Siswa::with('user')
+            ->where('kelas_id', $kelasMapel->kelas_id)
+            ->where('status', 'aktif')
+            ->orderBy('nis')
+            ->get();
+
+        $sikapSosial = SikapSosial::where('kelas_mapel_id', $kelasMapel->id)
+            ->where('tahun_ajaran_id', $tahunAjaran?->id)
+            ->where('semester', $semester)
+            ->get()
+            ->keyBy('siswa_id');
+
+        $sikapSpiritual = SikapSpiritual::where('kelas_mapel_id', $kelasMapel->id)
+            ->where('tahun_ajaran_id', $tahunAjaran?->id)
+            ->where('semester', $semester)
+            ->get()
+            ->keyBy('siswa_id');
+
+        return [
+            'kelas_mapel_id' => $kelasMapel->id,
+            'kelas' => trim(($kelasMapel->kelas?->tingkat ? $kelasMapel->kelas->tingkat . ' ' : '') . ($kelasMapel->kelas?->nama_kelas ?? '-')),
+            'mata_pelajaran' => $kelasMapel->mataPelajaran?->nama_mapel ?? '-',
+            'label' => trim(($kelasMapel->kelas?->tingkat ? $kelasMapel->kelas->tingkat . ' ' : '') . ($kelasMapel->kelas?->nama_kelas ?? '-') . ' - ' . ($kelasMapel->mataPelajaran?->nama_mapel ?? '-') . ' (Sem. ' . $kelasMapel->semester . ')'),
+            'export_excel_url' => route('guru.sikap.export.excel', $kelasMapel),
+            'export_pdf_url' => route('guru.sikap.export.pdf', $kelasMapel),
+            'students' => $siswa->values()->map(function (Siswa $student, int $index) use ($sikapSosial, $sikapSpiritual) {
+                $sosial = $sikapSosial->get($student->id);
+                $spiritual = $sikapSpiritual->get($student->id);
+
+                return [
+                    'id' => $student->id,
+                    'no' => $index + 1,
+                    'nis' => $student->nis,
+                    'nama' => $student->user?->nama_lengkap ?? $student->nis,
+                    'sosial' => collect($this->sosialFields)->mapWithKeys(fn (string $field) => [$field => $sosial?->{$field}])->all(),
+                    'spiritual' => collect($this->spiritualFields)->mapWithKeys(fn (string $field) => [$field => $spiritual?->{$field}])->all(),
+                ];
+            })->values(),
+        ];
+    }
+
+    private function formatKelasMapelOptions($kelasMapel)
+    {
+        return $kelasMapel->map(fn (KelasMapel $item) => [
+            'id' => $item->id,
+            'kelas' => trim(($item->kelas?->tingkat ? $item->kelas->tingkat . ' ' : '') . ($item->kelas?->nama_kelas ?? '-')),
+            'mata_pelajaran' => $item->mataPelajaran?->nama_mapel ?? '-',
+            'semester' => $item->semester,
+            'label' => trim(($item->kelas?->tingkat ? $item->kelas->tingkat . ' ' : '') . ($item->kelas?->nama_kelas ?? '-') . ' - ' . ($item->mataPelajaran?->nama_mapel ?? '-') . ' (Sem. ' . $item->semester . ')'),
+            'href' => route('guru.sikap.input', $item),
+        ])->values();
+    }
+
+    private function saveSikapForKelasMapel(KelasMapel $kelasMapel, string $semester, array $sosialInput, array $spiritualInput): void
+    {
+        $tahunAjaran = TahunAjaran::getAktif();
+        if (!$tahunAjaran) {
+            throw ValidationException::withMessages([
+                'tahun_ajaran' => 'Tahun ajaran aktif belum diatur.',
+            ]);
+        }
+
+        $validSiswaIds = Siswa::where('kelas_id', $kelasMapel->kelas_id)
+            ->where('status', 'aktif')
+            ->pluck('id')
+            ->map(fn ($id) => (string) $id);
+
+        $submittedSiswaIds = collect(array_keys($sosialInput))
+            ->merge(array_keys($spiritualInput))
+            ->unique();
+
+        if ($submittedSiswaIds->diff($validSiswaIds)->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'sosial' => 'Data sikap berisi siswa yang tidak termasuk kelas ini.',
+            ]);
+        }
+
+        foreach ($sosialInput as $siswaId => $data) {
+            SikapSosial::updateOrCreate(
+                [
+                    'siswa_id' => $siswaId,
+                    'kelas_mapel_id' => $kelasMapel->id,
+                    'tahun_ajaran_id' => $tahunAjaran->id,
+                    'semester' => $semester,
+                ],
+                collect($this->sosialFields)
+                    ->mapWithKeys(fn (string $field) => [$field => ($data[$field] ?? null) === '' ? null : ($data[$field] ?? null)])
+                    ->all()
+            );
+        }
+
+        foreach ($spiritualInput as $siswaId => $data) {
+            SikapSpiritual::updateOrCreate(
+                [
+                    'siswa_id' => $siswaId,
+                    'kelas_mapel_id' => $kelasMapel->id,
+                    'tahun_ajaran_id' => $tahunAjaran->id,
+                    'semester' => $semester,
+                ],
+                collect($this->spiritualFields)
+                    ->mapWithKeys(fn (string $field) => [$field => ($data[$field] ?? null) === '' ? null : ($data[$field] ?? null)])
+                    ->all()
+            );
+        }
     }
 }
