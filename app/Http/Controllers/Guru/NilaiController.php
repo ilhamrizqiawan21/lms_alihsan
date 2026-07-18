@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
+use App\Models\AcademicAuditLog;
 use App\Models\KelasMapel;
 use App\Models\NilaiAkhir;
 use App\Models\Notifikasi;
@@ -299,15 +300,53 @@ class NilaiController extends Controller
             ] + $nilaiData);
 
             $siswa = $siswas->get((int) $siswaId);
-            if ($siswa && $siswa->user_id && ($nilai->wasRecentlyCreated || $nilai->wasChanged($fields))) {
-                Notifikasi::create([
+            $nilaiChanged = $nilai->wasRecentlyCreated || $nilai->wasChanged($fields);
+
+            if ($siswa && $nilaiChanged) {
+                $this->logNilaiChange($kelasMapel, $siswa, $semester, $fields, $existing, $nilai);
+            }
+
+            if ($siswa && $siswa->user_id && $nilaiChanged) {
+                Notifikasi::firstOrCreate([
                     'user_id' => $siswa->user_id,
                     'tipe' => 'nilai_baru',
                     'judul' => 'Nilai Diperbarui',
                     'pesan' => "Nilai {$kelasMapel->mataPelajaran?->nama_mapel} semester {$semester} telah diinput.",
                     'link' => route('siswa.nilai.index'),
+                    'is_read' => false,
                 ]);
             }
         }
+    }
+
+    private function logNilaiChange(KelasMapel $kelasMapel, Siswa $siswa, string $semester, array $fields, ?NilaiAkhir $before, NilaiAkhir $after): void
+    {
+        try {
+            AcademicAuditLog::create([
+                'actor_id' => Auth::id(),
+                'module' => 'nilai',
+                'action' => $after->wasRecentlyCreated ? 'create' : 'update',
+                'auditable_type' => NilaiAkhir::class,
+                'auditable_id' => $after->id,
+                'before_values' => $this->nilaiValues($before, $fields),
+                'after_values' => $this->nilaiValues($after, $fields),
+                'metadata' => [
+                    'siswa' => $siswa->user?->nama_lengkap ?? $siswa->nis,
+                    'nis' => $siswa->nis,
+                    'kelas' => $kelasMapel->kelas?->nama_kelas ?? '-',
+                    'mata_pelajaran' => $kelasMapel->mataPelajaran?->nama_mapel ?? '-',
+                    'semester' => $semester,
+                ],
+            ]);
+        } catch (\Throwable) {
+            // Audit log tidak boleh menggagalkan simpan nilai.
+        }
+    }
+
+    private function nilaiValues(?NilaiAkhir $nilai, array $fields): array
+    {
+        return collect($fields)
+            ->mapWithKeys(fn (string $field) => [$field => $nilai?->$field])
+            ->all();
     }
 }

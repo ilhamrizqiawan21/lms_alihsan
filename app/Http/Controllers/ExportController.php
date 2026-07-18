@@ -817,7 +817,7 @@ class ExportController extends Controller
         $request->validate(['bulan' => 'nullable|date_format:Y-m']);
 
         $bulan = $request->input('bulan', date('Y-m'));
-        $weeks = $this->monthMondays($bulan);
+        $meetings = $this->attendanceMeetings($bulan, (int) $kelasMapel->pertemuan_per_minggu);
         $students = Siswa::with('user')->where('kelas_id', $kelasMapel->kelas_id)->where('status', 'aktif')->orderBy('nis')->get();
         $absensiRaw = Absensi::where('kelas_mapel_id', $kelasMapel->id)
             ->whereIn('siswa_id', $students->pluck('id'))
@@ -826,13 +826,13 @@ class ExportController extends Controller
             ->groupBy('siswa_id')
             ->map(fn($records) => $records->keyBy(fn(Absensi $absensi) => $absensi->tanggal?->format('Y-m-d')));
 
-        $rows = $students->values()->map(function (Siswa $siswa, int $index) use ($weeks, $absensiRaw) {
+        $rows = $students->values()->map(function (Siswa $siswa, int $index) use ($meetings, $absensiRaw) {
             $row = [$index + 1, $siswa->nis, $siswa->user?->nama_lengkap ?? '-'];
             $counts = ['hadir' => 0, 'sakit' => 0, 'izin' => 0, 'alpha' => 0];
             $studentAbsensi = $absensiRaw->get($siswa->id, collect());
 
-            foreach ($weeks as $date) {
-                $status = $studentAbsensi->get($date)?->status;
+            foreach ($meetings as $meeting) {
+                $status = $studentAbsensi->get($meeting['date'])?->status;
                 $row[] = ['hadir' => 'H', 'sakit' => 'S', 'izin' => 'I', 'alpha' => 'A'][$status] ?? '-';
                 if ($status && isset($counts[$status])) {
                     $counts[$status]++;
@@ -843,7 +843,7 @@ class ExportController extends Controller
         })->all();
 
         return [
-            'headers' => array_merge(['No', 'NIS', 'Nama'], collect($weeks)->map(fn($date, $index) => 'M' . ($index + 1) . ' ' . date('d/m', strtotime($date)))->all(), ['H', 'S', 'I', 'A']),
+            'headers' => array_merge(['No', 'NIS', 'Nama'], $meetings->map(fn($meeting) => $meeting['title'] . ' ' . $meeting['label'])->all(), ['H', 'S', 'I', 'A']),
             'rows' => $rows,
             'context' => $this->kelasMapelContext($kelasMapel) . " - {$bulan}",
             'slug' => $this->slug($this->kelasMapelContext($kelasMapel) . "_{$bulan}"),
@@ -1034,6 +1034,41 @@ class ExportController extends Controller
         }
 
         return $dates;
+    }
+
+    private function attendanceMeetings(string $bulan, int $meetingsPerWeek): \Illuminate\Support\Collection
+    {
+        $meetingsPerWeek = max(1, min($meetingsPerWeek, 6));
+        $monthNumber = (int) substr($bulan, 5, 2);
+        $firstDay = \Carbon\Carbon::create((int) substr($bulan, 0, 4), $monthNumber, 1);
+        $firstMonday = $firstDay->copy();
+
+        if ($firstDay->dayOfWeek !== 1) {
+            $firstMonday->addDays((8 - $firstDay->dayOfWeek) % 7);
+        }
+
+        $meetings = [];
+
+        for ($week = 1; $week <= 5; $week++) {
+            $weekStart = $firstMonday->copy()->addDays(($week - 1) * 7);
+
+            for ($meeting = 1; $meeting <= $meetingsPerWeek; $meeting++) {
+                $offset = (int) round((($meeting - 1) * 6) / $meetingsPerWeek);
+                $date = $weekStart->copy()->addDays($offset);
+
+                if ((int) $date->format('m') !== $monthNumber) {
+                    continue;
+                }
+
+                $meetings[] = [
+                    'date' => $date->format('Y-m-d'),
+                    'label' => $date->format('d/m'),
+                    'title' => $meetingsPerWeek > 1 ? "M{$week} P{$meeting}" : "M{$week}",
+                ];
+            }
+        }
+
+        return collect($meetings);
     }
 
     private function slug(string $value): string

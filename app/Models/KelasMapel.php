@@ -17,6 +17,11 @@ class KelasMapel extends Model
         'guru_id',
         'tahun_ajaran_id',
         'semester',
+        'pertemuan_per_minggu',
+    ];
+
+    protected $casts = [
+        'pertemuan_per_minggu' => 'integer',
     ];
 
     public function scopeAktif($query, ?string $semester = null)

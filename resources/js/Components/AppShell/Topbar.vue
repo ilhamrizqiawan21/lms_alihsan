@@ -16,19 +16,23 @@ function logout() {
 }
 
 function profileHref(role) {
+    if (role === 'admin') {
+        return '/admin/pengaturan-akun';
+    }
+
     if (role === 'guru') {
-        return '/guru/profil';
+        return '/guru/pengaturan';
     }
 
     if (role === 'siswa') {
-        return '/siswa/profil';
+        return '/siswa/pengaturan';
     }
 
     return null;
 }
 
 function profileIsInertia(role) {
-    return ['guru', 'siswa'].includes(role);
+    return ['admin', 'guru', 'siswa'].includes(role);
 }
 </script>
 
@@ -117,10 +121,10 @@ function profileIsInertia(role) {
                     <li><hr class="dropdown-divider"></li>
                     <li v-if="profileHref(user?.role)">
                         <Link v-if="profileIsInertia(user?.role)" :href="profileHref(user?.role)" class="dropdown-item">
-                            <i class="bi bi-person-gear me-1" aria-hidden="true"></i> Profil
+                            <i class="bi bi-person-gear me-1" aria-hidden="true"></i> Pengaturan
                         </Link>
                         <a v-else :href="profileHref(user?.role)" class="dropdown-item">
-                            <i class="bi bi-person-gear me-1" aria-hidden="true"></i> Profil
+                            <i class="bi bi-person-gear me-1" aria-hidden="true"></i> Pengaturan
                         </a>
                     </li>
                     <li>

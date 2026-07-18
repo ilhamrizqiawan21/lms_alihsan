@@ -118,6 +118,7 @@ function submit() {
                         <i class="bi bi-box-arrow-in-right me-2" aria-hidden="true"></i>
                         {{ form.processing ? 'Memproses...' : 'Masuk' }}
                     </button>
+                    <div>Kalau lupa password hubungi Pak Ilham WA. 0895802329062</div>
                 </form>
             </section>
 

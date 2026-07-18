@@ -13,6 +13,7 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Session\TokenMismatchException;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -41,6 +42,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 || $e instanceof AuthorizationException
                 || $e instanceof AccessDeniedHttpException
                 || $e instanceof NotFoundHttpException
+                || $e instanceof TokenMismatchException
                 || ($e instanceof HttpExceptionInterface && $e->getStatusCode() < 500)
             ) {
                 return;
@@ -81,12 +83,14 @@ return Application::configure(basePath: dirname(__DIR__))
             };
         };
 
-        $maintenanceResponse = function (Request $request, int $status = 500) {
+        $errorPageResponse = function (Request $request, int $status = 500) {
             if ($request->expectsJson() || $request->is('api/*')) {
                 return null;
             }
 
-            return response()->view('errors.maintenance', [], $status);
+            $view = view()->exists("errors.{$status}") ? "errors.{$status}" : 'errors.500';
+
+            return response()->view($view, [], $status);
         };
 
         $exceptions->render(function (AuthenticationException $e, Request $request) {
@@ -129,6 +133,10 @@ return Application::configure(basePath: dirname(__DIR__))
             return response()->view('errors.404', [], 404);
         });
 
+        $exceptions->render(function (TokenMismatchException $e, Request $request) use ($errorPageResponse) {
+            return $errorPageResponse($request, 419);
+        });
+
         // Tangani duplicate key constraint violation
         $exceptions->render(function (UniqueConstraintViolationException $e, Request $request) {
             $message = $e->getMessage();
@@ -151,19 +159,20 @@ return Application::configure(basePath: dirname(__DIR__))
             return back()->withInput()->with('error', $errorMsg);
         });
 
-        $exceptions->render(function (\Throwable $e, Request $request) use ($maintenanceResponse) {
+        $exceptions->render(function (\Throwable $e, Request $request) use ($errorPageResponse) {
             if (
                 $e instanceof AuthenticationException
                 || $e instanceof AuthorizationException
                 || $e instanceof AccessDeniedHttpException
                 || $e instanceof ValidationException
                 || $e instanceof UniqueConstraintViolationException
+                || $e instanceof TokenMismatchException
             ) {
                 return null;
             }
 
             $status = $e instanceof HttpExceptionInterface ? $e->getStatusCode() : 500;
 
-            return $maintenanceResponse($request, $status);
+            return $errorPageResponse($request, $status);
         });
     })->create();

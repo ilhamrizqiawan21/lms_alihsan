@@ -117,9 +117,11 @@ class DashboardController extends Controller
                 'id' => $item->id,
                 'judul' => $item->judul,
                 'created_at' => $item->created_at ? Carbon::parse($item->created_at)->format('d/m/Y') : '-',
+                'show_url' => route('siswa.pengumuman.show', $item),
             ])->values(),
             'links' => [
                 'notifikasi' => route('siswa.notifikasi.index'),
+                'pengumuman' => route('siswa.pengumuman.index'),
             ],
         ]);
     }

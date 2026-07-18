@@ -68,6 +68,7 @@ class KelasMapelController extends Controller
             'guru_id' => 'required|exists:users,id',
             'tahun_ajaran_id' => 'required|exists:tahun_ajaran,id',
             'semester' => 'required|in:1,2',
+            'pertemuan_per_minggu' => 'required|integer|min:1|max:6',
         ]);
 
         $isGuru = User::whereKey($validated['guru_id'])

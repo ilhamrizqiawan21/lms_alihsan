@@ -32,7 +32,7 @@ const statusOptions = [
     { value: 'alpha', label: 'A' },
 ];
 
-const weekNumbers = computed(() => props.weeks.map((week) => String(week.number)));
+const meetingKeys = computed(() => props.weeks.map((week) => String(week.key)));
 
 watch(() => [props.filters.bulan, props.students], () => {
     form.bulan = props.filters.bulan ?? '';
@@ -64,27 +64,27 @@ function cleanFilters() {
     return Object.fromEntries(Object.entries(filterForm).filter(([, value]) => value !== '' && value !== null));
 }
 
-function fillColumn(weekNumber, value) {
+function fillColumn(meetingKey, value) {
     if (!value) {
         return;
     }
 
     props.students.forEach((student) => {
-        if (form.absensi[String(student.id)] && weekHasDate(weekNumber)) {
-            form.absensi[String(student.id)][String(weekNumber)] = value;
+        if (form.absensi[String(student.id)] && meetingHasDate(meetingKey)) {
+            form.absensi[String(student.id)][String(meetingKey)] = value;
         }
     });
 }
 
-function weekHasDate(weekNumber) {
-    return props.weeks.some((week) => String(week.number) === String(weekNumber) && week.date);
+function meetingHasDate(meetingKey) {
+    return props.weeks.some((week) => String(week.key) === String(meetingKey) && week.date);
 }
 
 function counts(studentId) {
     const row = form.absensi[String(studentId)] ?? {};
 
-    return weekNumbers.value.reduce((summary, weekNumber) => {
-        const status = row[weekNumber];
+    return meetingKeys.value.reduce((summary, meetingKey) => {
+        const status = row[meetingKey];
 
         if (status === 'hadir') summary.hadir += 1;
         if (status === 'sakit') summary.sakit += 1;
@@ -175,6 +175,7 @@ function selectedExportUrl(format) {
                             <Badge color="warning" class="text-dark">S=Sakit</Badge>
                             <Badge color="info" class="text-dark">I=Izin</Badge>
                             <Badge color="danger">A=Alpha</Badge>
+                            <Badge color="secondary">{{ selected.pertemuan_per_minggu }}x/minggu</Badge>
                             <span class="ms-auto d-flex flex-wrap gap-2">
                                 <a :href="selectedExportUrl('excel')" class="btn btn-sm btn-outline-success">
                                     <i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i> Excel
@@ -194,11 +195,11 @@ function selectedExportUrl(format) {
                                         <th>Nama</th>
                                         <th
                                             v-for="week in weeks"
-                                            :key="week.number"
+                                            :key="week.key"
                                             class="text-center"
                                             style="min-width:72px;"
                                         >
-                                            Minggu {{ week.number }}<br>
+                                            {{ week.title }}<br>
                                             <small class="text-muted">{{ week.label }}</small>
                                         </th>
                                         <th class="text-center" style="width:42px;">H</th>
@@ -210,13 +211,13 @@ function selectedExportUrl(format) {
                                         <td colspan="3"></td>
                                         <td
                                             v-for="week in weeks"
-                                            :key="`fill-${week.number}`"
+                                            :key="`fill-${week.key}`"
                                             class="text-center py-2"
                                         >
                                             <select
                                                 v-if="week.date"
                                                 class="form-select form-select-sm attendance-select"
-                                                @change="fillColumn(week.number, $event.target.value); $event.target.value = ''"
+                                                @change="fillColumn(week.key, $event.target.value); $event.target.value = ''"
                                             >
                                                 <option
                                                     v-for="option in statusOptions"
@@ -237,14 +238,14 @@ function selectedExportUrl(format) {
                                         <td class="align-middle"><strong>{{ student.nama }}</strong></td>
                                         <td
                                             v-for="week in weeks"
-                                            :key="`${student.id}-${week.number}`"
+                                            :key="`${student.id}-${week.key}`"
                                             class="p-0 text-center align-middle"
                                         >
                                             <select
                                                 v-if="week.date"
-                                                v-model="form.absensi[String(student.id)][String(week.number)]"
+                                                v-model="form.absensi[String(student.id)][String(week.key)]"
                                                 class="form-select form-select-sm attendance-select"
-                                                :class="form.absensi[String(student.id)][String(week.number)]"
+                                                :class="form.absensi[String(student.id)][String(week.key)]"
                                             >
                                                 <option
                                                     v-for="option in statusOptions"

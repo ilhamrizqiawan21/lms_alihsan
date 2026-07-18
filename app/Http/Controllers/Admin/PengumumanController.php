@@ -37,6 +37,18 @@ class PengumumanController extends Controller
         return view('admin.pengumuman.index', compact('pengumuman', 'kelasMapel', 'routePrefix'));
     }
 
+    public function show(Pengumuman $pengumuman)
+    {
+        $role = Auth::user()->role?->nama_role;
+
+        abort_unless($this->canView($pengumuman, $role), 403);
+
+        $pengumuman->loadMissing(['creator', 'kelasMapel.kelas', 'kelasMapel.mataPelajaran']);
+        $routePrefix = $this->routePrefix();
+
+        return view('admin.pengumuman.show', compact('pengumuman', 'routePrefix'));
+    }
+
     /**
      * Form tambah pengumuman.
      */
@@ -50,9 +62,14 @@ class PengumumanController extends Controller
      */
     public function store(Request $request)
     {
-        $allowedTargets = Auth::user()->isGuru()
-            ? ['kelas_mapel']
-            : ['semua', 'guru', 'siswa', 'kelas_mapel'];
+        $role = Auth::user()->role?->nama_role;
+        $allowedTargets = match ($role) {
+            'guru' => ['kelas_mapel'],
+            'admin', 'kepala_sekolah' => ['semua', 'guru', 'siswa', 'kelas_mapel'],
+            default => [],
+        };
+
+        abort_unless($allowedTargets !== [], 403);
 
         $validated = $request->validate([
             'judul' => 'required|string|max:200',
@@ -131,5 +148,29 @@ class PengumumanController extends Controller
             'kepala_sekolah' => 'kepsek.pengumuman',
             default => 'admin.pengumuman',
         };
+    }
+
+    private function canView(Pengumuman $pengumuman, ?string $role): bool
+    {
+        if ($role === 'admin') {
+            return true;
+        }
+
+        if ($role === 'kepala_sekolah') {
+            return in_array($pengumuman->target, ['semua', 'guru'], true) || (int) $pengumuman->created_by === (int) Auth::id();
+        }
+
+        if ($role === 'guru') {
+            if (in_array($pengumuman->target, ['semua', 'guru'], true) || (int) $pengumuman->created_by === (int) Auth::id()) {
+                return true;
+            }
+
+            return $pengumuman->target === 'kelas_mapel'
+                && KelasMapel::whereKey($pengumuman->kelas_mapel_id)
+                    ->where('guru_id', Auth::id())
+                    ->exists();
+        }
+
+        return false;
     }
 }

@@ -85,7 +85,11 @@ class LoginController extends Controller
 
             // Redirect berdasarkan role. Untuk request Inertia, pakai full visit agar aman
             // saat target intended masih halaman Blade.
-            $intendedUrl = $request->session()->pull('url.intended', $this->redirectToByRole($user));
+            $defaultUrl = $this->redirectToByRole($user);
+            $intendedUrl = $request->session()->pull('url.intended', $defaultUrl);
+            $intendedUrl = $this->intendedUrlIsAllowedForRole($intendedUrl, $user->role?->nama_role)
+                ? $intendedUrl
+                : $defaultUrl;
 
             if ($request->header('X-Inertia')) {
                 return Inertia::location($intendedUrl);
@@ -123,6 +127,23 @@ class LoginController extends Controller
             'siswa' => route('siswa.dashboard'),
             'kepala_sekolah' => route('kepsek.dashboard'),
             default => '/',
+        };
+    }
+
+    private function intendedUrlIsAllowedForRole(?string $url, ?string $role): bool
+    {
+        if (! $url || ! $role) {
+            return false;
+        }
+
+        $path = '/' . ltrim((string) parse_url($url, PHP_URL_PATH), '/');
+
+        return match ($role) {
+            'admin' => str_starts_with($path, '/admin'),
+            'guru' => str_starts_with($path, '/guru'),
+            'siswa' => str_starts_with($path, '/siswa'),
+            'kepala_sekolah' => str_starts_with($path, '/kepsek'),
+            default => false,
         };
     }
 }

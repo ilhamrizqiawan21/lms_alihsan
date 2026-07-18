@@ -64,7 +64,10 @@ class DemoAcademicSeeder extends Seeder
                         'tahun_ajaran_id' => $tahunAjaran->id,
                         'semester' => '1',
                     ],
-                    ['guru_id' => $guru->id]
+                    [
+                        'guru_id' => $guru->id,
+                        'pertemuan_per_minggu' => $mapel->kode === 'IPA' ? 2 : 1,
+                    ]
                 );
             }
         }

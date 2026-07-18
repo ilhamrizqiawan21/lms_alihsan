@@ -83,6 +83,9 @@
                                 </td>
                                 <td>{{ $p->created_at ? \Carbon\Carbon::parse($p->created_at)->format('d/m/Y') : '-' }}</td>
                                 <td>
+                                    <a href="{{ route($routePrefix . '.show', $p) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> Detail
+                                    </a>
                                     @if(auth()->user()->isAdmin() || $p->created_by === auth()->id())
                                     <form action="{{ route($routePrefix . '.destroy', $p) }}" method="POST" class="d-inline">
                                         @csrf @method('DELETE')

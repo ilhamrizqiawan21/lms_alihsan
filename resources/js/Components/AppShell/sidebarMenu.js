@@ -9,6 +9,7 @@ export function sidebarMenu(role, capabilities = {}) {
             item('Mata Pelajaran', '/admin/mata-pelajaran', 'bi-book-fill', ['/admin/mata-pelajaran'], true),
             item('Penugasan Guru', '/admin/kelas-mapel', 'bi-diagram-3-fill', ['/admin/kelas-mapel']),
             item('Tahun Ajaran', '/admin/tahun-ajaran', 'bi-calendar-event-fill', ['/admin/tahun-ajaran'], true),
+            item('Pengaturan Akun', '/admin/pengaturan-akun', 'bi-person-gear', ['/admin/pengaturan-akun'], true),
             section('Aktivitas'),
             item('Pengumuman', '/admin/pengumuman', 'bi-megaphone-fill', ['/admin/pengumuman']),
             item('Kalender', '/admin/kalender', 'bi-calendar3', ['/admin/kalender'], true),
@@ -21,6 +22,7 @@ export function sidebarMenu(role, capabilities = {}) {
             item('Pengaturan', '/admin/pengaturan', 'bi-gear-fill', ['/admin/pengaturan', '/admin/school-settings']),
             item('Log Login', '/admin/log-login', 'bi-clock-history', ['/admin/log-login'], true),
             item('Log Error', '/admin/log-error', 'bi-bug-fill', ['/admin/log-error'], true),
+            item('Log Akademik', '/admin/log-akademik', 'bi-clipboard-data-fill', ['/admin/log-akademik'], true),
             item('IP Diblokir', '/admin/blocked-ips', 'bi-shield-fill-x', ['/admin/blocked-ips']),
         ],
         guru: [
@@ -42,6 +44,8 @@ export function sidebarMenu(role, capabilities = {}) {
             section('Rekap'),
             item('Rekap Nilai', '/guru/rekap-nilai', 'bi-file-earmark-bar-graph-fill', ['/guru/rekap-nilai']),
             item('Rekap Sikap', '/guru/rekap-sikap', 'bi-file-earmark-text-fill', ['/guru/rekap-sikap']),
+            section('Akun'),
+            item('Pengaturan', '/guru/pengaturan', 'bi-person-gear', ['/guru/pengaturan', '/guru/profil'], true),
         ],
         siswa: [
             section('Belajar'),
@@ -52,7 +56,10 @@ export function sidebarMenu(role, capabilities = {}) {
             item('Nilai Saya', '/siswa/nilai', 'bi-bar-chart-fill', ['/siswa/nilai'], true),
             section('Kelas'),
             item('Kalender', '/siswa/kalender', 'bi-calendar3', ['/siswa/kalender'], true),
+            item('Pengumuman', '/siswa/pengumuman', 'bi-megaphone-fill', ['/siswa/pengumuman'], true),
             item('Chat Kelas', '/siswa/chat', 'bi-chat-dots-fill', ['/siswa/chat'], true),
+            section('Akun'),
+            item('Pengaturan', '/siswa/pengaturan', 'bi-person-gear', ['/siswa/pengaturan', '/siswa/profil'], true),
         ],
         kepala_sekolah: [
             section('Ringkasan'),

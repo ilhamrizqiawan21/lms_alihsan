@@ -1,5 +1,5 @@
 <script setup>
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import PageHeader from '../../Components/AppShell/PageHeader.vue';
 import AppShell from '../../Layouts/AppShell.vue';
 import { Badge, Card, EmptyState, StatCard, TableWrapper } from '../../Components/UI';
@@ -106,6 +106,9 @@ function iconFor(type) {
                 </Card>
 
                 <Card title="Pengumuman" icon="bi-megaphone-fill" body-class="p-0">
+                    <template v-if="pengumuman.length" #actions>
+                        <Link :href="links.pengumuman" class="text-decoration-none small" style="color: var(--primary-600);">Lihat Semua</Link>
+                    </template>
                     <TableWrapper v-if="pengumuman.length">
                         <table class="table table-hover mb-0">
                             <thead>
@@ -116,7 +119,11 @@ function iconFor(type) {
                             </thead>
                             <tbody>
                                 <tr v-for="item in pengumuman" :key="item.id">
-                                    <td>{{ item.judul }}</td>
+                                    <td>
+                                        <Link :href="item.show_url" class="text-decoration-none fw-semibold">
+                                            {{ item.judul }}
+                                        </Link>
+                                    </td>
                                     <td>{{ item.created_at }}</td>
                                 </tr>
                             </tbody>

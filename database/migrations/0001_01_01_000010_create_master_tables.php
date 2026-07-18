@@ -47,6 +47,7 @@ return new class extends Migration
             $table->foreignId('guru_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('tahun_ajaran_id')->constrained('tahun_ajaran')->cascadeOnDelete();
             $table->enum('semester', ['1', '2']);
+            $table->unsignedTinyInteger('pertemuan_per_minggu')->default(1);
             $table->timestamps();
         });
 

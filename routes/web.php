@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\AccountSettingsController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\KelasController;
@@ -13,13 +14,13 @@ use App\Http\Controllers\Admin\KalenderController;
 use App\Http\Controllers\Admin\RekapController;
 use App\Http\Controllers\Admin\SchoolSettingController;
 use App\Http\Controllers\Admin\SystemController;
+use App\Http\Controllers\Admin\AcademicAuditLogController;
 use App\Http\Controllers\Guru\DashboardController as GuruDashboardController;
 use App\Http\Controllers\Guru\AbsensiController;
 use App\Http\Controllers\Guru\MateriController as GuruMateriController;
 use App\Http\Controllers\Guru\TugasController as GuruTugasController;
 use App\Http\Controllers\Guru\KalenderController as GuruKalenderController;
 use App\Http\Controllers\Guru\NilaiController;
-use App\Http\Controllers\Guru\ProfilController;
 use App\Http\Controllers\Guru\SikapController;
 use App\Http\Controllers\Guru\ChatController as GuruChatController;
 use App\Http\Controllers\Guru\NotifikasiController as GuruNotifikasiController;
@@ -30,9 +31,9 @@ use App\Http\Controllers\Siswa\TugasController as SiswaTugasController;
 use App\Http\Controllers\Siswa\NilaiController as SiswaNilaiController;
 use App\Http\Controllers\Siswa\KalenderController as SiswaKalenderController;
 use App\Http\Controllers\Siswa\ProgressController;
-use App\Http\Controllers\Siswa\ProfilController as SiswaProfilController;
 use App\Http\Controllers\Siswa\ChatController as SiswaChatController;
 use App\Http\Controllers\Siswa\NotifikasiController as SiswaNotifikasiController;
+use App\Http\Controllers\Siswa\PengumumanController as SiswaPengumumanController;
 use App\Http\Controllers\Kepsek\DashboardController as KepsekDashboardController;
 use App\Http\Controllers\Kepsek\LaporanController;
 use App\Http\Controllers\Kepsek\StatistikController;
@@ -103,6 +104,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Pengumuman
     Route::get('/pengumuman', [AdminPengumumanController::class, 'index'])->name('pengumuman.index');
+    Route::get('/pengumuman/{pengumuman}', [AdminPengumumanController::class, 'show'])->name('pengumuman.show');
     Route::post('/pengumuman', [AdminPengumumanController::class, 'store'])->name('pengumuman.store');
     Route::delete('/pengumuman/{pengumuman}', [AdminPengumumanController::class, 'destroy'])->name('pengumuman.destroy');
 
@@ -129,11 +131,14 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/export/sikap/pdf', [ExportController::class, 'pdfSikap'])->name('export.sikap.pdf');
 
     // Sistem
+    Route::get('/pengaturan-akun', [AccountSettingsController::class, 'edit'])->name('pengaturan-akun');
+    Route::put('/pengaturan-akun', [AccountSettingsController::class, 'update'])->name('pengaturan-akun.update');
     Route::get('/school-settings', [SchoolSettingController::class, 'index'])->name('school-settings.index');
     Route::put('/school-settings', [SchoolSettingController::class, 'update'])->name('school-settings.update');
     Route::get('/log-login', [SystemController::class, 'logLogin'])->name('log-login');
     Route::get('/log-login/export/excel', [SystemController::class, 'exportLogLoginExcel'])->name('log-login.export.excel');
     Route::get('/log-error', [SystemController::class, 'logError'])->name('log-error');
+    Route::get('/log-akademik', [AcademicAuditLogController::class, 'index'])->name('log-akademik');
     Route::get('/pengaturan', [SystemController::class, 'pengaturan'])->name('pengaturan');
     Route::post('/pengaturan', [SystemController::class, 'savePengaturan'])->name('pengaturan.save');
     Route::get('/blocked-ips', [SystemController::class, 'blockedIps'])->name('blocked-ips');
@@ -154,6 +159,7 @@ Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(f
 
     // Pengumuman
     Route::get('/pengumuman', [AdminPengumumanController::class, 'index'])->name('pengumuman.index');
+    Route::get('/pengumuman/{pengumuman}', [AdminPengumumanController::class, 'show'])->name('pengumuman.show');
     Route::post('/pengumuman', [AdminPengumumanController::class, 'store'])->name('pengumuman.store');
     Route::delete('/pengumuman/{pengumuman}', [AdminPengumumanController::class, 'destroy'])->name('pengumuman.destroy');
 
@@ -231,8 +237,10 @@ Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(f
     Route::post('/notifikasi/mark-all-read', [GuruNotifikasiController::class, 'markAllRead'])->name('notifikasi.mark-all-read');
 
     // Profil
-    Route::get('/profil', [ProfilController::class, 'edit'])->name('profil');
-    Route::put('/profil', [ProfilController::class, 'update'])->name('profil.update');
+    Route::get('/pengaturan', [AccountSettingsController::class, 'edit'])->name('pengaturan');
+    Route::put('/pengaturan', [AccountSettingsController::class, 'update'])->name('pengaturan.update');
+    Route::get('/profil', [AccountSettingsController::class, 'edit'])->name('profil');
+    Route::put('/profil', [AccountSettingsController::class, 'update'])->name('profil.update');
 });
 
 // ────────────────────────────────────────────
@@ -246,6 +254,10 @@ Route::middleware(['auth', 'role:siswa'])->prefix('siswa')->name('siswa.')->grou
 
     // Kalender
     Route::get('/kalender', [SiswaKalenderController::class, 'index'])->name('kalender');
+
+    // Pengumuman
+    Route::get('/pengumuman', [SiswaPengumumanController::class, 'index'])->name('pengumuman.index');
+    Route::get('/pengumuman/{pengumuman}', [SiswaPengumumanController::class, 'show'])->name('pengumuman.show');
 
     // Materi
     Route::get('/materi', [SiswaMateriController::class, 'index'])->name('materi.index');
@@ -273,8 +285,10 @@ Route::middleware(['auth', 'role:siswa'])->prefix('siswa')->name('siswa.')->grou
     Route::post('/notifikasi/mark-all-read', [SiswaNotifikasiController::class, 'markAllRead'])->name('notifikasi.mark-all-read');
 
     // Profil
-    Route::get('/profil', [SiswaProfilController::class, 'edit'])->name('profil');
-    Route::put('/profil', [SiswaProfilController::class, 'update'])->name('profil.update');
+    Route::get('/pengaturan', [AccountSettingsController::class, 'edit'])->name('pengaturan');
+    Route::put('/pengaturan', [AccountSettingsController::class, 'update'])->name('pengaturan.update');
+    Route::get('/profil', [AccountSettingsController::class, 'edit'])->name('profil');
+    Route::put('/profil', [AccountSettingsController::class, 'update'])->name('profil.update');
 });
 
 // ────────────────────────────────────────────
@@ -292,6 +306,7 @@ Route::middleware(['auth', 'role:kepala_sekolah'])->prefix('kepsek')->name('keps
 
     // Pengumuman
     Route::get('/pengumuman', [AdminPengumumanController::class, 'index'])->name('pengumuman.index');
+    Route::get('/pengumuman/{pengumuman}', [AdminPengumumanController::class, 'show'])->name('pengumuman.show');
     Route::post('/pengumuman', [AdminPengumumanController::class, 'store'])->name('pengumuman.store');
     Route::delete('/pengumuman/{pengumuman}', [AdminPengumumanController::class, 'destroy'])->name('pengumuman.destroy');
 

@@ -62,6 +62,19 @@
                             @error('semester') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">Pertemuan per Minggu <span class="text-danger">*</span></label>
+                        <input
+                            type="number"
+                            name="pertemuan_per_minggu"
+                            min="1"
+                            max="6"
+                            value="{{ old('pertemuan_per_minggu', 1) }}"
+                            class="form-control @error('pertemuan_per_minggu') is-invalid @enderror"
+                            required
+                        >
+                        @error('pertemuan_per_minggu') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
                     <button type="submit" class="btn btn-success w-100"><i class="bi bi-save"></i> Simpan</button>
                 </form>
             </div>
@@ -78,6 +91,7 @@
                                 <th>Kelas</th>
                                 <th>Mapel</th>
                                 <th>Guru</th>
+                                <th>Pertemuan</th>
                                 <th>Semester</th>
                                 <th>Tahun Ajaran</th>
                                 <th>Aksi</th>
@@ -90,6 +104,7 @@
                                 <td>{{ $km->kelas?->nama_kelas ?? '-' }}</td>
                                 <td>{{ $km->mataPelajaran?->nama_mapel ?? '-' }}</td>
                                 <td>{{ $km->guru?->nama_lengkap ?? '-' }}</td>
+                                <td>{{ (int) $km->pertemuan_per_minggu }}x/minggu</td>
                                 <td><span class="badge bg-info">Semester {{ $km->semester }}</span></td>
                                 <td>{{ $km->tahunAjaran?->tahun ?? '-' }}</td>
                                 <td>
@@ -103,7 +118,7 @@
                             </tr>
                                 @endforeach
                             @else
-                            <tr><td colspan="6" class="text-center text-muted py-3">Belum ada pengajaran</td></tr>
+                            <tr><td colspan="7" class="text-center text-muted py-3">Belum ada pengajaran</td></tr>
                             @endif
                         </tbody>
                     </table>
