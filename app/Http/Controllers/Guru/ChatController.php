@@ -93,7 +93,7 @@ class ChatController extends Controller
             ]);
         }
 
-        if ($request->ajax()) {
+        if ($request->ajax() && !$request->header('X-Inertia')) {
             return response()->json(['success' => true, 'message' => $chat->load('user')]);
         }
 

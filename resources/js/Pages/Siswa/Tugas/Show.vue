@@ -1,5 +1,6 @@
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import PageHeader from '../../../Components/AppShell/PageHeader.vue';
 import { FileInput, TextareaInput } from '../../../Components/Form';
 import AppShell from '../../../Layouts/AppShell.vue';
@@ -12,8 +13,20 @@ const props = defineProps({
 });
 
 const form = useForm({
-    file_upload: null,
+    files: [],
     teks_jawaban: '',
+});
+
+const uploadFileError = computed(() => {
+    const errors = [
+        form.errors.file_upload,
+        form.errors.files,
+        ...Object.entries(form.errors)
+            .filter(([key]) => key.startsWith('files.'))
+            .map(([, message]) => message),
+    ].filter(Boolean);
+
+    return errors.length > 1 ? errors : errors[0] ?? '';
 });
 
 function statusColor(status) {
@@ -118,14 +131,15 @@ function submit() {
                 <Card v-if="canSubmit" title="Kumpulkan Tugas" icon="bi-upload">
                     <form @submit.prevent="submit">
                         <FileInput
-                            v-model="form.file_upload"
-                            name="file_upload"
+                            v-model="form.files"
+                            name="files[]"
                             label="Upload File"
-                            accept=".png,.jpg,.jpeg,.pdf,image/png,image/jpeg,application/pdf"
-                            accept-label="PNG, JPG, JPEG, PDF"
+                            accept=".jpg,.jpeg,.pdf,image/jpeg,application/pdf"
+                            accept-label="JPG, JPEG, PDF"
                             max-size="5MB"
+                            multiple
                             help="Opsional jika jawaban dikirim lewat teks."
-                            :error="form.errors.file_upload || form.errors.files"
+                            :error="uploadFileError"
                         />
                         <TextareaInput
                             v-model="form.teks_jawaban"

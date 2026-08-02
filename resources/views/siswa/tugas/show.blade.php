@@ -117,11 +117,12 @@
                 <form action="{{ route('siswa.tugas.kumpul', $tugas->id) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <x-form.file
-                        name="file_upload"
+                        name="files[]"
                         label="Upload File"
-                        accept=".png,.jpg,.jpeg,.pdf,image/png,image/jpeg,application/pdf"
-                        accept-label="PNG, JPG, JPEG, PDF"
+                        accept=".jpg,.jpeg,.pdf,image/jpeg,application/pdf"
+                        accept-label="JPG, JPEG, PDF"
                         max-size="5MB"
+                        multiple
                         help="Opsional jika jawaban dikirim lewat teks."
                     />
                     <x-form.textarea

@@ -19,7 +19,7 @@
                     <span class="badge bg-info">{{ $pengumuman->target }}</span>
                     @if($pengumuman->target === 'kelas_mapel')
                         <span class="badge bg-secondary">
-                            {{ $pengumuman->kelasMapel?->kelas?->nama_kelas ?? '-' }} - {{ $pengumuman->kelasMapel?->mataPelajaran?->nama_mapel ?? '-' }}
+                            {{ $targetKelasLabels->isNotEmpty() ? $targetKelasLabels->join(', ') : (($pengumuman->kelasMapel?->kelas?->nama_kelas ?? '-') . ' - ' . ($pengumuman->kelasMapel?->mataPelajaran?->nama_mapel ?? '-')) }}
                         </span>
                     @endif
                 </div>

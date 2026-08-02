@@ -43,9 +43,19 @@ class DashboardController extends Controller
         $tugasPerluDinilai = $this->tugasPerluDinilai($kelasMapelIds);
 
         $pengumuman = Pengumuman::with('creator')
-            ->where(function ($q) {
+            ->where(function ($q) use ($kelasMapelIds, $kelasIds) {
                 $q->where('target', 'semua')
-                  ->orWhere('target', 'guru');
+                  ->orWhere('target', 'guru')
+                  ->orWhere(function ($q) use ($kelasMapelIds, $kelasIds) {
+                      $q->where('target', 'kelas_mapel')
+                        ->where(function ($q) use ($kelasMapelIds, $kelasIds) {
+                            $q->whereIn('kelas_mapel_id', $kelasMapelIds);
+
+                            foreach ($kelasIds as $kelasId) {
+                                $q->orWhere('target_kelas', 'like', '%"' . $kelasId . '"%');
+                            }
+                        });
+                  });
             })
             ->orderBy('created_at', 'desc')
             ->take(5)

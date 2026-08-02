@@ -3,7 +3,7 @@ import { computed } from 'vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import PageHeader from '../../Components/AppShell/PageHeader.vue';
 import AppShell from '../../Layouts/AppShell.vue';
-import { Badge, Card, EmptyState, StatCard, TableWrapper } from '../../Components/UI';
+import { Badge, Card, EmptyState, InfoListItem, StatCard, TableWrapper } from '../../Components/UI';
 
 const page = usePage();
 const user = page.props.auth?.user;
@@ -160,44 +160,40 @@ const totalPerluDinilai = computed(() => props.tugasPerluDinilai.reduce((total, 
                         <Link
                             v-if="unreadNotifCount > 0"
                             href="/guru/notifikasi"
-                            class="text-decoration-none small"
-                            style="color: var(--primary-600);"
+                            class="app-card-action-link"
                         >
                             Lihat Semua
                         </Link>
                     </template>
                     <template #default>
-                        <div v-if="notifikasi.length">
-                            <div
+                        <div v-if="notifikasi.length" class="app-list">
+                            <InfoListItem
                                 v-for="item in notifikasi"
                                 :key="item.id"
-                                :style="{
-                                    borderLeft: `3px solid ${item.is_read ? '#d1d5db' : '#ef4444'}`,
-                                    padding: '0.5rem 0.75rem',
-                                    marginBottom: '0.5rem',
-                                    background: item.is_read ? '#f9fafb' : '#fef2f2',
-                                    borderRadius: '0 6px 6px 0',
-                                }"
-                            >
-                                <strong style="font-size:0.85rem;">{{ item.judul }}</strong>
-                                <div class="text-muted" style="font-size:0.7rem;">{{ item.pesan }}</div>
-                                <small class="text-muted" style="font-size:0.65rem;">{{ item.created_at ?? '' }}</small>
-                            </div>
+                                :title="item.judul"
+                                :message="item.pesan"
+                                :meta="item.created_at ?? ''"
+                                icon="bi-bell-fill"
+                                accent="var(--primary-500)"
+                                :unread="!item.is_read"
+                                compact
+                            />
                         </div>
                         <EmptyState v-else title="Belum ada notifikasi" icon="bi-bell" />
                     </template>
                 </Card>
 
                 <Card title="Pengumuman" icon="bi-megaphone">
-                    <div v-if="pengumuman.length">
-                        <div
+                    <div v-if="pengumuman.length" class="app-list">
+                        <InfoListItem
                             v-for="item in pengumuman"
                             :key="item.id"
-                            style="border-left:3px solid var(--primary-500);padding:0.5rem 0.75rem;margin-bottom:0.5rem;background:#f9fafb;border-radius:0 6px 6px 0;"
-                        >
-                            <strong style="font-size:0.85rem;">{{ item.judul }}</strong>
-                            <div class="text-muted" style="font-size:0.7rem;">{{ item.created_at ?? '' }}</div>
-                        </div>
+                            :title="item.judul"
+                            :meta="item.created_at ?? ''"
+                            icon="bi-megaphone-fill"
+                            accent="var(--primary-500)"
+                            compact
+                        />
                     </div>
                     <EmptyState v-else title="Belum ada pengumuman" icon="bi-megaphone" />
                 </Card>

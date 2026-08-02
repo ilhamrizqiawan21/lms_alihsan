@@ -17,6 +17,7 @@ const form = useForm({
 
 const flash = computed(() => page.props.flash ?? {});
 const title = computed(() => `Login - ${props.branding.school_short_name} ${props.branding.school_name}`);
+const supportContact = computed(() => props.branding.support_contact || 'admin sekolah');
 
 function submit() {
     form.post(props.loginUrl, {
@@ -118,7 +119,13 @@ function submit() {
                         <i class="bi bi-box-arrow-in-right me-2" aria-hidden="true"></i>
                         {{ form.processing ? 'Memproses...' : 'Masuk' }}
                     </button>
-                    <div>Kalau lupa password hubungi Pak Ilham WA. 0895802329062</div>
+                    <div class="login-help" role="note">
+                        <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
+                        <span>
+                            <span class="login-help-title">Lupa password?</span>
+                            Hubungi {{ supportContact }} untuk bantuan reset akun.
+                        </span>
+                    </div>
                 </form>
             </section>
 
@@ -308,6 +315,13 @@ function submit() {
 .btn-login:disabled {
     cursor: wait;
     opacity: 0.75;
+}
+
+.login-help {
+    margin-top: 14px;
+    padding: 11px 12px;
+    border-color: var(--login-border);
+    background: var(--login-surface-muted);
 }
 
 .alert {

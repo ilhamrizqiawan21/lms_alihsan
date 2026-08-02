@@ -2,7 +2,7 @@
 import { Head } from '@inertiajs/vue3';
 import PageHeader from '../../Components/AppShell/PageHeader.vue';
 import AppShell from '../../Layouts/AppShell.vue';
-import { Badge, Card, EmptyState, StatCard, TableWrapper } from '../../Components/UI';
+import { Badge, Card, EmptyState, InfoListItem, StatCard, TableWrapper } from '../../Components/UI';
 
 defineProps({
     statistik: { type: Object, default: () => ({}) },
@@ -72,18 +72,16 @@ function roleBadgeColor(role) {
 
             <div class="col-md-6 mb-4">
                 <Card title="Pengumuman Terbaru" icon="bi-megaphone-fill" body-class="p-0">
-                    <div v-if="pengumuman.length">
-                        <div
+                    <div v-if="pengumuman.length" class="app-list">
+                        <InfoListItem
                             v-for="item in pengumuman"
                             :key="item.id"
-                            style="border-left:4px solid var(--primary-500); padding:0.8rem 1rem; border-bottom:1px solid var(--gray-200);"
-                        >
-                            <strong>{{ item.judul }}</strong>
-                            <div class="text-muted small mt-1">
-                                {{ item.created_at ?? '-' }} - {{ item.creator }}
-                            </div>
-                            <div class="mt-1" style="font-size:0.85rem;">{{ item.isi }}</div>
-                        </div>
+                            :title="item.judul"
+                            :message="item.isi"
+                            :meta="`${item.created_at ?? '-'} - ${item.creator}`"
+                            icon="bi-megaphone-fill"
+                            accent="var(--primary-500)"
+                        />
                     </div>
                     <EmptyState
                         v-else

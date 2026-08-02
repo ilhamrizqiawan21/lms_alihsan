@@ -24,6 +24,7 @@ class LoginController extends Controller
                 'school_short_name' => school_setting('school_short_name', 'LMS'),
                 'school_motto' => school_setting('motto', 'Learning Management System'),
                 'school_address' => school_setting('address', 'Alamat sekolah belum diatur'),
+                'support_contact' => school_setting('whatsapp') ?: school_setting('phone'),
                 'logo_url' => school_logo_url(),
             ],
             'loginUrl' => route('login.post'),

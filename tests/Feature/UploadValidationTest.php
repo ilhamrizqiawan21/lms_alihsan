@@ -46,4 +46,34 @@ class UploadValidationTest extends TestCase
         $this->expectException(ValidationException::class);
         $controller->store($request, $tugas);
     }
+
+    public function test_tugas_multiple_upload_rejects_png_files(): void
+    {
+        $user = new User();
+        $siswa = new Siswa();
+        $siswa->kelas_id = 10;
+        $user->setRelation('siswa', $siswa);
+
+        Auth::shouldReceive('user')->andReturn($user);
+
+        $kelasMapel = new KelasMapel();
+        $kelasMapel->kelas_id = 10;
+        $kelasMapel->guru_id = 1;
+
+        $tugas = new Tugas();
+        $tugas->id = 1;
+        $tugas->setRelation('kelasMapel', $kelasMapel);
+
+        $request = new Request();
+        $request->files->add([
+            'files' => [
+                UploadedFile::fake()->image('jawaban.png'),
+            ],
+        ]);
+
+        $controller = new TugasController();
+
+        $this->expectException(ValidationException::class);
+        $controller->store($request, $tugas);
+    }
 }

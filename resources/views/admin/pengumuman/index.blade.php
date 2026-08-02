@@ -5,6 +5,8 @@
 
 @php
     $isGuru = auth()->user()->isGuru();
+    $oldTargetKelasIds = collect(old('target_kelas_ids', []))->map(fn ($id) => (int) $id)->all();
+    $kelasById = $kelas->keyBy('id');
 @endphp
 
 @section('content')
@@ -35,21 +37,33 @@
                                 <option value="guru" @selected(old('target') === 'guru')>Guru</option>
                                 <option value="siswa" @selected(old('target') === 'siswa')>Siswa</option>
                             @endif
-                            <option value="kelas_mapel" @selected(old('target', $isGuru ? 'kelas_mapel' : null) === 'kelas_mapel')>Kelas Mapel Tertentu</option>
+                            <option value="kelas_mapel" @selected(old('target', $isGuru ? 'kelas_mapel' : null) === 'kelas_mapel')>Kelas Tertentu</option>
                         </select>
                         @error('target') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Kelas Mapel Tujuan <small class="text-muted">(wajib bila target kelas mapel)</small></label>
-                        <select name="kelas_mapel_id" class="form-select @error('kelas_mapel_id') is-invalid @enderror">
-                            <option value="">-- Pilih Kelas Mapel --</option>
-                            @foreach($kelasMapel as $km)
-                                <option value="{{ $km->id }}" @selected(old('kelas_mapel_id') == $km->id)>
-                                    {{ $km->kelas?->tingkat }} {{ $km->kelas?->nama_kelas }} — {{ $km->mataPelajaran?->nama_mapel }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('kelas_mapel_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <div class="mb-3" data-target-kelas-wrapper>
+                        <label class="form-label">Target Kelas <small class="text-muted">(pilih satu atau beberapa kelas)</small></label>
+                        <div class="target-kelas-checklist @error('target_kelas_ids') is-invalid @enderror @error('target_kelas_ids.*') is-invalid @enderror">
+                            @forelse($targetKelasOptions as $kelasOption)
+                                <div class="form-check">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        name="target_kelas_ids[]"
+                                        value="{{ $kelasOption->id }}"
+                                        id="target-kelas-{{ $kelasOption->id }}"
+                                        @checked(in_array((int) $kelasOption->id, $oldTargetKelasIds, true))
+                                    >
+                                    <label class="form-check-label" for="target-kelas-{{ $kelasOption->id }}">
+                                        {{ $kelasOption->tingkat }} {{ $kelasOption->nama_kelas }}
+                                    </label>
+                                </div>
+                            @empty
+                                <div class="text-muted small">Belum ada kelas yang tersedia.</div>
+                            @endforelse
+                        </div>
+                        @error('target_kelas_ids') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        @error('target_kelas_ids.*') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                     </div>
                     <button type="submit" class="btn btn-success w-100"><i class="bi bi-send"></i> Kirim</button>
                 </form>
@@ -78,7 +92,15 @@
                                 <td>
                                     <span class="badge bg-info">{{ $p->target }}</span>
                                     @if($p->target === 'kelas_mapel')
-                                        <div class="small text-muted mt-1">{{ $p->kelasMapel?->kelas?->nama_kelas ?? '-' }} — {{ $p->kelasMapel?->mataPelajaran?->nama_mapel ?? '-' }}</div>
+                                        @php
+                                            $targetLabels = collect($p->targetKelasIds())
+                                                ->map(fn ($id) => $kelasById->get($id))
+                                                ->filter()
+                                                ->map(fn ($kelasItem) => trim($kelasItem->tingkat . ' ' . $kelasItem->nama_kelas));
+                                        @endphp
+                                        <div class="small text-muted mt-1">
+                                            {{ $targetLabels->isNotEmpty() ? $targetLabels->join(', ') : (($p->kelasMapel?->kelas?->nama_kelas ?? '-') . ' — ' . ($p->kelasMapel?->mataPelajaran?->nama_mapel ?? '-')) }}
+                                        </div>
                                     @endif
                                 </td>
                                 <td>{{ $p->created_at ? \Carbon\Carbon::parse($p->created_at)->format('d/m/Y') : '-' }}</td>
@@ -110,3 +132,42 @@
     </div>
 </div>
 @endsection
+
+@push('styles')
+<style>
+    .target-kelas-checklist {
+        border: 1px solid var(--bs-border-color);
+        border-radius: 0.375rem;
+        display: grid;
+        gap: 0.35rem 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        max-height: 180px;
+        overflow-y: auto;
+        padding: 0.75rem;
+    }
+
+    .target-kelas-checklist.is-invalid {
+        border-color: var(--bs-danger);
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const targetSelect = document.querySelector('select[name="target"]');
+        const targetKelasWrapper = document.querySelector('[data-target-kelas-wrapper]');
+
+        if (!targetSelect || !targetKelasWrapper) {
+            return;
+        }
+
+        const syncTargetKelasVisibility = () => {
+            targetKelasWrapper.classList.toggle('d-none', targetSelect.value !== 'kelas_mapel');
+        };
+
+        targetSelect.addEventListener('change', syncTargetKelasVisibility);
+        syncTargetKelasVisibility();
+    });
+</script>
+@endpush

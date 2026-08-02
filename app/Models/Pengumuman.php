@@ -31,4 +31,19 @@ class Pengumuman extends Model
     {
         return $this->belongsTo(KelasMapel::class, 'kelas_mapel_id');
     }
+
+    public function targetKelasIds(): array
+    {
+        if (blank($this->target_kelas)) {
+            return [];
+        }
+
+        $decoded = json_decode($this->target_kelas, true);
+
+        if (is_array($decoded)) {
+            return array_values(array_filter(array_map('intval', $decoded)));
+        }
+
+        return array_values(array_filter(array_map('intval', explode(',', $this->target_kelas))));
+    }
 }

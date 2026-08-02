@@ -2,7 +2,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import PageHeader from '../../Components/AppShell/PageHeader.vue';
 import AppShell from '../../Layouts/AppShell.vue';
-import { Badge, Card, EmptyState, StatCard, TableWrapper } from '../../Components/UI';
+import { Badge, Card, EmptyState, InfoListItem, StatCard, TableWrapper } from '../../Components/UI';
 
 defineProps({
     stats: { type: Object, required: true },
@@ -46,7 +46,7 @@ function iconFor(type) {
         <div class="row">
             <div class="col-md-6 mb-4">
                 <Card title="Tugas Terbaru" icon="bi-journal-fill" body-class="p-0">
-                    <TableWrapper v-if="tugasTerbaru.length">
+                    <TableWrapper v-if="tugasTerbaru.length" class="d-none d-md-block">
                         <table class="table table-hover mb-0">
                             <thead>
                                 <tr>
@@ -70,6 +70,18 @@ function iconFor(type) {
                             </tbody>
                         </table>
                     </TableWrapper>
+                    <div v-if="tugasTerbaru.length" class="app-mobile-list d-md-none">
+                        <div v-for="item in tugasTerbaru" :key="item.id" class="app-mobile-list-item">
+                            <div class="app-mobile-list-row">
+                                <span class="app-mobile-list-title">{{ item.judul }}</span>
+                                <Badge :color="item.selesai ? 'success' : 'warning text-dark'">
+                                    {{ item.selesai ? 'Selesai' : 'Belum' }}
+                                </Badge>
+                            </div>
+                            <span class="app-mobile-list-meta">{{ item.mata_pelajaran }}</span>
+                            <span class="app-mobile-list-meta">Deadline {{ item.batas_waktu }}</span>
+                        </div>
+                    </div>
                     <EmptyState v-else title="Belum ada tugas" icon="bi-journal" />
                 </Card>
             </div>
@@ -77,58 +89,44 @@ function iconFor(type) {
             <div class="col-md-6 mb-4">
                 <Card title="Notifikasi" icon="bi-bell-fill" body-class="p-0">
                     <template v-if="notifikasi.length" #actions>
-                        <a :href="links.notifikasi" class="text-decoration-none small" style="color: var(--primary-600);">Lihat Semua</a>
+                        <a :href="links.notifikasi" class="app-card-action-link">
+                            Lihat Semua
+                        </a>
                     </template>
-                    <TableWrapper v-if="notifikasi.length">
-                        <table class="table table-hover mb-0">
-                            <tbody>
-                                <tr
-                                    v-for="item in notifikasi"
-                                    :key="item.id"
-                                    :style="!item.is_read ? 'background: #fef2f2;' : ''"
-                                >
-                                    <td style="width: 40px; text-align: center;">
-                                        <i class="bi" :class="iconFor(item.tipe).icon" :style="{ color: iconFor(item.tipe).color }" aria-hidden="true"></i>
-                                    </td>
-                                    <td>
-                                        <strong style="font-size: 0.82rem;">{{ item.judul }}</strong>
-                                        <Badge v-if="!item.is_read" color="danger" style="font-size: 0.55rem;">Baru</Badge>
-                                        <div class="text-muted" style="font-size: 0.7rem;">{{ item.pesan }}</div>
-                                    </td>
-                                    <td class="text-end">
-                                        <small class="text-muted">{{ item.created_at }}</small>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </TableWrapper>
+                    <div v-if="notifikasi.length" class="app-list">
+                        <InfoListItem
+                            v-for="item in notifikasi"
+                            :key="item.id"
+                            :title="item.judul"
+                            :message="item.pesan"
+                            :meta="item.created_at"
+                            :icon="iconFor(item.tipe).icon"
+                            :accent="iconFor(item.tipe).color"
+                            :unread="!item.is_read"
+                            compact
+                        />
+                    </div>
                     <EmptyState v-else title="Belum ada notifikasi" icon="bi-bell" />
                 </Card>
 
                 <Card title="Pengumuman" icon="bi-megaphone-fill" body-class="p-0">
                     <template v-if="pengumuman.length" #actions>
-                        <Link :href="links.pengumuman" class="text-decoration-none small" style="color: var(--primary-600);">Lihat Semua</Link>
+                        <Link :href="links.pengumuman" class="app-card-action-link">
+                            Lihat Semua
+                        </Link>
                     </template>
-                    <TableWrapper v-if="pengumuman.length">
-                        <table class="table table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Judul</th>
-                                    <th>Tanggal</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="item in pengumuman" :key="item.id">
-                                    <td>
-                                        <Link :href="item.show_url" class="text-decoration-none fw-semibold">
-                                            {{ item.judul }}
-                                        </Link>
-                                    </td>
-                                    <td>{{ item.created_at }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </TableWrapper>
+                    <div v-if="pengumuman.length" class="app-list">
+                        <InfoListItem
+                            v-for="item in pengumuman"
+                            :key="item.id"
+                            :title="item.judul"
+                            :meta="item.created_at"
+                            :href="item.show_url"
+                            icon="bi-megaphone-fill"
+                            accent="var(--primary-500)"
+                            compact
+                        />
+                    </div>
                     <EmptyState v-else title="Tidak ada pengumuman" icon="bi-megaphone" />
                 </Card>
             </div>

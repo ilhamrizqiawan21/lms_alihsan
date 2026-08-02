@@ -62,12 +62,15 @@ class DashboardController extends Controller
             ->get();
 
         $pengumuman = Pengumuman::with('creator')
-            ->where(function ($q) use ($kelasMapelIds) {
+            ->where(function ($q) use ($kelasMapelIds, $siswa) {
                 $q->where('target', 'semua')
                   ->orWhere('target', 'siswa')
-                  ->orWhere(function ($q) use ($kelasMapelIds) {
+                  ->orWhere(function ($q) use ($kelasMapelIds, $siswa) {
                       $q->where('target', 'kelas_mapel')
-                        ->whereIn('kelas_mapel_id', $kelasMapelIds);
+                        ->where(function ($q) use ($kelasMapelIds, $siswa) {
+                            $q->whereIn('kelas_mapel_id', $kelasMapelIds)
+                              ->orWhere('target_kelas', 'like', '%"' . $siswa->kelas_id . '"%');
+                        });
                   });
             })
             ->orderBy('created_at', 'desc')

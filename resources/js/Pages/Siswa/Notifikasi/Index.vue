@@ -2,7 +2,7 @@
 import { Head, router } from '@inertiajs/vue3';
 import PageHeader from '../../../Components/AppShell/PageHeader.vue';
 import AppShell from '../../../Layouts/AppShell.vue';
-import { Badge, Button, Card, EmptyState, IconButton, Pagination, TableWrapper } from '../../../Components/UI';
+import { Button, Card, EmptyState, IconButton, InfoListItem, Pagination } from '../../../Components/UI';
 
 const props = defineProps({
     notifikasi: { type: Object, required: true },
@@ -58,57 +58,27 @@ function markAllRead() {
         </PageHeader>
 
         <Card body-class="p-0">
-            <TableWrapper v-if="notifikasi.data.length">
-                <table class="table table-hover mb-0">
-                    <thead>
-                        <tr>
-                            <th style="width: 50px;"></th>
-                            <th>Judul</th>
-                            <th>Pesan</th>
-                            <th>Waktu</th>
-                            <th style="width: 80px;"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr
-                            v-for="item in notifikasi.data"
-                            :key="item.id"
-                            :class="{ 'table-active': !item.is_read }"
-                            :style="!item.is_read ? 'font-weight: 600;' : ''"
-                        >
-                            <td class="text-center">
-                                <span
-                                    class="notification-icon"
-                                    :style="{
-                                        background: `${iconFor(item.tipe).color}15`,
-                                        color: iconFor(item.tipe).color,
-                                    }"
-                                >
-                                    <i class="bi" :class="iconFor(item.tipe).icon" aria-hidden="true"></i>
-                                </span>
-                            </td>
-                            <td>
-                                <div>{{ item.judul }}</div>
-                                <Badge v-if="!item.is_read" color="danger" style="font-size:0.6rem;">Baru</Badge>
-                            </td>
-                            <td style="max-width: 300px;">
-                                <span class="text-muted" style="font-size: 0.82rem;">{{ item.pesan_ringkas }}</span>
-                            </td>
-                            <td>
-                                <small class="text-muted">{{ item.created_at }}</small>
-                            </td>
-                            <td>
-                                <IconButton
-                                    :icon="item.link ? 'bi-arrow-right' : 'bi-check2'"
-                                    :label="item.link ? `Lihat notifikasi ${item.judul}` : `Tandai dibaca ${item.judul}`"
-                                    color="outline-primary"
-                                    @click="markRead(item)"
-                                />
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </TableWrapper>
+            <div v-if="notifikasi.data.length" class="app-list">
+                <InfoListItem
+                    v-for="item in notifikasi.data"
+                    :key="item.id"
+                    :title="item.judul"
+                    :message="item.pesan_ringkas"
+                    :meta="item.created_at"
+                    :icon="iconFor(item.tipe).icon"
+                    :accent="iconFor(item.tipe).color"
+                    :unread="!item.is_read"
+                >
+                    <template #action>
+                        <IconButton
+                            :icon="item.link ? 'bi-arrow-right' : 'bi-check2'"
+                            :label="item.link ? `Lihat notifikasi ${item.judul}` : `Tandai dibaca ${item.judul}`"
+                            color="outline-primary"
+                            @click="markRead(item)"
+                        />
+                    </template>
+                </InfoListItem>
+            </div>
 
             <EmptyState
                 v-else
@@ -122,15 +92,3 @@ function markAllRead() {
         </Card>
     </AppShell>
 </template>
-
-<style scoped>
-.notification-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    font-size: 1rem;
-}
-</style>

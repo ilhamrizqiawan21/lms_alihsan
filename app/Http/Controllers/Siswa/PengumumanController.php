@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Siswa;
 
 use App\Http\Controllers\Controller;
+use App\Models\Kelas;
 use App\Models\KelasMapel;
 use App\Models\Pengumuman;
 use Carbon\Carbon;
@@ -54,12 +55,15 @@ class PengumumanController extends Controller
             ->pluck('id');
 
         return Pengumuman::with(['creator', 'kelasMapel.kelas', 'kelasMapel.mataPelajaran'])
-            ->where(function ($query) use ($kelasMapelIds) {
+            ->where(function ($query) use ($kelasMapelIds, $kelasId) {
                 $query->where('target', 'semua')
                     ->orWhere('target', 'siswa')
-                    ->orWhere(function ($query) use ($kelasMapelIds) {
+                    ->orWhere(function ($query) use ($kelasMapelIds, $kelasId) {
                         $query->where('target', 'kelas_mapel')
-                            ->whereIn('kelas_mapel_id', $kelasMapelIds);
+                            ->where(function ($query) use ($kelasMapelIds, $kelasId) {
+                                $query->whereIn('kelas_mapel_id', $kelasMapelIds)
+                                    ->orWhere('target_kelas', 'like', '%"' . $kelasId . '"%');
+                            });
                     });
             })
             ->orderBy('created_at', 'desc');
@@ -82,6 +86,19 @@ class PengumumanController extends Controller
     private function targetLabel(Pengumuman $pengumuman): string
     {
         if ($pengumuman->target === 'kelas_mapel') {
+            $targetKelasIds = $pengumuman->targetKelasIds();
+            if ($targetKelasIds !== []) {
+                $labels = Kelas::whereIn('id', $targetKelasIds)
+                    ->orderBy('tingkat')
+                    ->orderBy('nama_kelas')
+                    ->get()
+                    ->map(fn (Kelas $kelas) => trim($kelas->tingkat . ' ' . $kelas->nama_kelas));
+
+                if ($labels->isNotEmpty()) {
+                    return $labels->join(', ');
+                }
+            }
+
             return trim(($pengumuman->kelasMapel?->kelas?->nama_kelas ?? '-') . ' - ' . ($pengumuman->kelasMapel?->mataPelajaran?->nama_mapel ?? '-'));
         }
 

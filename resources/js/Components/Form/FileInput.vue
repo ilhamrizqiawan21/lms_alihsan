@@ -43,7 +43,7 @@ const describedBy = computed(() => [helpId.value, errorId.value].filter(Boolean)
             :aria-describedby="describedBy"
             :aria-invalid="error ? 'true' : null"
             v-bind="$attrs"
-            @change="emit('update:modelValue', $event.target.files?.[0] ?? null)"
+            @change="emit('update:modelValue', $attrs.multiple ? Array.from($event.target.files ?? []) : ($event.target.files?.[0] ?? null))"
         >
         <InputError :id="errorId" :message="error" />
         <div v-if="helpText" :id="helpId" class="form-text">{{ helpText }}</div>
