@@ -114,6 +114,15 @@
         .alert-success { background:var(--login-success-bg); color:var(--login-success-text); }
         .form-check-input { border-color:#cbd5e1; }
         .form-check-input:checked { background-color:var(--login-primary); border-color:var(--login-primary); }
+        .login-help {
+            display:flex; align-items:flex-start; gap:10px;
+            margin-top:14px; padding:11px 12px; border-radius:10px;
+            background:var(--login-surface-muted); color:var(--login-text-muted);
+            font-size:0.82rem; line-height:1.45;
+        }
+        .login-help i { color:var(--login-primary); margin-top:2px; }
+        .login-help-title { color:var(--login-primary-dark); font-weight:700; text-decoration:none; }
+        .login-help-title:hover { color:var(--login-primary); text-decoration:underline; }
         .login-footer { text-align:center; margin-top:20px; color:rgba(255,255,255,0.78); font-size:0.78rem; }
         .login-footer span { color:rgba(253,224,71,0.92); font-weight:700; }
         @media(max-width:480px) { .login-card { padding:25px 20px; } }
@@ -175,6 +184,20 @@
             <button type="submit" class="btn-login">
                 <i class="bi bi-box-arrow-in-right me-2"></i> Masuk
             </button>
+            <div class="login-help" role="note">
+                <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
+                <span>
+                    <a
+                        class="login-help-title"
+                        href="https://wa.me/62895802329062?text=Assalamu%27alaikum%2C%20Bapa%20saya%20lupa%20password%20mohon%20bantu%20saya%20%20%3A%0ANama%20%3A%20........%0AKelas%20%3A%20.........%0ATerimakasih"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        Lupa password?
+                    </a>
+                    Hubungi admin lewat WhatsApp untuk bantuan reset akun.
+                </span>
+            </div>
         </form>
     </div>
 

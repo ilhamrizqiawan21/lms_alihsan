@@ -17,7 +17,7 @@ const form = useForm({
 
 const flash = computed(() => page.props.flash ?? {});
 const title = computed(() => `Login - ${props.branding.school_short_name} ${props.branding.school_name}`);
-const supportContact = computed(() => props.branding.support_contact || 'admin sekolah');
+const forgotPasswordUrl = 'https://wa.me/62895802329062?text=Assalamu%27alaikum%2C%20Bapa%20saya%20lupa%20password%20mohon%20bantu%20saya%20%20%3A%0ANama%20%3A%20........%0AKelas%20%3A%20.........%0ATerimakasih';
 
 function submit() {
     form.post(props.loginUrl, {
@@ -122,8 +122,15 @@ function submit() {
                     <div class="login-help" role="note">
                         <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
                         <span>
-                            <span class="login-help-title">Lupa password?</span>
-                            Hubungi {{ supportContact }} untuk bantuan reset akun.
+                            <a
+                                class="login-help-title"
+                                :href="forgotPasswordUrl"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                Lupa password?
+                            </a>
+                            Hubungi admin lewat WhatsApp untuk bantuan reset akun.
                         </span>
                     </div>
                 </form>
@@ -318,10 +325,34 @@ function submit() {
 }
 
 .login-help {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
     margin-top: 14px;
     padding: 11px 12px;
-    border-color: var(--login-border);
+    border: 1px solid var(--login-border);
+    border-radius: 10px;
     background: var(--login-surface-muted);
+    color: var(--login-text-muted);
+    font-size: 0.82rem;
+    line-height: 1.45;
+}
+
+.login-help i {
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: var(--login-primary);
+}
+
+.login-help-title {
+    color: var(--login-primary-dark);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.login-help-title:hover {
+    color: var(--login-primary);
+    text-decoration: underline;
 }
 
 .alert {
