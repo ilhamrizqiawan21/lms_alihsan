@@ -137,7 +137,7 @@ function remove(item) {
                     </div>
                     <p class="mt-3 mb-3 text-secondary" style="white-space: pre-line">{{ item.isi }}</p>
                     <div class="d-flex flex-wrap gap-2">
-                        <Link :href="`/admin/pengumuman/${item.id}`" class="btn btn-sm btn-outline-primary">Detail</Link>
+                        <Link :href="item.show_url" class="btn btn-sm btn-outline-primary">Detail</Link>
                         <button v-if="item.can_edit" class="btn btn-sm btn-outline-warning" type="button" @click="openEdit(item)">Edit</button>
                         <button v-if="item.can_delete" class="btn btn-sm btn-outline-danger" type="button" @click="remove(item)">Hapus</button>
                     </div>
