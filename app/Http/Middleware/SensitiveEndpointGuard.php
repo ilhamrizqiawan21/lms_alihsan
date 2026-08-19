@@ -22,22 +22,26 @@ class SensitiveEndpointGuard
     public function handle(Request $request, Closure $next): Response
     {
         if ($request->routeIs('admin.users.export.excel')) {
-            return $this->safeUserPasswordStatusExport($request);
+            return $this->safeUserPasswordStatusExport($request, $next);
         }
 
         if ($request->routeIs('admin.users.reset-password')) {
-            return $this->secureStaffResetPassword($request);
+            return $this->secureStaffResetPassword($request, $next);
         }
 
         if ($request->routeIs('admin.kelas-siswa.reset-password')) {
-            return $this->secureStudentResetPassword($request);
+            return $this->secureStudentResetPassword($request, $next);
         }
 
         return $next($request);
     }
 
-    private function secureStaffResetPassword(Request $request): Response
+    private function secureStaffResetPassword(Request $request, Closure $next): Response
     {
+        if ($response = $this->authorizeAdmin($request, $next)) {
+            return $response;
+        }
+
         /** @var User|null $user */
         $user = $request->route('user');
 
@@ -56,8 +60,12 @@ class SensitiveEndpointGuard
         );
     }
 
-    private function secureStudentResetPassword(Request $request): Response
+    private function secureStudentResetPassword(Request $request, Closure $next): Response
     {
+        if ($response = $this->authorizeAdmin($request, $next)) {
+            return $response;
+        }
+
         /** @var Siswa|null $siswa */
         $siswa = $request->route('siswa');
         $siswa?->loadMissing('user');
@@ -82,8 +90,12 @@ class SensitiveEndpointGuard
             ]);
     }
 
-    private function safeUserPasswordStatusExport(Request $request): Response
+    private function safeUserPasswordStatusExport(Request $request, Closure $next): Response
     {
+        if ($response = $this->authorizeAdmin($request, $next)) {
+            return $response;
+        }
+
         $validated = $request->validate([
             'role_id' => 'nullable|exists:roles,id',
             'search' => 'nullable|string|max:100',
@@ -127,5 +139,18 @@ class SensitiveEndpointGuard
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
             'X-Content-Type-Options' => 'nosniff',
         ]);
+    }
+
+    private function authorizeAdmin(Request $request, Closure $next): ?Response
+    {
+        $user = $request->user();
+
+        if (! $user) {
+            return $next($request);
+        }
+
+        abort_unless($user->hasRole('admin'), 403, 'Anda tidak memiliki akses ke halaman ini.');
+
+        return null;
     }
 }

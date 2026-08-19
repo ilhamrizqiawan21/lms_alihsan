@@ -44,7 +44,7 @@ class DashboardController extends Controller
         // Rata-rata nilai per mata pelajaran
         $rataNilaiPerMapel = NilaiAkhir::select(
             'mata_pelajaran.nama_mapel',
-            DB::raw('AVG(nilai_akhir.rata_akhir) as rata_rata')
+            DB::raw('AVG('.NilaiAkhir::rataAkhirExpression().') as rata_rata')
         )
             ->join('kelas_mapel', 'nilai_akhir.kelas_mapel_id', '=', 'kelas_mapel.id')
             ->join('mata_pelajaran', 'kelas_mapel.mapel_id', '=', 'mata_pelajaran.id')

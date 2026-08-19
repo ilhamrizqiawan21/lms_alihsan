@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'force_password_change' => env('FORCE_PASSWORD_CHANGE', app()->isProduction()),
+    'force_password_change' => env('FORCE_PASSWORD_CHANGE', env('APP_ENV', 'production') === 'production'),
     'rate_limit_per_minute' => (int) env('SECURITY_RATE_LIMIT_PER_MINUTE', 180),
     'max_upload_mb' => (int) env('SECURITY_MAX_UPLOAD_MB', 5),
 ];

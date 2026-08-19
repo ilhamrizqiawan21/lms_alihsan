@@ -147,6 +147,7 @@ class Phase10AuthorizationTest extends TestCase
             'role_id' => $role->id,
             'nama_lengkap' => $namaLengkap,
             'is_active' => true,
+            'is_password_default' => false,
         ]);
     }
 }

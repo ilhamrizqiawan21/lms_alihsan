@@ -20,6 +20,10 @@ class StatistikController extends Controller
      */
     public function index()
     {
+        $monthExpression = DB::getDriverName() === 'sqlite'
+            ? "strftime('%Y-%m', tanggal)"
+            : "DATE_FORMAT(tanggal, '%Y-%m')";
+
         $siswaPerKelas = Kelas::withCount(['siswa' => fn($q) => $q->where('status', 'aktif')])
             ->orderBy('tingkat')
             ->get();
@@ -29,7 +33,7 @@ class StatistikController extends Controller
         $totalKelas = Kelas::count();
 
         $absensiBulanan = Absensi::select(
-            DB::raw("DATE_FORMAT(tanggal, '%Y-%m') as bulan"),
+            DB::raw("$monthExpression as bulan"),
             DB::raw("SUM(CASE WHEN status = 'hadir' THEN 1 ELSE 0 END) as hadir"),
             DB::raw("COUNT(*) as total")
         )
@@ -38,11 +42,12 @@ class StatistikController extends Controller
             ->orderBy('bulan')
             ->get();
 
+        $rataAkhir = NilaiAkhir::rataAkhirExpression();
         $distribusiNilai = [
-            'sangat_baik' => NilaiAkhir::where('rata_akhir', '>=', 92)->count(),
-            'baik' => NilaiAkhir::whereBetween('rata_akhir', [83, 91.99])->count(),
-            'cukup' => NilaiAkhir::whereBetween('rata_akhir', [75, 82.99])->count(),
-            'kurang' => NilaiAkhir::where('rata_akhir', '<', 75)->count(),
+            'sangat_baik' => NilaiAkhir::whereRaw("$rataAkhir >= ?", [92])->count(),
+            'baik' => NilaiAkhir::whereRaw("$rataAkhir between ? and ?", [83, 91.99])->count(),
+            'cukup' => NilaiAkhir::whereRaw("$rataAkhir between ? and ?", [75, 82.99])->count(),
+            'kurang' => NilaiAkhir::whereRaw("$rataAkhir < ?", [75])->count(),
         ];
 
         $totalTugas = Tugas::whereHas('kelasMapel', fn($q) => $q->aktif())->count();
