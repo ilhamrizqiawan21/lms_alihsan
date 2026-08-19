@@ -3,7 +3,9 @@
 use App\Http\Middleware\CheckBlockedIp;
 use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\RequirePasswordChange;
 use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\SecurityRateLimit;
 use App\Models\SystemError;
 use App\Support\SensitiveDataRedactor;
 use Illuminate\Foundation\Application;
@@ -11,7 +13,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Auth\AuthenticationException;
-use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthorizationException;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Session\TokenMismatchException;
@@ -23,8 +25,18 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(web: __DIR__.'/../routes/web.php', commands: __DIR__.'/../routes/console.php', health: '/up')
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->web(append: [CheckBlockedIp::class, HandleInertiaRequests::class, SecurityHeaders::class]);
-        $middleware->alias(['role' => CheckRole::class]);
+        $middleware->web(append: [
+            CheckBlockedIp::class,
+            HandleInertiaRequests::class,
+            SecurityHeaders::class,
+            SecurityRateLimit::class,
+            RequirePasswordChange::class,
+        ]);
+        $middleware->alias([
+            'role' => CheckRole::class,
+            'security.rate' => SecurityRateLimit::class,
+            'password.change' => RequirePasswordChange::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->report(function (\Throwable $e) {
