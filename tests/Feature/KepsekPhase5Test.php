@@ -44,7 +44,7 @@ class KepsekPhase5Test extends TestCase
             '/kepsek/laporan/rekap-absensi' => 'Kepsek/Laporan/RekapAbsensi',
             '/kepsek/laporan/rekap-tugas' => 'Kepsek/Laporan/RekapTugas',
             '/kepsek/laporan/rekap-sikap' => 'Kepsek/Laporan/RekapSikap',
-            '/kepsek/laporan/wali-kelas' => 'Kepsek/Laporan/WaliKelas',
+            '/kepsek/laporan/wali-kelas' => 'Kepsek/Laporan/WaliKelas/Index',
         ];
 
         foreach ($pages as $url => $component) {
