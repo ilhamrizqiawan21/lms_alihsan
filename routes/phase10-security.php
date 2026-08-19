@@ -26,7 +26,7 @@ Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(f
     Route::get('/tugas/{kelasMapel}/{tugas}/pengumpulan/{file}/download', [GuruTugasController::class, 'downloadFile'])->name('tugas.file.download')->middleware('can:mengajar,kelasMapel');
     Route::get('/tugas/{kelasMapel}/{tugas}/pengumpulan/{pengumpulan}/legacy-download', [GuruTugasController::class, 'downloadLegacyFile'])->name('tugas.pengumpulan.download')->middleware('can:mengajar,kelasMapel');
     Route::post('/tugas/{kelasMapel}/{tugas}/siswa/{siswa}/nilai', [GuruTugasController::class, 'nilai'])->name('tugas.nilai')->middleware('can:mengajar,kelasMapel');
-    Route::delete('/tugas/{tugas}', [GuruTugasController::class, 'destroy'])->name('tugas.destroy');
+    Route::delete('/tugas/{tugas}', [GuruTugasController::class, 'destroy'])->name('tugas.destroy')->middleware('can:mengajar-tugas,tugas');
 
     Route::get('/nilai', [NilaiController::class, 'index'])->name('nilai.index');
     Route::post('/nilai/store', [NilaiController::class, 'storeBulk'])->name('nilai.store.bulk');
@@ -60,7 +60,7 @@ Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(f
     Route::post('/chat/{kelasMapel}/send', [GuruChatController::class, 'send'])->name('chat.send')->middleware('can:mengajar,kelasMapel');
     Route::get('/notifikasi', [GuruNotifikasiController::class, 'index'])->name('notifikasi.index');
     Route::post('/notifikasi/{notifikasi}/read', [GuruNotifikasiController::class, 'markRead'])->name('notifikasi.mark-read');
-    Route::post('/notifikasi/mark-all-read', [GuruNotifikasiController::class, 'markAllRead'])->name('notifikasi.mark-all-read');
+    Route::post('/notifikasi/mark-all-read', [GuruNotifikasiController::class, 'mark-all-read');
 });
 
 Route::middleware(['auth', 'role:kepala_sekolah'])->prefix('kepsek')->name('kepsek.')->group(function () {
