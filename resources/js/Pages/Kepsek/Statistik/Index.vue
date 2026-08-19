@@ -8,8 +8,14 @@ import { Card, EmptyState, StatCard, TableWrapper } from '../../../Components/UI
 const props = defineProps({
     siswaPerKelas: { type: Array, default: () => [] },
     totalGuru: { type: Number, default: 0 },
+    totalSiswa: { type: Number, default: 0 },
+    totalKelas: { type: Number, default: 0 },
     absensiBulanan: { type: Array, default: () => [] },
     distribusiNilai: { type: Array, default: () => [] },
+    pembelajaran: {
+        type: Object,
+        default: () => ({ total_tugas: 0, total_pengumpulan: 0, total_dinilai: 0, persentase_dinilai: 0, rata_nilai_tugas: null }),
+    },
 });
 
 const siswaCanvas = ref(null);
@@ -96,16 +102,50 @@ onBeforeUnmount(() => {
 
     <AppShell title="Statistik">
         <PageHeader
-            title="Statistik"
+            title="Statistik Sekolah"
             icon="bi-graph-up-arrow"
-            subtitle="Pantau ringkasan statistik siswa, guru, absensi, dan nilai."
+            subtitle="Pantau kondisi siswa, guru, kelas, pembelajaran, absensi, dan hasil belajar sekolah."
         />
 
         <div class="stats-grid">
             <StatCard label="Total Guru" :value="totalGuru" icon="bi-person-workspace" />
-            <StatCard label="Total Kelas" :value="siswaPerKelas.length" icon="bi-building" />
-            <StatCard label="Total Siswa Aktif" :value="siswaPerKelas.reduce((total, item) => total + item.jumlah, 0)" icon="bi-people-fill" />
+            <StatCard label="Total Kelas" :value="totalKelas" icon="bi-building" />
+            <StatCard label="Total Siswa Aktif" :value="totalSiswa" icon="bi-people-fill" />
             <StatCard label="Data Nilai" :value="distribusiNilai.reduce((total, item) => total + item.value, 0)" icon="bi-bar-chart-fill" />
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <Card title="Statistik Pembelajaran" icon="bi-journal-check">
+                    <div class="row g-3">
+                        <div class="col-6 col-xl-3">
+                            <div class="border rounded p-3 h-100">
+                                <div class="text-muted small">Total Tugas Aktif</div>
+                                <div class="fs-4 fw-bold">{{ pembelajaran.total_tugas }}</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-xl-3">
+                            <div class="border rounded p-3 h-100">
+                                <div class="text-muted small">Total Pengumpulan</div>
+                                <div class="fs-4 fw-bold">{{ pembelajaran.total_pengumpulan }}</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-xl-3">
+                            <div class="border rounded p-3 h-100">
+                                <div class="text-muted small">Sudah Dinilai</div>
+                                <div class="fs-4 fw-bold">{{ pembelajaran.total_dinilai }}</div>
+                                <div class="text-muted small">{{ pembelajaran.persentase_dinilai }}% dari pengumpulan</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-xl-3">
+                            <div class="border rounded p-3 h-100">
+                                <div class="text-muted small">Rata-rata Nilai Tugas</div>
+                                <div class="fs-4 fw-bold">{{ pembelajaran.rata_nilai_tugas ?? '-' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+            </div>
         </div>
 
         <div class="row mb-4">
