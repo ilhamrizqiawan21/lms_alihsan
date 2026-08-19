@@ -16,6 +16,7 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\AuthorizationException;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Session\TokenMismatchException;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -23,7 +24,14 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
-    ->withRouting(web: __DIR__.'/../routes/web.php', commands: __DIR__.'/../routes/console.php', health: '/up')
+    ->withRouting(
+        web: __DIR__.'/../routes/web.php',
+        commands: __DIR__.'/../routes/console.php',
+        health: '/up',
+        then: function (): void {
+            Route::middleware('web')->group(base_path('routes/phase10-security.php'));
+        },
+    )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
             CheckBlockedIp::class,
