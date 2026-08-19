@@ -14,16 +14,16 @@ const props = defineProps({
 
 const showForm = ref(false);
 const editingId = ref(null);
-const form = useForm({ judul: '', isi: '', target: 'semua', target_kelas_ids: [], action: 'create', pengumuman_id: null });
+const editingUpdateUrl = ref(null);
+const form = useForm({ judul: '', isi: '', target: 'semua', target_kelas_ids: [] });
 const isAdmin = computed(() => page.props.auth?.user?.role === 'admin');
 const canPublish = computed(() => ['admin', 'guru'].includes(page.props.auth?.user?.role));
 
 function resetForm() {
     form.reset();
     form.clearErrors();
-    form.action = 'create';
-    form.pengumuman_id = null;
     editingId.value = null;
+    editingUpdateUrl.value = null;
 }
 
 function openCreate() {
@@ -37,14 +37,24 @@ function openEdit(item) {
     form.isi = item.isi ?? '';
     form.target = item.target ?? 'semua';
     form.target_kelas_ids = Array.isArray(item.target_kelas_ids) ? [...item.target_kelas_ids] : [];
-    form.action = 'update';
-    form.pengumuman_id = item.id;
     editingId.value = item.id;
+    editingUpdateUrl.value = item.update_url;
     showForm.value = true;
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function submit() {
+    if (editingId.value && editingUpdateUrl.value) {
+        form.put(editingUpdateUrl.value, {
+            preserveScroll: true,
+            onSuccess: () => {
+                resetForm();
+                showForm.value = false;
+            },
+        });
+        return;
+    }
+
     form.post(props.storeUrl, {
         preserveScroll: true,
         onSuccess: () => {
