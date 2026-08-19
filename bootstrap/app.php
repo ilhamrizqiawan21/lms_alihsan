@@ -6,6 +6,7 @@ use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RequirePasswordChange;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SecurityRateLimit;
+use App\Http\Middleware\SensitiveEndpointGuard;
 use App\Models\SystemError;
 use App\Support\SensitiveDataRedactor;
 use Illuminate\Foundation\Application;
@@ -38,6 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             SecurityHeaders::class,
             SecurityRateLimit::class,
+            SensitiveEndpointGuard::class,
             RequirePasswordChange::class,
         ]);
         $middleware->alias([
