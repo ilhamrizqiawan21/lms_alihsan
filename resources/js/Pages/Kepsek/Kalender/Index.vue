@@ -7,9 +7,6 @@ import AppShell from '../../../Layouts/AppShell.vue';
 defineProps({
     calendar: { type: Object, required: true },
     monthEvents: { type: Array, default: () => [] },
-    storeUrl: { type: String, required: true },
-    createTitle: { type: String, default: 'Tambah Event Sekolah' },
-    fixedScope: { type: String, default: 'school' },
     pageTitle: { type: String, default: 'Kalender dan Monitoring Event Sekolah' },
 });
 </script>
@@ -18,13 +15,16 @@ defineProps({
     <Head :title="pageTitle" />
 
     <AppShell title="Kalender">
-        <PageHeader :title="pageTitle" icon="bi-calendar3" />
+        <PageHeader
+            :title="pageTitle"
+            icon="bi-calendar3"
+            subtitle="Pantau agenda sekolah tanpa mengubah data kalender."
+        />
         <CalendarWorkspace
             :calendar="calendar"
             :month-events="monthEvents"
-            :store-url="storeUrl"
-            :create-title="createTitle"
-            :fixed-scope="fixedScope"
+            :read-only="true"
+            fixed-scope="school"
         />
     </AppShell>
 </template>
