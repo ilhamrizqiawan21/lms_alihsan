@@ -73,9 +73,9 @@ async function toggleActive(user) {
 }
 
 async function resetPassword(user) {
-    const confirmed = await window.confirmDialog?.(`Reset password ${user.nama_lengkap} ke 123456?`, {
+    const confirmed = await window.confirmDialog?.(`Generate password sementara baru untuk ${user.nama_lengkap}?`, {
         title: 'Reset Password',
-        confirmText: 'Ya, reset',
+        confirmText: 'Ya, generate password',
     });
 
     if (!confirmed) {
