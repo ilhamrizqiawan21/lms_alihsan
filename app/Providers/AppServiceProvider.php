@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\KelasMapel;
 use App\Policies\KelasMapelPolicy;
+use App\Policies\TugasPolicy;
 use App\Policies\WaliKelasPolicy;
 use App\Http\Controllers\Guru\NilaiController;
 use App\Http\Controllers\Guru\NilaiRekapController;
@@ -26,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::define('mengajar', [KelasMapelPolicy::class, 'mengajar']);
+        Gate::define('mengajar-tugas', [TugasPolicy::class, 'mengajar']);
         Gate::define('kelola-wali-kelas', [WaliKelasPolicy::class, 'kelola']);
         Gate::define('lihat-laporan-wali-kelas', [WaliKelasPolicy::class, 'lihatLaporan']);
 
