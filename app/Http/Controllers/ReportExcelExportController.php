@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\Reports\Exports\AbsensiExportService;
 use App\Services\Reports\Exports\NilaiExportService;
 use App\Services\Reports\Exports\TugasExportService;
+use App\Models\Pengaturan;
 use Illuminate\Http\Request;
 
 final class ReportExcelExportController extends Controller
@@ -40,9 +41,16 @@ final class ReportExcelExportController extends Controller
     {
         $rules = [
             'kelas_id' => ['required', 'integer', 'exists:kelas,id'],
-            'semester' => ['required', 'in:1,2'],
+            'semester' => ['nullable', 'in:1,2'],
         ];
-        if ($withMonth) $rules['bulan'] = ['required', 'date_format:Y-m'];
-        return $request->validate($rules);
+        if ($withMonth) $rules['bulan'] = ['nullable', 'date_format:Y-m'];
+
+        $validated = $request->validate($rules);
+
+        return [
+            'kelas_id' => (int) $validated['kelas_id'],
+            'semester' => (string) ($validated['semester'] ?? Pengaturan::getValue('semester_aktif', '1')),
+            'bulan' => (string) ($validated['bulan'] ?? date('Y-m')),
+        ];
     }
 }

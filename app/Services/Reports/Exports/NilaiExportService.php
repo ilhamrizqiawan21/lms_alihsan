@@ -40,6 +40,18 @@ final class NilaiExportService
 
     private function mapelList(int $kelasId, ?int $tahunAjaranId, string $semester)
     {
-        return KelasMapel::with('mataPelajaran')->where('kelas_id', $kelasId)->where('tahun_ajaran_id', $tahunAjaranId)->where('semester', $semester)->orderBy('mapel_id')->get()->map(fn (KelasMapel $item) => (object) ['kelas_mapel_id' => $item->id, 'nama_mapel' => $item->mataPelajaran?->nama_mapel ?? '-']);
+        return KelasMapel::with('mataPelajaran')
+            ->where('kelas_id', $kelasId)
+            ->where('tahun_ajaran_id', $tahunAjaranId)
+            ->where('semester', $semester)
+            ->join('mata_pelajaran', 'mata_pelajaran.id', '=', 'kelas_mapel.mapel_id')
+            ->orderBy('mata_pelajaran.urutan')
+            ->orderBy('mata_pelajaran.nama_mapel')
+            ->select('kelas_mapel.*')
+            ->get()
+            ->map(fn (KelasMapel $item) => (object) [
+                'kelas_mapel_id' => $item->id,
+                'nama_mapel' => $item->mataPelajaran?->nama_mapel ?? '-',
+            ]);
     }
 }

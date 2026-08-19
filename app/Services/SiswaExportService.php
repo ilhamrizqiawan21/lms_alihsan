@@ -24,7 +24,7 @@ class SiswaExportService
         $writer->openToFile($filePath);
         $writer->getCurrentSheet()->setName('Data Siswa');
 
-        foreach ([22, 32, 20, 18, 24, 12] as $column => $width) {
+        foreach ([16, 22, 32, 20, 18, 14, 18, 20] as $column => $width) {
             $writer->getCurrentSheet()->setColumnWidth($width, $column + 1);
         }
 
@@ -36,12 +36,21 @@ class SiswaExportService
         $writer->addRow(Row::fromValuesWithStyle(['Tanggal Export', now()->format('d/m/Y H:i')], $styles['meta'], 18));
         $writer->addRow(Row::fromValues([]));
         $writer->addRow(Row::fromValuesWithStyle([
-            'NIS', 'Username', 'Nama', 'Kelas', 'Jenis Kelamin', 'Status',
+            'NIS',
+            'Username',
+            'Nama',
+            'Kelas',
+            'Jenis Kelamin',
+            'Status Siswa',
+            'Password Default',
+            'Status Password',
         ], $styles['tableHeader'], 24));
 
-        $query->orderBy('nis')->chunk(500, function ($students) use ($writer, $styles) {
-            foreach ($students as $index => $siswa) {
+        $rowIndex = 0;
+        $query->chunk(500, function ($students) use ($writer, $styles, &$rowIndex) {
+            foreach ($students as $siswa) {
                 $kelas = trim(($siswa->kelas?->tingkat ? $siswa->kelas->tingkat.' ' : '').($siswa->kelas?->nama_kelas ?? '')) ?: '-';
+                $isDefaultPassword = (bool) $siswa->user?->is_password_default;
                 $values = [
                     $siswa->nis ?? '-',
                     $siswa->user?->username ?? '-',
@@ -49,12 +58,15 @@ class SiswaExportService
                     $kelas,
                     $siswa->user?->jenis_kelamin ?? '-',
                     $siswa->status ?? '-',
+                    User::DEFAULT_PASSWORD,
+                    $isDefaultPassword ? 'Masih default' : 'Sudah diubah',
                 ];
                 $writer->addRow(Row::fromValuesWithStyle(
                     $values,
-                    $index % 2 === 0 ? $styles['row'] : $styles['alternateRow'],
+                    $rowIndex % 2 === 0 ? $styles['row'] : $styles['alternateRow'],
                     20
                 ));
+                $rowIndex++;
             }
         });
 

@@ -41,6 +41,7 @@ use App\Http\Controllers\Kepsek\LaporanController;
 use App\Http\Controllers\Kepsek\StatistikController;
 use App\Http\Controllers\Kepsek\KalenderController as KepsekKalenderController;
 use App\Http\Controllers\ExportController;
+use App\Http\Controllers\ReportExcelExportController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
@@ -100,11 +101,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/rekap/nilai', [RekapController::class, 'nilai'])->name('rekap.nilai');
     Route::get('/rekap/sikap', [RekapController::class, 'sikap'])->name('rekap.sikap');
     Route::get('/rekap/tugas', [RekapController::class, 'tugas'])->name('rekap.tugas');
-    Route::get('/export/nilai/excel', [ExportController::class, 'excelNilai'])->name('export.nilai.excel');
+    Route::get('/export/nilai/excel', [ReportExcelExportController::class, 'nilai'])->name('export.nilai.excel');
     Route::get('/export/nilai/pdf', [ExportController::class, 'pdfNilai'])->name('export.nilai.pdf');
-    Route::get('/export/absensi/excel', [ExportController::class, 'excelAbsensi'])->name('export.absensi.excel');
+    Route::get('/export/absensi/excel', [ReportExcelExportController::class, 'absensi'])->name('export.absensi.excel');
     Route::get('/export/absensi/pdf', [ExportController::class, 'pdfAbsensi'])->name('export.absensi.pdf');
-    Route::get('/export/tugas/excel', [ExportController::class, 'excelTugas'])->name('export.tugas.excel');
+    Route::get('/export/tugas/excel', [ReportExcelExportController::class, 'tugas'])->name('export.tugas.excel');
     Route::get('/export/tugas/pdf', [ExportController::class, 'pdfTugas'])->name('export.tugas.pdf');
     Route::get('/export/sikap/excel', [ExportController::class, 'excelSikap'])->name('export.sikap.excel');
     Route::get('/export/sikap/pdf', [ExportController::class, 'pdfSikap'])->name('export.sikap.pdf');

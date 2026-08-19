@@ -7,6 +7,7 @@ use App\Models\Kelas;
 use App\Models\Role;
 use App\Models\Siswa;
 use App\Models\User;
+use App\Services\SiswaExportService;
 use App\Services\SiswaImportService;
 use App\Services\SiswaTemplateService;
 use Illuminate\Http\Request;
@@ -15,16 +16,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Inertia\Inertia;
-use OpenSpout\Common\Entity\Row;
-use OpenSpout\Common\Entity\Style\Border;
-use OpenSpout\Common\Entity\Style\BorderName;
-use OpenSpout\Common\Entity\Style\BorderPart;
-use OpenSpout\Common\Entity\Style\BorderWidth;
-use OpenSpout\Common\Entity\Style\CellAlignment;
-use OpenSpout\Common\Entity\Style\CellVerticalAlignment;
-use OpenSpout\Common\Entity\Style\Color;
-use OpenSpout\Common\Entity\Style\Style;
-use OpenSpout\Writer\XLSX\Writer;
 
 class KelasSiswaController extends Controller
 {
@@ -101,11 +92,12 @@ class KelasSiswaController extends Controller
         ]);
     }
 
-    public function exportExcel(Request $request)
+    public function exportExcel(Request $request, SiswaExportService $exportService)
     {
         $request->validate([
             'kelas_id' => 'nullable|exists:kelas,id',
             'search' => 'nullable|string|max:100',
+            'status' => 'nullable|in:aktif,lulus,keluar',
         ]);
 
         $query = Siswa::with(['user', 'kelas'])
@@ -124,47 +116,12 @@ class KelasSiswaController extends Controller
             });
         }
 
-        $writer = new Writer();
-        $filePath = tempnam(sys_get_temp_dir(), 'siswa_');
-        $filename = 'status_password_siswa_' . date('Ymd_His') . '.xlsx';
-
-        $writer->openToFile($filePath);
-        $writer->getCurrentSheet()->setColumnWidth(22, 1);
-        $writer->getCurrentSheet()->setColumnWidth(32, 2);
-        $writer->getCurrentSheet()->setColumnWidth(18, 3);
-        $writer->getCurrentSheet()->setColumnWidth(18, 4);
-        $writer->getCurrentSheet()->setColumnWidth(24, 5);
-
-        $styles = $this->excelStyles();
-        $writer->addRow(Row::fromValuesWithStyle([school_setting('school_name', 'Nama Sekolah')], $styles['school'], 24));
-        $writer->addRow(Row::fromValuesWithStyle(['STATUS PASSWORD SISWA'], $styles['title'], 24));
-        $writer->addRow(Row::fromValuesWithStyle(['Tanggal Export', now()->format('d/m/Y H:i')], $styles['meta'], 18));
-        $writer->addRow(Row::fromValues([]));
-        $writer->addRow(Row::fromValuesWithStyle([
-            'Username',
-            'Nama',
-            'Kelas',
-            'Password Default',
-            'Status Password',
-        ], $styles['tableHeader'], 24));
-
-        $query->get()->values()->each(function (Siswa $siswa, int $index) use ($writer, $styles) {
-            $user = $siswa->user;
-            $isDefaultPassword = (bool) $user?->is_password_default;
-
-            $writer->addRow(Row::fromValuesWithStyle([
-                $user?->username ?? '-',
-                $user?->nama_lengkap ?? '-',
-                trim(($siswa->kelas?->tingkat ? $siswa->kelas->tingkat . ' ' : '') . ($siswa->kelas?->nama_kelas ?? '')) ?: '-',
-                User::DEFAULT_PASSWORD,
-                $isDefaultPassword ? 'Masih default' : 'Sudah diubah',
-            ], $index % 2 === 0 ? $styles['row'] : $styles['alternateRow'], 20));
-        });
-
-        $writer->close();
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
 
         return response()
-            ->download($filePath, $filename)
+            ->download($exportService->export($query), 'export_siswa_' . date('Ymd_His') . '.xlsx')
             ->deleteFileAfterSend(true);
     }
 
@@ -367,48 +324,4 @@ class KelasSiswaController extends Controller
         ]);
     }
 
-    private function excelStyles(): array
-    {
-        $border = new Border(
-            new BorderPart(BorderName::TOP, 'CBD5E1', BorderWidth::THIN),
-            new BorderPart(BorderName::RIGHT, 'CBD5E1', BorderWidth::THIN),
-            new BorderPart(BorderName::BOTTOM, 'CBD5E1', BorderWidth::THIN),
-            new BorderPart(BorderName::LEFT, 'CBD5E1', BorderWidth::THIN),
-        );
-
-        $base = (new Style())
-            ->withFontName('Arial')
-            ->withFontSize(10)
-            ->withShouldWrapText(true)
-            ->withCellVerticalAlignment(CellVerticalAlignment::CENTER);
-
-        return [
-            'school' => $base
-                ->withFontBold(true)
-                ->withFontSize(14)
-                ->withFontColor('0F172A')
-                ->withCellAlignment(CellAlignment::CENTER),
-            'title' => $base
-                ->withFontBold(true)
-                ->withFontSize(13)
-                ->withFontColor(Color::WHITE)
-                ->withBackgroundColor('1D4ED8')
-                ->withCellAlignment(CellAlignment::CENTER),
-            'meta' => $base
-                ->withFontColor('475569')
-                ->withBackgroundColor('F8FAFC'),
-            'tableHeader' => $base
-                ->withFontBold(true)
-                ->withFontColor(Color::WHITE)
-                ->withBackgroundColor('334155')
-                ->withCellAlignment(CellAlignment::CENTER)
-                ->withBorder($border),
-            'row' => $base
-                ->withBackgroundColor(Color::WHITE)
-                ->withBorder($border),
-            'alternateRow' => $base
-                ->withBackgroundColor('F8FAFC')
-                ->withBorder($border),
-        ];
-    }
 }
