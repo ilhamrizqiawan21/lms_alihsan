@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Notifikasi;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
