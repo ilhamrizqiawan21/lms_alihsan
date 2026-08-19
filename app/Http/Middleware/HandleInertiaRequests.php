@@ -116,8 +116,10 @@ class HandleInertiaRequests extends Middleware
     private function notificationRoute(?string $role): ?string
     {
         return match ($role) {
+            'admin' => route('admin.notifikasi.index'),
             'guru' => route('guru.notifikasi.index'),
             'siswa' => route('siswa.notifikasi.index'),
+            'kepala_sekolah' => route('kepsek.notifikasi.index'),
             default => null,
         };
     }
@@ -125,15 +127,17 @@ class HandleInertiaRequests extends Middleware
     private function notificationMarkAllRoute(?string $role): ?string
     {
         return match ($role) {
+            'admin' => route('admin.notifikasi.mark-all-read'),
             'guru' => route('guru.notifikasi.mark-all-read'),
             'siswa' => route('siswa.notifikasi.mark-all-read'),
+            'kepala_sekolah' => route('kepsek.notifikasi.mark-all-read'),
             default => null,
         };
     }
 
     private function unreadNotificationCount($user, ?string $role): int
     {
-        if (! $user || ! in_array($role, ['guru', 'siswa'], true)) {
+        if (! $user || ! in_array($role, ['admin', 'guru', 'siswa', 'kepala_sekolah'], true)) {
             return 0;
         }
 
@@ -146,7 +150,7 @@ class HandleInertiaRequests extends Middleware
 
     private function latestNotifications($user, ?string $role): array
     {
-        if (! $user || ! in_array($role, ['guru', 'siswa'], true)) {
+        if (! $user || ! in_array($role, ['admin', 'guru', 'siswa', 'kepala_sekolah'], true)) {
             return [];
         }
 
@@ -162,8 +166,10 @@ class HandleInertiaRequests extends Middleware
                     'is_read' => (bool) $notification->is_read,
                     'created_at' => optional($notification->created_at)->diffForHumans(),
                     'mark_read_route' => match ($role) {
+                        'admin' => route('admin.notifikasi.mark-read', $notification),
                         'guru' => route('guru.notifikasi.mark-read', $notification),
                         'siswa' => route('siswa.notifikasi.mark-read', $notification),
+                        'kepala_sekolah' => route('kepsek.notifikasi.mark-read', $notification),
                         default => null,
                     },
                 ])
