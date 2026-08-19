@@ -50,9 +50,10 @@ class SensitiveEndpointGuard
             'is_password_default' => true,
         ])->save();
 
-        return back()
-            ->with('success', "Password {$user->nama_lengkap} berhasil direset. Password sementara hanya ditampilkan sekali.")
-            ->with('temporary_password', $temporaryPassword);
+        return back()->with(
+            'success',
+            "Password {$user->nama_lengkap} berhasil direset. Password sementara: {$temporaryPassword}. Segera berikan kepada pengguna dan minta pengguna menggantinya."
+        );
     }
 
     private function secureStudentResetPassword(Request $request): Response
