@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Kelas;
 use App\Models\KelasMapel;
-use App\Models\Pengumuman;
 use App\Models\Notifikasi;
+use App\Models\Pengumuman;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -91,7 +91,7 @@ class PengumumanController extends Controller
 
     private function notifyRecipients(Pengumuman $pengumuman): void
     {
-        $query = User::query()->where('is_active', true)->whereKeyNot(Auth::id());
+        $query = User::query()->where('is_active', true)->where('id', '!=', Auth::id());
         $target = $pengumuman->target;
 
         if ($target === 'guru') {
@@ -106,21 +106,21 @@ class PengumumanController extends Controller
             $query->whereHas('role', fn ($q) => $q->whereIn('nama_role', ['guru', 'siswa', 'kepala_sekolah']));
         }
 
-        foreach ($query->pluck('id') as $userId) {
+        $users = $query->with('role')->get(['id', 'role_id']);
+        foreach ($users as $user) {
             Notifikasi::create([
-                'user_id' => $userId,
+                'user_id' => $user->id,
                 'tipe' => 'pengumuman_baru',
                 'judul' => 'Pengumuman baru',
                 'pesan' => $pengumuman->judul,
-                'link' => $this->notificationLinkForUser($userId, $pengumuman),
+                'link' => $this->notificationLinkForUser($user, $pengumuman),
             ]);
         }
     }
 
-    private function notificationLinkForUser(int $userId, Pengumuman $pengumuman): string
+    private function notificationLinkForUser(User $user, Pengumuman $pengumuman): string
     {
-        $role = User::with('role')->find($userId)?->role?->nama_role;
-        return match ($role) {
+        return match ($user->role?->nama_role) {
             'siswa' => route('siswa.pengumuman.show', $pengumuman),
             'guru' => route('guru.pengumuman.show', $pengumuman),
             'kepala_sekolah' => route('kepsek.pengumuman.show', $pengumuman),
