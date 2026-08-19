@@ -1,6 +1,6 @@
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import PageHeader from '../../../Components/AppShell/PageHeader.vue';
 import { FileInput, TextareaInput } from '../../../Components/Form';
 import AppShell from '../../../Layouts/AppShell.vue';
@@ -16,6 +16,9 @@ const form = useForm({
     files: [],
     teks_jawaban: '',
 });
+const allowedUploadExtensions = ['jpg', 'jpeg', 'pdf'];
+const maxUploadSizeInBytes = 5 * 1024 * 1024;
+const fileInputKey = ref(0);
 
 const uploadFileError = computed(() => {
     const errors = [
@@ -41,10 +44,60 @@ function statusLabel(status) {
     return status ? status.replace(/\b\w/g, (char) => char.toUpperCase()) : '-';
 }
 
+function selectedFiles(files) {
+    return Array.isArray(files) ? files.filter(Boolean) : (files ? [files] : []);
+}
+
+function clearUploadErrors() {
+    form.clearErrors('file_upload', 'files');
+
+    Object.keys(form.errors)
+        .filter((key) => key.startsWith('files.'))
+        .forEach((key) => form.clearErrors(key));
+}
+
+function validateSelectedFiles(files) {
+    if (files.length > 5) {
+        return 'Maksimal 5 file untuk satu pengumpulan tugas.';
+    }
+
+    const invalidFile = files.find((file) => {
+        const extension = file.name.split('.').pop()?.toLowerCase();
+
+        return !allowedUploadExtensions.includes(extension);
+    });
+
+    if (invalidFile) {
+        return `Format file "${invalidFile.name}" tidak didukung. Gunakan JPG, JPEG, atau PDF.`;
+    }
+
+    const oversizedFile = files.find((file) => file.size > maxUploadSizeInBytes);
+
+    return oversizedFile ? `Ukuran file "${oversizedFile.name}" melebihi 5MB.` : '';
+}
+
 function submit() {
+    const files = selectedFiles(form.files);
+    const uploadError = validateSelectedFiles(files);
+
+    if (uploadError) {
+        form.setError('files', uploadError);
+        return;
+    }
+
+    form.transform((data) => ({
+        teks_jawaban: data.teks_jawaban,
+        ...(files.length ? { files } : {}),
+    }));
+
     form.post(props.tugas.store_url, {
         preserveScroll: true,
         forceFormData: true,
+        onSuccess: () => {
+            form.reset('files');
+            fileInputKey.value += 1;
+        },
+        onFinish: () => form.transform((data) => data),
     });
 }
 </script>
@@ -131,6 +184,7 @@ function submit() {
                 <Card v-if="canSubmit" title="Kumpulkan Tugas" icon="bi-upload">
                     <form @submit.prevent="submit">
                         <FileInput
+                            :key="fileInputKey"
                             v-model="form.files"
                             name="files[]"
                             label="Upload File"
@@ -140,6 +194,7 @@ function submit() {
                             multiple
                             help="Opsional jika jawaban dikirim lewat teks."
                             :error="uploadFileError"
+                            @update:model-value="clearUploadErrors"
                         />
                         <TextareaInput
                             v-model="form.teks_jawaban"

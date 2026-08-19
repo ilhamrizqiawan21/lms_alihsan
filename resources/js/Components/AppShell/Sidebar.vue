@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
 import SidebarLink from './SidebarLink.vue';
 import { sidebarMenu } from './sidebarMenu';
 
@@ -10,16 +11,24 @@ const props = defineProps({
     capabilities: { type: Object, default: () => ({}) },
 });
 
-const path = computed(() => window.location.pathname);
+const page = usePage();
 const menu = computed(() => sidebarMenu(props.user?.role, props.capabilities));
+const mobileMenu = computed(() => menu.value
+    .filter((entry) => entry.type === 'item' && entry.inertia && entry.href)
+    .slice(0, 5));
+
+const currentPath = computed(() => {
+    const url = page.url || '/';
+    return url.split('?')[0].split('#')[0] || '/';
+});
 
 function isActive(entry) {
-    return entry.activePrefixes?.some((prefix) => path.value === prefix || path.value.startsWith(`${prefix}/`));
+    return entry.activePrefixes?.some((prefix) => currentPath.value === prefix || currentPath.value.startsWith(`${prefix}/`));
 }
 </script>
 
 <template>
-    <aside id="sidebar" class="sidebar" :class="{ 'sidebar-open': open }">
+    <aside id="sidebar" class="sidebar modern-sidebar" :class="{ 'sidebar-open': open }">
         <div class="sidebar-header">
             <div class="sidebar-logo-icon">
                 <img :src="school.logo_url" :alt="`Logo ${school.name}`" class="app-logo-md" width="36" height="36" decoding="async">
@@ -56,4 +65,19 @@ function isActive(entry) {
             <div class="sidebar-footer-sub">Tahun {{ new Date().getFullYear() }}</div>
         </div>
     </aside>
+
+    <nav v-if="mobileMenu.length" class="mobile-bottom-nav" aria-label="Navigasi cepat">
+        <Link
+            v-for="entry in mobileMenu"
+            :key="entry.href"
+            :href="entry.href"
+            prefetch="hover"
+            class="mobile-bottom-link"
+            :class="{ active: isActive(entry) }"
+            :aria-current="isActive(entry) ? 'page' : undefined"
+        >
+            <i class="bi" :class="entry.icon" aria-hidden="true"></i>
+            <span>{{ entry.label }}</span>
+        </Link>
+    </nav>
 </template>

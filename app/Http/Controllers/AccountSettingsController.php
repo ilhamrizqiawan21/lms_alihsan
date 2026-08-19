@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 
 class AccountSettingsController extends Controller
@@ -41,8 +42,12 @@ class AccountSettingsController extends Controller
     public function update(Request $request)
     {
         $validated = $request->validate([
-            'current_password' => 'required|current_password',
-            'password' => 'required|string|min:8|confirmed',
+            'current_password' => ['required', 'current_password'],
+            'password' => [
+                'required',
+                'confirmed',
+                Password::min(10)->letters()->mixedCase()->numbers()->symbols(),
+            ],
         ]);
 
         $request->user()->update([
@@ -59,6 +64,7 @@ class AccountSettingsController extends Controller
             'admin' => route('admin.pengaturan-akun.update'),
             'guru' => route('guru.pengaturan.update'),
             'siswa' => route('siswa.pengaturan.update'),
+            'kepala_sekolah' => route('kepsek.pengaturan.update'),
             default => url()->current(),
         };
     }

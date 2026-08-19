@@ -4,6 +4,13 @@ import { Link } from '@inertiajs/vue3';
 defineProps({
     links: { type: Array, default: () => [] },
 });
+
+function cleanLabel(label) {
+    return String(label)
+        .replace('&laquo;', '‹')
+        .replace('&raquo;', '›')
+        .replace(/<[^>]*>/g, '');
+}
 </script>
 
 <template>
@@ -20,9 +27,10 @@ defineProps({
                     class="page-link"
                     :href="link.url"
                     preserve-scroll
-                    v-html="link.label"
-                />
-                <span v-else class="page-link" v-html="link.label"></span>
+                >
+                    {{ cleanLabel(link.label) }}
+                </Link>
+                <span v-else class="page-link">{{ cleanLabel(link.label) }}</span>
             </li>
         </ul>
     </nav>

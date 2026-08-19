@@ -7,30 +7,28 @@ use App\Models\Kelas;
 use App\Models\Role;
 use App\Models\Siswa;
 use App\Models\User;
+use App\Services\SiswaExportService;
 use App\Services\SiswaImportService;
 use App\Services\SiswaTemplateService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Inertia\Inertia;
-use OpenSpout\Common\Entity\Row;
-use OpenSpout\Common\Entity\Style\Border;
-use OpenSpout\Common\Entity\Style\BorderName;
-use OpenSpout\Common\Entity\Style\BorderPart;
-use OpenSpout\Common\Entity\Style\BorderWidth;
-use OpenSpout\Common\Entity\Style\CellAlignment;
-use OpenSpout\Common\Entity\Style\CellVerticalAlignment;
-use OpenSpout\Common\Entity\Style\Color;
-use OpenSpout\Common\Entity\Style\Style;
-use OpenSpout\Writer\XLSX\Writer;
 
 class KelasSiswaController extends Controller
 {
     public function index(Request $request)
     {
+        $request->validate([
+            'kelas_id' => 'nullable|exists:kelas,id',
+            'search' => 'nullable|string|max:100',
+            'status' => 'nullable|in:aktif,lulus,keluar',
+        ]);
+
         $kelasList = Kelas::withCount(['siswa' => fn ($query) => $query->where('status', 'aktif')])
-            ->orderBy('tingkat')
+            ->orderByRaw("CASE tingkat WHEN 'VII' THEN 1 WHEN 'VIII' THEN 2 WHEN 'IX' THEN 3 ELSE 4 END")
             ->orderBy('nama_kelas')
             ->get();
         //Urutan User berdasarkan NIS/Kode Guru
@@ -48,6 +46,9 @@ class KelasSiswaController extends Controller
                   ->orWhereHas('user', fn($u) => $u->where('nama_lengkap', 'like', "%{$search}%"));
             });
         }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
 
         $siswa = $query->paginate(25)
             ->withQueryString()
@@ -60,6 +61,7 @@ class KelasSiswaController extends Controller
                     'kelas_id' => $siswa->kelas_id,
                     'kelas' => trim(($siswa->kelas?->tingkat ? $siswa->kelas->tingkat . ' ' : '') . ($siswa->kelas?->nama_kelas ?? '')),
                     'status' => $siswa->status,
+                    'is_active' => (bool) $siswa->user?->is_active,
                     'tinggal_kelas' => (bool) $siswa->tinggal_kelas,
                     'nama_lengkap' => $siswa->user?->nama_lengkap,
                     'jenis_kelamin' => $siswa->user?->jenis_kelamin,
@@ -77,7 +79,12 @@ class KelasSiswaController extends Controller
                 'siswa_count' => $kelas->siswa_count,
             ]),
             'siswa' => $siswa,
-            'filters' => $request->only(['kelas_id', 'search']),
+            'filters' => $request->only(['kelas_id', 'search', 'status']),
+            'metrics' => [
+                'total_siswa_aktif' => Siswa::where('status', 'aktif')->count(),
+                'total_lulus' => Siswa::where('status', 'lulus')->count(),
+                'total_keluar' => Siswa::where('status', 'keluar')->count(),
+            ],
             'importErrors' => session('import_errors', []),
             'studentPassword' => session('student_password'),
             'templateUrl' => route('admin.kelas-siswa.import.template'),
@@ -85,11 +92,12 @@ class KelasSiswaController extends Controller
         ]);
     }
 
-    public function exportExcel(Request $request)
+    public function exportExcel(Request $request, SiswaExportService $exportService)
     {
         $request->validate([
             'kelas_id' => 'nullable|exists:kelas,id',
             'search' => 'nullable|string|max:100',
+            'status' => 'nullable|in:aktif,lulus,keluar',
         ]);
 
         $query = Siswa::with(['user', 'kelas'])
@@ -108,47 +116,12 @@ class KelasSiswaController extends Controller
             });
         }
 
-        $writer = new Writer();
-        $filePath = tempnam(sys_get_temp_dir(), 'siswa_');
-        $filename = 'status_password_siswa_' . date('Ymd_His') . '.xlsx';
-
-        $writer->openToFile($filePath);
-        $writer->getCurrentSheet()->setColumnWidth(22, 1);
-        $writer->getCurrentSheet()->setColumnWidth(32, 2);
-        $writer->getCurrentSheet()->setColumnWidth(18, 3);
-        $writer->getCurrentSheet()->setColumnWidth(18, 4);
-        $writer->getCurrentSheet()->setColumnWidth(24, 5);
-
-        $styles = $this->excelStyles();
-        $writer->addRow(Row::fromValuesWithStyle([school_setting('school_name', 'Nama Sekolah')], $styles['school'], 24));
-        $writer->addRow(Row::fromValuesWithStyle(['STATUS PASSWORD SISWA'], $styles['title'], 24));
-        $writer->addRow(Row::fromValuesWithStyle(['Tanggal Export', now()->format('d/m/Y H:i')], $styles['meta'], 18));
-        $writer->addRow(Row::fromValues([]));
-        $writer->addRow(Row::fromValuesWithStyle([
-            'Username',
-            'Nama',
-            'Kelas',
-            'Password Default',
-            'Status Password',
-        ], $styles['tableHeader'], 24));
-
-        $query->get()->values()->each(function (Siswa $siswa, int $index) use ($writer, $styles) {
-            $user = $siswa->user;
-            $isDefaultPassword = (bool) $user?->is_password_default;
-
-            $writer->addRow(Row::fromValuesWithStyle([
-                $user?->username ?? '-',
-                $user?->nama_lengkap ?? '-',
-                trim(($siswa->kelas?->tingkat ? $siswa->kelas->tingkat . ' ' : '') . ($siswa->kelas?->nama_kelas ?? '')) ?: '-',
-                User::DEFAULT_PASSWORD,
-                $isDefaultPassword ? 'Masih default' : 'Sudah diubah',
-            ], $index % 2 === 0 ? $styles['row'] : $styles['alternateRow'], 20));
-        });
-
-        $writer->close();
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
 
         return response()
-            ->download($filePath, $filename)
+            ->download($exportService->export($query), 'export_siswa_' . date('Ymd_His') . '.xlsx')
             ->deleteFileAfterSend(true);
     }
 
@@ -177,6 +150,8 @@ class KelasSiswaController extends Controller
     //Save new Siswa
     public function storeSiswa(Request $request)
     {
+        $this->normalizeSiswaInput($request);
+
         $validated = $request->validate([
             'nis' => 'required|string|max:20|unique:siswa,nis|unique:users,username',
             'nama_lengkap' => 'required|string|max:100',
@@ -201,6 +176,7 @@ class KelasSiswaController extends Controller
                     'password' => Hash::make($password),
                     'is_password_default' => true,
                     'nama_lengkap' => $validated['nama_lengkap'],
+                    'nip_nis' => $validated['nis'],
                     'role_id' => $siswaRoleId,
                     'jenis_kelamin' => $validated['jenis_kelamin'],
                     'is_active' => true,
@@ -235,6 +211,7 @@ class KelasSiswaController extends Controller
     //Edit Siswa
     public function updateSiswa(Request $request, Siswa $siswa)
     {
+        $this->normalizeSiswaInput($request);
         $userId = $siswa->user_id;
 
         $validated = $request->validate([
@@ -246,14 +223,18 @@ class KelasSiswaController extends Controller
         ]);
 
         DB::transaction(function () use ($siswa, $validated) {
+            $user = $siswa->user;
+            abort_unless($user, 404);
+
             $siswa->update([
                 'nis' => $validated['nis'],
                 'kelas_id' => $validated['kelas_id'],
                 'tinggal_kelas' => $validated['tinggal_kelas'] ?? false,
             ]);
 
-            $siswa->user->update([
+            $user->update([
                 'username' => $validated['nis'],
+                'nip_nis' => $validated['nis'],
                 'nama_lengkap' => $validated['nama_lengkap'],
                 'jenis_kelamin' => $validated['jenis_kelamin'],
             ]);
@@ -264,9 +245,11 @@ class KelasSiswaController extends Controller
     //Reset password ke password default.
     public function resetPassword(Siswa $siswa)
     {
+        $user = $siswa->user;
+        abort_unless($user, 404);
         $password = $this->generateInitialPassword();
 
-        $siswa->user->update([
+        $user->update([
             'password' => Hash::make($password),
             'is_password_default' => true,
         ]);
@@ -275,18 +258,32 @@ class KelasSiswaController extends Controller
             ->with('success', 'Password siswa berhasil direset.')
             ->with('student_password', [
                 'title' => 'Password baru siswa',
-                'name' => $siswa->user->nama_lengkap,
-                'username' => $siswa->user->username,
+                'name' => $user->nama_lengkap,
+                'username' => $user->username,
                 'password' => $password,
             ]);
     }
     //Delete Siswa beserta Usernya
     public function destroySiswa(Siswa $siswa)
     {
+        $siswa->loadMissing('user');
+        abort_unless($siswa->user, 404);
+
+        if ($siswa->absensi()->exists()
+            || $siswa->pengumpulanTugas()->exists()
+            || $siswa->nilaiAkhir()->exists()
+            || $siswa->sikapSosial()->exists()
+            || $siswa->sikapSpiritual()->exists()) {
+            return back()->with('error', 'Siswa tidak dapat dihapus karena sudah memiliki riwayat akademik. Ubah status siswa menjadi keluar atau lulus.');
+        }
+
         $nama = $siswa->user->nama_lengkap;
-        $userId = $siswa->user_id;
-        $siswa->delete();
-        User::destroy($userId);
+
+        DB::transaction(function () use ($siswa) {
+            $siswa->delete();
+            $siswa->user->delete();
+        });
+
         return back()->with('success', "Siswa {$nama} berhasil dihapus.");
     }
     //Tampilkan daftar siswa yang sudah lulus
@@ -296,9 +293,20 @@ class KelasSiswaController extends Controller
             return back()->with('error', 'Hanya kelas IX yang bisa diluluskan.');
         }
 
-        $count = Siswa::where('kelas_id', $kelas->id)
-            ->where('status', 'aktif')
-            ->update(['status' => 'lulus']);
+        $count = DB::transaction(function () use ($kelas) {
+            $siswa = Siswa::where('kelas_id', $kelas->id)
+                ->where('status', 'aktif')
+                ->get(['id', 'user_id']);
+
+            if ($siswa->isEmpty()) {
+                return 0;
+            }
+
+            Siswa::whereIn('id', $siswa->pluck('id'))->update(['status' => 'lulus']);
+            User::whereIn('id', $siswa->pluck('user_id')->filter())->update(['is_active' => false]);
+
+            return $siswa->count();
+        });
 
         return back()->with('success', "{$count} siswa kelas {$kelas->nama_kelas} berhasil diluluskan.");
     }
@@ -308,48 +316,12 @@ class KelasSiswaController extends Controller
         return User::DEFAULT_PASSWORD;
     }
 
-    private function excelStyles(): array
+    private function normalizeSiswaInput(Request $request): void
     {
-        $border = new Border(
-            new BorderPart(BorderName::TOP, 'CBD5E1', BorderWidth::THIN),
-            new BorderPart(BorderName::RIGHT, 'CBD5E1', BorderWidth::THIN),
-            new BorderPart(BorderName::BOTTOM, 'CBD5E1', BorderWidth::THIN),
-            new BorderPart(BorderName::LEFT, 'CBD5E1', BorderWidth::THIN),
-        );
-
-        $base = (new Style())
-            ->withFontName('Arial')
-            ->withFontSize(10)
-            ->withShouldWrapText(true)
-            ->withCellVerticalAlignment(CellVerticalAlignment::CENTER);
-
-        return [
-            'school' => $base
-                ->withFontBold(true)
-                ->withFontSize(14)
-                ->withFontColor('0F172A')
-                ->withCellAlignment(CellAlignment::CENTER),
-            'title' => $base
-                ->withFontBold(true)
-                ->withFontSize(13)
-                ->withFontColor(Color::WHITE)
-                ->withBackgroundColor('1D4ED8')
-                ->withCellAlignment(CellAlignment::CENTER),
-            'meta' => $base
-                ->withFontColor('475569')
-                ->withBackgroundColor('F8FAFC'),
-            'tableHeader' => $base
-                ->withFontBold(true)
-                ->withFontColor(Color::WHITE)
-                ->withBackgroundColor('334155')
-                ->withCellAlignment(CellAlignment::CENTER)
-                ->withBorder($border),
-            'row' => $base
-                ->withBackgroundColor(Color::WHITE)
-                ->withBorder($border),
-            'alternateRow' => $base
-                ->withBackgroundColor('F8FAFC')
-                ->withBorder($border),
-        ];
+        $request->merge([
+            'nis' => Str::upper(trim((string) $request->input('nis'))),
+            'nama_lengkap' => trim((string) $request->input('nama_lengkap')),
+        ]);
     }
+
 }

@@ -1,9 +1,9 @@
 <script setup>
 import { Head, router, useForm } from '@inertiajs/vue3';
-import PageHeader from '../../../Components/AppShell/PageHeader.vue';
+import { computed, ref } from 'vue';
 import { TextareaInput, TextInput } from '../../../Components/Form';
 import AppShell from '../../../Layouts/AppShell.vue';
-import { Badge, Button, Card, EmptyState, IconButton, TableWrapper } from '../../../Components/UI';
+import { Badge, Button, Card, DashboardHero, EmptyState, IconButton, MetricStrip, TableWrapper } from '../../../Components/UI';
 
 const props = defineProps({
     kelasMapel: { type: Array, default: () => [] },
@@ -17,6 +17,46 @@ const form = useForm({
     deskripsi: '',
     batas_waktu: '',
 });
+
+const search = ref('');
+
+const filteredTugas = computed(() => {
+    const keyword = search.value.trim().toLowerCase();
+
+    if (!keyword) {
+        return props.tugas;
+    }
+
+    return props.tugas.filter((item) => [
+        item.judul,
+        item.deskripsi,
+        item.kelas,
+        item.mata_pelajaran,
+    ].filter(Boolean).join(' ').toLowerCase().includes(keyword));
+});
+
+const metrics = computed(() => {
+    const submitted = props.tugas.reduce((total, item) => total + Number(item.sudah_mengumpulkan || 0), 0);
+    const pendingGrades = props.tugas.reduce((total, item) => total + Number(item.perlu_dinilai || 0), 0);
+    const overdue = props.tugas.filter((item) => item.is_overdue).length;
+
+    return [
+        { label: 'Tugas aktif', value: props.tugas.length, icon: 'bi-journal-check', tone: 'primary' },
+        { label: 'Penugasan', value: props.kelasMapel.length, icon: 'bi-diagram-3', tone: 'info' },
+        { label: 'Pengumpulan', value: submitted, icon: 'bi-inbox-fill', tone: 'success' },
+        { label: 'Perlu dinilai', value: pendingGrades, icon: 'bi-pencil-square', tone: pendingGrades ? 'danger' : 'muted' },
+        { label: 'Lewat deadline', value: overdue, icon: 'bi-exclamation-triangle', tone: overdue ? 'warning' : 'muted' },
+    ];
+});
+
+function toggleAllCourses() {
+    if (form.kelas_mapel_ids.length === props.kelasMapel.length) {
+        form.kelas_mapel_ids = [];
+        return;
+    }
+
+    form.kelas_mapel_ids = props.kelasMapel.map((item) => item.id);
+}
 
 function submit() {
     form.post(props.storeUrl, {
@@ -42,11 +82,21 @@ async function destroy(item) {
     <Head title="Tugas" />
 
     <AppShell title="Tugas">
-        <PageHeader
-            title="Tugas & Nilai"
-            subtitle="Buat tugas dan pilih kelas tujuan sesuai penugasan."
+        <DashboardHero
+            eyebrow="Teaching Workspace"
+            title="Penugasan Guru"
+            subtitle="Buat, bagikan, dan pantau tugas lintas kelas dari satu tempat."
             icon="bi-journal-fill"
-        />
+            tone="teacher"
+        >
+            <template #actions>
+                <a v-if="kelasMapel.length" :href="kelasMapel[0].href" class="btn btn-light btn-sm">
+                    <i class="bi bi-arrow-right-circle me-1" aria-hidden="true"></i> Buka kelas pertama
+                </a>
+            </template>
+        </DashboardHero>
+
+        <MetricStrip v-if="kelasMapel.length" :items="metrics" />
 
         <div v-if="kelasMapel.length" class="row">
             <div class="col-md-5 mb-4">
@@ -65,7 +115,12 @@ async function destroy(item) {
                         <TextInput v-model="form.batas_waktu" type="date" name="batas_waktu" label="Deadline" required :error="form.errors.batas_waktu" />
 
                         <div class="mb-3">
-                            <label class="form-label">Kelas Tujuan <span class="text-danger">*</span></label>
+                            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                <label class="form-label mb-0">Kelas Tujuan <span class="text-danger">*</span></label>
+                                <button class="btn btn-sm btn-outline-secondary" type="button" @click="toggleAllCourses">
+                                    {{ form.kelas_mapel_ids.length === kelasMapel.length ? 'Kosongkan' : 'Pilih semua' }}
+                                </button>
+                            </div>
                             <div class="assignment-list">
                                 <label
                                     v-for="item in kelasMapel"
@@ -80,6 +135,10 @@ async function destroy(item) {
                                         :value="item.id"
                                     >
                                     <span>{{ item.label }}</span>
+                                    <a :href="item.href" class="assignment-option-link" @click.stop>
+                                        <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
+                                        <span class="visually-hidden">Buka {{ item.label }}</span>
+                                    </a>
                                 </label>
                             </div>
                             <div v-if="form.errors.kelas_mapel_ids" class="text-danger small mt-1">
@@ -96,7 +155,14 @@ async function destroy(item) {
 
             <div class="col-md-7 mb-4">
                 <Card title="Daftar Tugas" icon="bi-list-ul" body-class="p-0">
-                    <TableWrapper v-if="tugas.length" class="d-none d-md-block">
+                    <template #actions>
+                        <div class="assignment-search">
+                            <i class="bi bi-search" aria-hidden="true"></i>
+                            <input v-model="search" class="form-control form-control-sm" type="search" placeholder="Cari tugas" aria-label="Cari tugas">
+                        </div>
+                    </template>
+
+                    <TableWrapper v-if="filteredTugas.length" class="d-none d-md-block">
                         <table class="table table-hover mb-0">
                             <thead>
                                 <tr>
@@ -109,15 +175,25 @@ async function destroy(item) {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="item in tugas" :key="item.id">
+                                <tr v-for="item in filteredTugas" :key="item.id">
                                     <td>
                                         <strong>{{ item.judul }}</strong>
                                         <div v-if="item.deskripsi" class="text-muted small">{{ item.deskripsi }}</div>
                                     </td>
                                     <td>{{ item.kelas }}</td>
                                     <td>{{ item.mata_pelajaran }}</td>
-                                    <td class="text-nowrap small">{{ item.batas_waktu ?? '-' }}</td>
-                                    <td>{{ item.sudah_mengumpulkan ?? 0 }}/{{ item.total_siswa ?? 0 }}</td>
+                                    <td class="text-nowrap small">
+                                        <Badge :color="item.is_overdue ? 'danger' : 'secondary'">{{ item.batas_waktu ?? '-' }}</Badge>
+                                    </td>
+                                    <td>
+                                        <div class="assignment-progress">
+                                            <span>{{ item.sudah_mengumpulkan ?? 0 }}/{{ item.total_siswa ?? 0 }}</span>
+                                            <div class="progress" role="progressbar" :aria-valuenow="item.progress_percent" aria-valuemin="0" aria-valuemax="100">
+                                                <div class="progress-bar" :style="{ width: `${item.progress_percent || 0}%` }"></div>
+                                            </div>
+                                            <small v-if="item.perlu_dinilai" class="text-danger">{{ item.perlu_dinilai }} perlu dinilai</small>
+                                        </div>
+                                    </td>
                                     <td>
                                         <div class="d-inline-flex align-items-center gap-1">
                                             <a v-if="item.pengumpulan_url" :href="item.pengumpulan_url" class="btn btn-sm btn-outline-primary">
@@ -130,16 +206,22 @@ async function destroy(item) {
                             </tbody>
                         </table>
                     </TableWrapper>
-                    <div v-if="tugas.length" class="app-mobile-list d-md-none">
-                        <div v-for="item in tugas" :key="item.id" class="app-mobile-list-item">
+                    <div v-if="filteredTugas.length" class="app-mobile-list d-md-none">
+                        <div v-for="item in filteredTugas" :key="item.id" class="app-mobile-list-item">
                             <div class="app-mobile-list-row">
                                 <span class="app-mobile-list-title">{{ item.judul }}</span>
                                 <Badge color="primary">{{ item.sudah_mengumpulkan ?? 0 }}/{{ item.total_siswa ?? 0 }}</Badge>
                             </div>
                             <span v-if="item.deskripsi" class="app-mobile-list-meta">{{ item.deskripsi }}</span>
                             <span class="app-mobile-list-meta">{{ item.kelas }} - {{ item.mata_pelajaran }}</span>
+                            <div class="progress my-2" role="progressbar" :aria-valuenow="item.progress_percent" aria-valuemin="0" aria-valuemax="100">
+                                <div class="progress-bar" :style="{ width: `${item.progress_percent || 0}%` }"></div>
+                            </div>
                             <div class="app-mobile-list-row">
-                                <span class="app-mobile-list-meta">Deadline {{ item.batas_waktu ?? '-' }}</span>
+                                <span class="app-mobile-list-meta">
+                                    Deadline {{ item.batas_waktu ?? '-' }}
+                                    <span v-if="item.perlu_dinilai" class="text-danger">- {{ item.perlu_dinilai }} perlu dinilai</span>
+                                </span>
                                 <span class="d-inline-flex align-items-center gap-1">
                                     <a v-if="item.pengumpulan_url" :href="item.pengumpulan_url" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-eye me-1" aria-hidden="true"></i> Nilai
@@ -149,7 +231,7 @@ async function destroy(item) {
                             </div>
                         </div>
                     </div>
-                    <EmptyState v-else title="Belum ada tugas" icon="bi-journal" />
+                    <EmptyState v-else :title="search ? 'Tugas tidak ditemukan' : 'Belum ada tugas'" icon="bi-journal" />
                 </Card>
             </div>
         </div>
@@ -178,6 +260,10 @@ async function destroy(item) {
     transition: var(--transition-fast);
 }
 
+.assignment-option input {
+    margin-top: 2px;
+}
+
 .assignment-option:hover,
 .assignment-option.selected {
     border-color: var(--primary-300);
@@ -190,7 +276,53 @@ async function destroy(item) {
     line-height: 1.35;
 }
 
+.assignment-option-link {
+    margin-left: auto;
+    color: var(--text-muted);
+    line-height: 1;
+}
+
+.assignment-option-link:hover {
+    color: var(--primary-600);
+}
+
 .assignment-submit {
     margin-top: 0.25rem;
+}
+
+.assignment-search {
+    position: relative;
+    width: min(220px, 100%);
+}
+
+.assignment-search .bi {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.assignment-search .form-control {
+    padding-left: 30px;
+}
+
+.assignment-progress {
+    display: grid;
+    gap: 4px;
+    min-width: 120px;
+}
+
+.assignment-progress .progress,
+.app-mobile-list .progress {
+    height: 6px;
+    background: var(--gray-100);
+}
+
+@media (max-width: 767.98px) {
+    .assignment-search {
+        width: 100%;
+    }
 }
 </style>

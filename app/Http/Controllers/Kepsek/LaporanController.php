@@ -100,7 +100,7 @@ class LaporanController extends Controller
         if ($request->filled('mapel_id')) {
             $query->whereHas('kelasMapel', fn($q) => $q->where('mapel_id', $request->mapel_id));
         }
-        $nilai = $query->orderBy('rata_akhir', 'desc')->paginate(30)->withQueryString();
+        $nilai = $query->orderByRaw(NilaiAkhir::rataAkhirExpression().' desc')->paginate(30)->withQueryString();
 
         return Inertia::render('Kepsek/Laporan/Nilai', [
             'nilai' => $nilai->through(fn (NilaiAkhir $item) => [

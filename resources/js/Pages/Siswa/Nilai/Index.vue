@@ -36,7 +36,10 @@ function averageStyle(value) {
     <Head title="Nilai Saya" />
 
     <AppShell title="Nilai Saya">
-        <PageHeader title="Nilai Saya" icon="bi-bar-chart-fill" />
+        <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+            <span class="badge bg-soft-primary">Ringkasan nilai per periode</span>
+            <span class="text-muted small">Nilai yang terlihat di sini mengikuti data terakhir yang tersedia.</span>
+        </div>
 
         <template v-if="nilaiGroups.length">
             <Card
@@ -48,6 +51,9 @@ function averageStyle(value) {
                 class="mb-3"
             >
                 <TableWrapper>
+                    <div class="p-3 border-bottom bg-light-subtle">
+                        <span class="text-muted small">Periode {{ group.periode }}</span>
+                    </div>
                     <table class="table table-hover mb-0" style="font-size:0.82rem;">
                         <thead style="background:var(--primary-100);">
                             <tr>

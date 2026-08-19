@@ -102,7 +102,7 @@ function submit() {
         </PageHeader>
 
         <form v-if="kelasMapel.length" @submit.prevent="submit">
-            <Card title="Kelas & Mata Pelajaran" icon="bi-funnel" class="mb-4">
+            <Card title="Kelas dan Mata Pelajaran" icon="bi-funnel" class="mb-4">
                 <label for="kelas-mapel" class="form-label">Kelas Aktif</label>
                 <select id="kelas-mapel" v-model="selectedKelasMapelId" class="form-select">
                     <option v-for="item in kelasMapel" :key="item.id" :value="item.id">

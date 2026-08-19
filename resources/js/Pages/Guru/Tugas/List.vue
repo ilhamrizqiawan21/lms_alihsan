@@ -1,9 +1,9 @@
 <script setup>
 import { Head, router, useForm } from '@inertiajs/vue3';
-import PageHeader from '../../../Components/AppShell/PageHeader.vue';
+import { computed, ref } from 'vue';
 import { TextareaInput, TextInput } from '../../../Components/Form';
 import AppShell from '../../../Layouts/AppShell.vue';
-import { Button, Card, EmptyState, IconButton, TableWrapper } from '../../../Components/UI';
+import { Badge, Button, Card, DashboardHero, EmptyState, IconButton, MetricStrip, QuickActionBar, TableWrapper } from '../../../Components/UI';
 
 const props = defineProps({
     kelasMapel: { type: Object, required: true },
@@ -15,6 +15,45 @@ const form = useForm({
     judul: '',
     deskripsi: '',
     batas_waktu: '',
+});
+
+const search = ref('');
+
+const courseTabs = [
+    { label: 'Ringkasan', href: props.kelasMapel.workspace_url, icon: 'bi-grid-1x2' },
+    { label: 'Materi', href: `/guru/materi/${props.kelasMapel.id}/list`, icon: 'bi-file-earmark-text' },
+    { label: 'Tugas', href: '#', icon: 'bi-journal-check', active: true },
+    { label: 'Nilai', href: `/guru/nilai/${props.kelasMapel.id}/input`, icon: 'bi-bar-chart' },
+    { label: 'Absensi', href: `/guru/absensi/${props.kelasMapel.id}/create`, icon: 'bi-clipboard-check' },
+    { label: 'Chat', href: `/guru/chat/${props.kelasMapel.id}`, icon: 'bi-chat-dots' },
+];
+
+const filteredTugas = computed(() => {
+    const keyword = search.value.trim().toLowerCase();
+
+    if (!keyword) {
+        return props.tugas;
+    }
+
+    return props.tugas.filter((item) => [
+        item.judul,
+        item.deskripsi,
+        item.batas_waktu,
+    ].filter(Boolean).join(' ').toLowerCase().includes(keyword));
+});
+
+const metrics = computed(() => {
+    const submitted = props.tugas.reduce((total, item) => total + Number(item.sudah_mengumpulkan || 0), 0);
+    const pendingGrades = props.tugas.reduce((total, item) => total + Number(item.perlu_dinilai || 0), 0);
+    const overdue = props.tugas.filter((item) => item.is_overdue).length;
+
+    return [
+        { label: 'Tugas', value: props.tugas.length, icon: 'bi-journal-check', tone: 'primary' },
+        { label: 'Siswa aktif', value: props.totalSiswa, icon: 'bi-people-fill', tone: 'info' },
+        { label: 'Pengumpulan', value: submitted, icon: 'bi-inbox-fill', tone: 'success' },
+        { label: 'Perlu dinilai', value: pendingGrades, icon: 'bi-pencil-square', tone: pendingGrades ? 'danger' : 'muted' },
+        { label: 'Lewat deadline', value: overdue, icon: 'bi-exclamation-triangle', tone: overdue ? 'warning' : 'muted' },
+    ];
 });
 
 function submit() {
@@ -45,22 +84,30 @@ async function destroy(item) {
     <Head :title="`Tugas: ${kelasMapel.mata_pelajaran} - ${kelasMapel.kelas}`" />
 
     <AppShell title="Tugas">
-        <PageHeader
-            :title="`Tugas ${kelasMapel.mata_pelajaran} - ${kelasMapel.kelas}`"
+        <DashboardHero
+            eyebrow="Workspace Kelas/Mapel"
+            :title="kelasMapel.mata_pelajaran"
+            :subtitle="`${kelasMapel.kelas} - Buat tugas dan pantau pengumpulan siswa.`"
             icon="bi-journal-fill"
+            tone="teacher"
         >
             <template #actions>
-                <a href="/guru/tugas" class="btn btn-sm btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-1" aria-hidden="true"></i> Kembali
-                </a>
-                <a :href="kelasMapel.export_excel_url" class="btn btn-sm btn-outline-success">
-                    <i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i> Excel
-                </a>
-                <a :href="kelasMapel.export_pdf_url" class="btn btn-sm btn-outline-danger">
-                    <i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i> PDF
-                </a>
+                <QuickActionBar :actions="[{ label: 'Ringkasan', href: kelasMapel.workspace_url, icon: 'bi-grid-1x2', color: 'light' }]" />
             </template>
-        </PageHeader>
+        </DashboardHero>
+
+        <nav class="workspace-tabs" aria-label="Navigasi kelas dan mata pelajaran">
+            <a v-for="tab in courseTabs" :key="tab.label" :href="tab.href" class="workspace-tab" :class="{ 'is-active': tab.active }">
+                <i class="bi" :class="tab.icon" aria-hidden="true"></i>{{ tab.label }}
+            </a>
+        </nav>
+
+        <div class="d-flex justify-content-end gap-2 mb-3 flex-wrap">
+            <a :href="kelasMapel.export_excel_url" class="btn btn-sm btn-outline-success"><i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i>Excel</a>
+            <a :href="kelasMapel.export_pdf_url" class="btn btn-sm btn-outline-danger"><i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>PDF</a>
+        </div>
+
+        <MetricStrip :items="metrics" />
 
         <div class="row">
             <div class="col-md-5 mb-4">
@@ -93,7 +140,7 @@ async function destroy(item) {
                             color="success"
                             size=""
                             icon="bi-save"
-                            class="w-100"
+                            class="w-100 mt-2"
                             :disabled="form.processing"
                         >
                             {{ form.processing ? 'Menyimpan...' : 'Simpan Tugas' }}
@@ -105,10 +152,13 @@ async function destroy(item) {
             <div class="col-md-7 mb-4">
                 <Card title="Daftar Tugas" icon="bi-list-ul" body-class="p-0">
                     <template #actions>
-                        <small class="text-muted">{{ totalSiswa }} siswa</small>
+                        <div class="assignment-search">
+                            <i class="bi bi-search" aria-hidden="true"></i>
+                            <input v-model="search" class="form-control form-control-sm" type="search" placeholder="Cari tugas" aria-label="Cari tugas">
+                        </div>
                     </template>
                     <template #default>
-                        <TableWrapper v-if="tugas.length">
+                        <TableWrapper v-if="filteredTugas.length" class="d-none d-md-block">
                             <table class="table table-hover mb-0">
                                 <thead>
                                     <tr>
@@ -119,13 +169,23 @@ async function destroy(item) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="item in tugas" :key="item.id">
+                                    <tr v-for="item in filteredTugas" :key="item.id">
                                         <td>
                                             <strong>{{ item.judul }}</strong>
                                             <div v-if="item.deskripsi" class="text-muted small">{{ item.deskripsi }}</div>
                                         </td>
-                                        <td style="white-space:nowrap;font-size:0.82rem;">{{ item.batas_waktu ?? '-' }}</td>
-                                        <td>{{ item.sudah_mengumpulkan ?? 0 }}/{{ totalSiswa }}</td>
+                                        <td class="text-nowrap small">
+                                            <Badge :color="item.is_overdue ? 'danger' : 'secondary'">{{ item.batas_waktu ?? '-' }}</Badge>
+                                        </td>
+                                        <td>
+                                            <div class="assignment-progress">
+                                                <span>{{ item.sudah_mengumpulkan ?? 0 }}/{{ totalSiswa }}</span>
+                                                <div class="progress" role="progressbar" :aria-valuenow="item.progress_percent" aria-valuemin="0" aria-valuemax="100">
+                                                    <div class="progress-bar" :style="{ width: `${item.progress_percent || 0}%` }"></div>
+                                                </div>
+                                                <small v-if="item.perlu_dinilai" class="text-danger">{{ item.perlu_dinilai }} perlu dinilai</small>
+                                            </div>
+                                        </td>
                                         <td>
                                             <div class="d-inline-flex align-items-center gap-1">
                                                 <a :href="item.pengumpulan_url" class="btn btn-sm btn-outline-primary">
@@ -143,10 +203,77 @@ async function destroy(item) {
                                 </tbody>
                             </table>
                         </TableWrapper>
-                        <EmptyState v-else title="Belum ada tugas" icon="bi-journal" />
+                        <div v-if="filteredTugas.length" class="app-mobile-list d-md-none">
+                            <div v-for="item in filteredTugas" :key="item.id" class="app-mobile-list-item">
+                                <div class="app-mobile-list-row">
+                                    <span class="app-mobile-list-title">{{ item.judul }}</span>
+                                    <Badge color="primary">{{ item.sudah_mengumpulkan ?? 0 }}/{{ totalSiswa }}</Badge>
+                                </div>
+                                <span v-if="item.deskripsi" class="app-mobile-list-meta">{{ item.deskripsi }}</span>
+                                <div class="progress my-2" role="progressbar" :aria-valuenow="item.progress_percent" aria-valuemin="0" aria-valuemax="100">
+                                    <div class="progress-bar" :style="{ width: `${item.progress_percent || 0}%` }"></div>
+                                </div>
+                                <div class="app-mobile-list-row">
+                                    <span class="app-mobile-list-meta">
+                                        Deadline {{ item.batas_waktu ?? '-' }}
+                                        <span v-if="item.perlu_dinilai" class="text-danger">- {{ item.perlu_dinilai }} perlu dinilai</span>
+                                    </span>
+                                    <span class="d-inline-flex align-items-center gap-1">
+                                        <a :href="item.pengumpulan_url" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye me-1" aria-hidden="true"></i> Nilai
+                                        </a>
+                                        <IconButton
+                                            icon="bi-trash"
+                                            :label="`Hapus ${item.judul}`"
+                                            color="outline-danger"
+                                            @click="destroy(item)"
+                                        />
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <EmptyState v-else :title="search ? 'Tugas tidak ditemukan' : 'Belum ada tugas'" icon="bi-journal" />
                     </template>
                 </Card>
             </div>
         </div>
     </AppShell>
 </template>
+
+<style scoped>
+.assignment-search {
+    position: relative;
+    width: min(220px, 100%);
+}
+
+.assignment-search .bi {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.assignment-search .form-control {
+    padding-left: 30px;
+}
+
+.assignment-progress {
+    display: grid;
+    gap: 4px;
+    min-width: 120px;
+}
+
+.assignment-progress .progress,
+.app-mobile-list .progress {
+    height: 6px;
+    background: var(--gray-100);
+}
+
+@media (max-width: 767.98px) {
+    .assignment-search {
+        width: 100%;
+    }
+}
+</style>

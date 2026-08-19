@@ -54,7 +54,9 @@ class StatistikService
             'total_absensi' => Absensi::where('siswa_id', $siswaId)->count(),
             'total_tugas' => \App\Models\PengumpulanTugas::where('siswa_id', $siswaId)->count(),
             'tugas_belum' => \App\Models\PengumpulanTugas::where('siswa_id', $siswaId)->where('status', 'belum')->count(),
-            'rata_rata_nilai' => NilaiAkhir::where('siswa_id', $siswaId)->avg('rata_akhir'),
+            'rata_rata_nilai' => NilaiAkhir::where('siswa_id', $siswaId)
+                ->selectRaw('AVG('.NilaiAkhir::rataAkhirExpression().') as rata_rata')
+                ->value('rata_rata'),
         ];
     }
 
@@ -68,7 +70,8 @@ class StatistikService
         $totalKelas = Kelas::count();
 
         // Rata-rata nilai seluruh siswa
-        $rataNilai = NilaiAkhir::avg('rata_akhir');
+        $rataNilai = NilaiAkhir::selectRaw('AVG('.NilaiAkhir::rataAkhirExpression().') as rata_rata')
+            ->value('rata_rata');
 
         // Persentase kehadiran
         $totalAbsensi = Absensi::count();

@@ -1,15 +1,15 @@
 <script setup>
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { reactive, ref } from 'vue';
-import PageHeader from '../../../Components/AppShell/PageHeader.vue';
 import { FileInput, SelectInput, TextInput } from '../../../Components/Form';
 import AppShell from '../../../Layouts/AppShell.vue';
-import { Badge, Button, Card, EmptyState, IconButton, Pagination, TableWrapper } from '../../../Components/UI';
+import { Badge, Button, Card, DashboardHero, EmptyState, IconButton, MetricStrip, Pagination, TableWrapper } from '../../../Components/UI';
 
 const props = defineProps({
     kelasList: { type: Array, default: () => [] },
     siswa: { type: Object, default: () => ({ data: [], links: [] }) },
     filters: { type: Object, default: () => ({}) },
+    metrics: { type: Object, default: () => ({}) },
     importErrors: { type: Array, default: () => [] },
     studentPassword: { type: Object, default: null },
     templateUrl: { type: String, required: true },
@@ -24,7 +24,20 @@ const genderOptions = [
 const filterForm = reactive({
     kelas_id: props.filters.kelas_id ?? '',
     search: props.filters.search ?? '',
+    status: props.filters.status ?? '',
 });
+
+const statusOptions = [
+    { value: 'aktif', label: 'Aktif' },
+    { value: 'lulus', label: 'Lulus' },
+    { value: 'keluar', label: 'Keluar' },
+];
+
+const metrics = () => [
+    { label: 'Siswa aktif', value: props.metrics.total_siswa_aktif ?? 0, icon: 'bi-people-fill', tone: 'success' },
+    { label: 'Lulus', value: props.metrics.total_lulus ?? 0, icon: 'bi-mortarboard-fill', tone: 'primary' },
+    { label: 'Keluar', value: props.metrics.total_keluar ?? 0, icon: 'bi-person-dash-fill', tone: 'warning' },
+];
 
 const editing = ref(null);
 const importForm = useForm({ file_siswa: null });
@@ -64,6 +77,7 @@ function applyFilters() {
 function resetFilters() {
     filterForm.kelas_id = '';
     filterForm.search = '';
+    filterForm.status = '';
     router.get('/admin/kelas-siswa', {}, {
         preserveState: true,
         preserveScroll: true,
@@ -152,20 +166,6 @@ async function graduateClass(kelas) {
     });
 }
 
-async function destroyClass(kelas) {
-    const confirmed = await window.confirmDialog?.(`Hapus kelas ${kelas.nama_kelas}?`, {
-        title: 'Hapus Kelas',
-        confirmText: 'Ya, hapus',
-        danger: true,
-    });
-
-    if (!confirmed) return;
-
-    router.delete(`/admin/kelas/${kelas.id}`, {
-        preserveScroll: true,
-    });
-}
-
 function passwordStatusColor(isDefault) {
     return isDefault ? 'warning text-dark' : 'success';
 }
@@ -175,11 +175,15 @@ function passwordStatusColor(isDefault) {
     <Head title="Kelas dan Siswa" />
 
     <AppShell title="Kelas dan Siswa">
-        <PageHeader
-            title="Kelola Kelas & Siswa"
-            subtitle="Import, tambah, edit, dan pantau data siswa per kelas."
+        <DashboardHero
+            eyebrow="Administrasi Akademik"
+            title="Kelas dan Siswa"
+            subtitle="Import, tambah, perbarui, dan pantau status siswa per kelas."
             icon="bi-mortarboard-fill"
+            tone="admin"
         />
+
+        <MetricStrip :items="metrics()" />
 
         <div v-if="importErrors.length" class="alert alert-danger" role="alert">
             <div class="fw-semibold mb-2"><i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i> Import siswa gagal</div>
@@ -246,11 +250,11 @@ function passwordStatusColor(isDefault) {
             </form>
         </Card>
 
-        <Card title="Daftar Kelas" icon="bi-building" class="mb-3" body-class="p-0">
+        <Card title="Kelulusan Kelas IX" icon="bi-mortarboard-fill" class="mb-3" body-class="p-0">
             <TableWrapper v-if="kelasList.length">
                 <table class="table table-hover mb-0">
                     <thead>
-                        <tr><th>Tingkat</th><th>Kelas</th><th>Jumlah Siswa</th><th class="table-action-column">Aksi</th></tr>
+                        <tr><th>Tingkat</th><th>Kelas</th><th>Siswa Aktif</th><th class="table-action-column">Aksi</th></tr>
                     </thead>
                     <tbody>
                         <tr v-for="kelas in kelasList" :key="kelas.id">
@@ -262,7 +266,6 @@ function passwordStatusColor(isDefault) {
                                     <Button v-if="kelas.tingkat === 'IX'" type="button" color="outline-success" icon="bi-check-circle" @click="graduateClass(kelas)">
                                         Luluskan
                                     </Button>
-                                    <IconButton icon="bi-trash" :label="`Hapus kelas ${kelas.nama_kelas}`" color="outline-danger" @click="destroyClass(kelas)" />
                                 </div>
                             </td>
                         </tr>
@@ -276,6 +279,7 @@ function passwordStatusColor(isDefault) {
             <template #actions>
                 <form class="d-flex flex-wrap gap-2" @submit.prevent="applyFilters">
                     <SelectInput v-model="filterForm.kelas_id" name="kelas_id" wrapper-class="mb-0 filter-control" placeholder="Semua Kelas" :options="kelasOptions()" />
+                    <SelectInput v-model="filterForm.status" name="status" wrapper-class="mb-0 filter-control" placeholder="Semua Status" :options="statusOptions" />
                     <TextInput v-model="filterForm.search" name="search" wrapper-class="mb-0 filter-control" placeholder="Cari NIS/Nama..." />
                     <Button type="submit" color="primary" icon="bi-search" aria-label="Cari siswa" />
                     <Button type="button" color="outline-secondary" icon="bi-arrow-clockwise" aria-label="Reset filter" @click="resetFilters" />
@@ -288,7 +292,7 @@ function passwordStatusColor(isDefault) {
             <TableWrapper v-if="siswa.data?.length">
                 <table class="table table-hover mb-0">
                     <thead>
-                        <tr><th>NIS</th><th>Nama</th><th>JK</th><th>Kelas</th><th>Status Password</th><th class="table-action-column">Aksi</th></tr>
+                        <tr><th>NIS</th><th>Nama</th><th>JK</th><th>Kelas</th><th>Status Siswa</th><th>Status Password</th><th class="table-action-column">Aksi</th></tr>
                     </thead>
                     <tbody>
                         <template v-for="item in siswa.data" :key="item.id">
@@ -297,11 +301,13 @@ function passwordStatusColor(isDefault) {
                                 <td><strong>{{ item.nama_lengkap ?? '-' }}</strong></td>
                                 <td>{{ item.jenis_kelamin ?? '-' }}</td>
                                 <td>{{ item.kelas || '-' }}</td>
+                                <td><Badge :color="item.status === 'aktif' ? 'success' : 'secondary'">{{ item.status }}</Badge></td>
                                 <td>
                                     <Badge :color="passwordStatusColor(item.password_is_default)">
                                         {{ item.password_status }}
                                     </Badge>
                                     <Badge v-if="item.tinggal_kelas" color="warning text-dark" class="ms-1">Tinggal Kelas</Badge>
+                                    <Badge v-if="!item.is_active" color="secondary" class="ms-1">Akun nonaktif</Badge>
                                 </td>
                                 <td class="table-action-column">
                                     <div class="d-inline-flex gap-1">
@@ -312,7 +318,7 @@ function passwordStatusColor(isDefault) {
                                 </td>
                             </tr>
                             <tr v-if="editing?.id === item.id">
-                                <td colspan="6">
+                                <td colspan="7">
                                     <form class="row g-3 align-items-end" @submit.prevent="submitEdit(item)">
                                         <div class="col-md-3">
                                             <TextInput v-model="editForm.nis" name="edit_nis" label="NIS" required wrapper-class="mb-0" :error="editForm.errors.nis" />

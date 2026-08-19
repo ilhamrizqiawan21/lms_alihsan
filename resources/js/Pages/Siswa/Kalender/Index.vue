@@ -2,24 +2,22 @@
 import { Head } from '@inertiajs/vue3';
 import PageHeader from '../../../Components/AppShell/PageHeader.vue';
 import CalendarWorkspace from '../../../Components/Calendar/CalendarWorkspace.vue';
+import AcademicTimeline from '../../../Components/Calendar/AcademicTimeline.vue';
 import AppShell from '../../../Layouts/AppShell.vue';
 
 defineProps({
     calendar: { type: Object, required: true },
     monthEvents: { type: Array, default: () => [] },
-    pageTitle: { type: String, default: 'Kalender & Reminder' },
+    timelineEvents: { type: Array, default: () => [] },
+    pageTitle: { type: String, default: 'Kalender dan Reminder' },
 });
 </script>
 
 <template>
     <Head :title="pageTitle" />
-
     <AppShell title="Kalender">
         <PageHeader :title="pageTitle" icon="bi-calendar3" />
-        <CalendarWorkspace
-            :calendar="calendar"
-            :month-events="monthEvents"
-            read-only
-        />
+        <CalendarWorkspace :calendar="calendar" :month-events="monthEvents" read-only />
+        <AcademicTimeline :events="timelineEvents" class="mt-4" />
     </AppShell>
 </template>

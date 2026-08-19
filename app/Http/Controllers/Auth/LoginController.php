@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\LogLogin;
-use App\Models\Notifikasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -13,9 +12,6 @@ use Inertia\Inertia;
 
 class LoginController extends Controller
 {
-    /**
-     * Tampilkan halaman login.
-     */
     public function showLogin()
     {
         return Inertia::render('Auth/Login', [
@@ -32,9 +28,6 @@ class LoginController extends Controller
         ]);
     }
 
-    /**
-     * Proses login.
-     */
     public function login(Request $request)
     {
         $request->validate([
@@ -44,8 +37,6 @@ class LoginController extends Controller
 
         $username = $request->input('username');
         $ip = $request->ip();
-
-        // Cek rate limiting
         $throttleKey = Str::lower($username . '|' . $ip);
 
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
@@ -55,11 +46,9 @@ class LoginController extends Controller
 
         $loginField = filter_var($username, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
 
-        // Attempt login
         if (Auth::attempt([$loginField => $username, 'password' => $request->password], $request->filled('remember'))) {
             $user = Auth::user();
 
-            // Cek user aktif
             if (!$user->is_active) {
                 Auth::logout();
                 $request->session()->invalidate();
@@ -67,10 +56,8 @@ class LoginController extends Controller
                 return back()->with('error', 'Akun Anda telah dinonaktifkan. Silakan hubungi administrator.');
             }
 
-            // Ganti ID sesi setelah autentikasi untuk mencegah session fixation.
             $request->session()->regenerate();
 
-            // Catat log login
             LogLogin::create([
                 'user_id' => $user->id,
                 'username' => $user->username,
@@ -81,14 +68,11 @@ class LoginController extends Controller
                 'login_time' => now(),
             ]);
 
-            // Hapus percobaan login yang berhasil
             RateLimiter::clear($throttleKey);
 
-            // Redirect berdasarkan role. Untuk request Inertia, pakai full visit agar aman
-            // saat target intended masih halaman Blade.
             $defaultUrl = $this->redirectToByRole($user);
             $intendedUrl = $request->session()->pull('url.intended', $defaultUrl);
-            $intendedUrl = $this->intendedUrlIsAllowedForRole($intendedUrl, $user->role?->nama_role)
+            $intendedUrl = $this->intendedUrlIsAllowedForRole($intendedUrl, $user->role?->nama_role, $request)
                 ? $intendedUrl
                 : $defaultUrl;
 
@@ -99,15 +83,11 @@ class LoginController extends Controller
             return redirect($intendedUrl);
         }
 
-        // Catat percobaan gagal
         RateLimiter::hit($throttleKey, 60);
 
         return back()->with('error', 'Username atau password salah.')->withInput($request->only('username'));
     }
 
-    /**
-     * Proses logout.
-     */
     public function logout(Request $request)
     {
         Auth::logout();
@@ -117,9 +97,6 @@ class LoginController extends Controller
         return redirect()->route('login')->with('success', 'Anda berhasil logout.');
     }
 
-    /**
-     * Redirect berdasarkan role user.
-     */
     protected function redirectToByRole($user): string
     {
         return match ($user->role?->nama_role) {
@@ -131,13 +108,27 @@ class LoginController extends Controller
         };
     }
 
-    private function intendedUrlIsAllowedForRole(?string $url, ?string $role): bool
+    private function intendedUrlIsAllowedForRole(?string $url, ?string $role, Request $request): bool
     {
         if (! $url || ! $role) {
             return false;
         }
 
-        $path = '/' . ltrim((string) parse_url($url, PHP_URL_PATH), '/');
+        $parts = parse_url($url);
+        if ($parts === false) {
+            return false;
+        }
+
+        // Absolute/protocol-relative intended URLs must remain on this application host.
+        if (isset($parts['host']) && ! hash_equals((string) $request->getHost(), (string) $parts['host'])) {
+            return false;
+        }
+
+        if (isset($parts['scheme']) && ! hash_equals((string) $request->getScheme(), (string) $parts['scheme'])) {
+            return false;
+        }
+
+        $path = '/' . ltrim((string) ($parts['path'] ?? ''), '/');
 
         return match ($role) {
             'admin' => str_starts_with($path, '/admin'),

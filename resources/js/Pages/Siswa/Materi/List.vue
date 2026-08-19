@@ -1,30 +1,42 @@
 <script setup>
 import { Head } from '@inertiajs/vue3';
-import PageHeader from '../../../Components/AppShell/PageHeader.vue';
 import AppShell from '../../../Layouts/AppShell.vue';
-import { Card, EmptyState } from '../../../Components/UI';
+import { Card, DashboardHero, EmptyState, QuickActionBar } from '../../../Components/UI';
 
-defineProps({
+const props = defineProps({
     kelasMapel: { type: Object, required: true },
     materi: { type: Array, default: () => [] },
 });
+
+const courseTabs = [
+    { label: 'Ringkasan', href: props.kelasMapel.workspace_url, icon: 'bi-grid-1x2' },
+    { label: 'Materi', href: '#', icon: 'bi-file-earmark-text', active: true },
+    { label: 'Tugas', href: props.kelasMapel.tugas_url, icon: 'bi-journal-check' },
+    { label: 'Chat', href: props.kelasMapel.chat_url, icon: 'bi-chat-dots' },
+];
 </script>
 
 <template>
     <Head :title="`Materi: ${kelasMapel.mata_pelajaran}`" />
 
     <AppShell title="Materi">
-        <PageHeader
+        <DashboardHero
+            eyebrow="Workspace Kelas/Mapel"
             :title="kelasMapel.mata_pelajaran"
-            :subtitle="`Guru: ${kelasMapel.guru}`"
+            :subtitle="`Guru: ${kelasMapel.guru} - Materi pembelajaran untuk kelas Anda.`"
             icon="bi-file-earmark-text-fill"
+            tone="student"
         >
             <template #actions>
-                <a :href="kelasMapel.back_url" class="btn btn-sm btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-1" aria-hidden="true"></i> Kembali
-                </a>
+                <QuickActionBar :actions="[{ label: 'Ringkasan', href: kelasMapel.workspace_url, icon: 'bi-grid-1x2', color: 'light' }]" />
             </template>
-        </PageHeader>
+        </DashboardHero>
+
+        <nav class="workspace-tabs" aria-label="Navigasi kelas dan mata pelajaran">
+            <a v-for="tab in courseTabs" :key="tab.label" :href="tab.href" class="workspace-tab" :class="{ 'is-active': tab.active }">
+                <i class="bi" :class="tab.icon" aria-hidden="true"></i>{{ tab.label }}
+            </a>
+        </nav>
 
         <div v-if="materi.length" class="row">
             <div v-for="item in materi" :key="item.id" class="col-md-6 mb-4">

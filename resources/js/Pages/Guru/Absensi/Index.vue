@@ -4,7 +4,7 @@ import { computed, reactive, watch } from 'vue';
 import PageHeader from '../../../Components/AppShell/PageHeader.vue';
 import { SearchableSelect, TextInput } from '../../../Components/Form';
 import AppShell from '../../../Layouts/AppShell.vue';
-import { Badge, Button, Card, EmptyState, TableWrapper } from '../../../Components/UI';
+import { Badge, Button, Card, DashboardHero, EmptyState, QuickActionBar, TableWrapper } from '../../../Components/UI';
 
 const props = defineProps({
     kelasMapel: { type: Array, default: () => [] },
@@ -33,6 +33,19 @@ const statusOptions = [
 ];
 
 const meetingKeys = computed(() => props.weeks.map((week) => String(week.key)));
+
+const courseTabs = computed(() => {
+    if (!props.selected) return [];
+
+    return [
+        { label: 'Ringkasan', href: props.selected.workspace_url, icon: 'bi-grid-1x2' },
+        { label: 'Materi', href: `/guru/materi/${props.selected.id}/list`, icon: 'bi-file-earmark-text' },
+        { label: 'Tugas', href: `/guru/tugas/${props.selected.id}/list`, icon: 'bi-journal-check' },
+        { label: 'Nilai', href: `/guru/nilai/${props.selected.id}/input`, icon: 'bi-bar-chart' },
+        { label: 'Absensi', href: '#', icon: 'bi-clipboard-check', active: true },
+        { label: 'Chat', href: `/guru/chat/${props.selected.id}`, icon: 'bi-chat-dots' },
+    ];
+});
 
 watch(() => [props.filters.bulan, props.students], () => {
     form.bulan = props.filters.bulan ?? '';
@@ -120,7 +133,25 @@ function selectedExportUrl(format) {
     <Head title="Absensi" />
 
     <AppShell title="Absensi">
-        <PageHeader title="Absensi" icon="bi-clipboard-check-fill" />
+        <DashboardHero
+            v-if="selected"
+            eyebrow="Workspace Kelas/Mapel"
+            :title="selected.mata_pelajaran"
+            :subtitle="`${selected.kelas} - Catat dan pantau kehadiran siswa.`"
+            icon="bi-clipboard2-check-fill"
+            tone="teacher"
+        >
+            <template #actions>
+                <QuickActionBar :actions="[{ label: 'Ringkasan', href: selected.workspace_url, icon: 'bi-grid-1x2', color: 'light' }]" />
+            </template>
+        </DashboardHero>
+        <PageHeader v-else title="Absensi" icon="bi-clipboard-check-fill" />
+
+        <nav v-if="selected" class="workspace-tabs" aria-label="Navigasi kelas dan mata pelajaran">
+            <a v-for="tab in courseTabs" :key="tab.label" :href="tab.href" class="workspace-tab" :class="{ 'is-active': tab.active }">
+                <i class="bi" :class="tab.icon" aria-hidden="true"></i>{{ tab.label }}
+            </a>
+        </nav>
 
         <div class="row gy-4">
             <div class="col-12">
@@ -130,7 +161,7 @@ function selectedExportUrl(format) {
                             <SearchableSelect
                                 v-model="filterForm.kelas_mapel_id"
                                 name="kelas_mapel_id"
-                                label="Kelas & Mata Pelajaran"
+                                label="Kelas dan Mata Pelajaran"
                                 placeholder="-- Pilih --"
                                 search-placeholder="Cari kelas atau mapel..."
                                 wrapper-class="mb-0"
@@ -304,4 +335,16 @@ function selectedExportUrl(format) {
 .attendance-select.alpha { background:#fee2e2; color:#991b1b; }
 .attendance-legend .badge { font-size:0.78rem; }
 .attendance-table th { vertical-align: middle; }
+
+@media (max-width: 767px) {
+    .attendance-select {
+        min-width: 54px;
+        padding: 0.25rem 0.35rem;
+        font-size: 0.7rem;
+    }
+
+    .attendance-legend {
+        gap: 0.4rem;
+    }
+}
 </style>

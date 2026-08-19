@@ -23,16 +23,22 @@ function progressColor(value) {
         <PageHeader
             title="Rekap Absensi Per Kelas"
             icon="bi-file-earmark-bar-graph-fill"
-        >
-            <template v-if="rekap.length" #actions>
+        />
+
+        <div v-if="rekap.length" class="content-summary">
+            <div>
+                <div class="content-summary-title">Peringkat kehadiran kelas</div>
+                <div class="content-summary-text">Ringkasan persentase kehadiran disajikan sebagai kartu yang dapat dibandingkan antar kelas.</div>
+            </div>
+            <div class="content-summary-actions">
                 <a :href="exportUrls.excel" class="btn btn-sm btn-outline-success">
                     <i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i> Excel
                 </a>
                 <a :href="exportUrls.pdf" class="btn btn-sm btn-outline-danger">
                     <i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i> PDF
                 </a>
-            </template>
-        </PageHeader>
+            </div>
+        </div>
 
         <div v-if="rekap.length" class="row">
             <div

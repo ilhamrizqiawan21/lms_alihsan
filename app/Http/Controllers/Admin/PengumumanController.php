@@ -5,270 +5,188 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Kelas;
 use App\Models\KelasMapel;
+use App\Models\Notifikasi;
 use App\Models\Pengumuman;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
 
 class PengumumanController extends Controller
 {
-    /**
-     * Tampilkan daftar pengumuman.
-     */
     public function index()
     {
-        $query = Pengumuman::with(['creator', 'kelasMapel.kelas', 'kelasMapel.mataPelajaran'])
-            ->orderBy('created_at', 'desc')
-            ;
-
+        $query = Pengumuman::with(['creator','kelasMapel.kelas','kelasMapel.mataPelajaran'])->orderByDesc('created_at');
         if (Auth::user()->isGuru()) {
             $guruKelasIds = KelasMapel::where('guru_id', Auth::id())->pluck('kelas_id')->unique()->values();
-
-            $query->where(function ($query) use ($guruKelasIds) {
-                $query->whereIn('target', ['semua', 'guru'])
+            $query->where(function ($q) use ($guruKelasIds) {
+                $q->whereIn('target', ['semua', 'guru'])
                     ->orWhere('created_by', Auth::id())
-                    ->orWhere(function ($query) use ($guruKelasIds) {
-                        $query->where('target', 'kelas_mapel')
-                            ->where(function ($query) use ($guruKelasIds) {
-                                $query->whereIn('kelas_mapel_id', KelasMapel::where('guru_id', Auth::id())->select('id'));
-
-                                foreach ($guruKelasIds as $kelasId) {
-                                    $query->orWhere('target_kelas', 'like', '%"' . $kelasId . '"%');
-                                }
-                            });
+                    ->orWhere(function ($q) use ($guruKelasIds) {
+                        $q->where('target', 'kelas_mapel')->where(function ($q) use ($guruKelasIds) {
+                            $q->whereIn('kelas_mapel_id', KelasMapel::where('guru_id', Auth::id())->select('id'));
+                            foreach ($guruKelasIds as $id) $q->orWhere('target_kelas', 'like', '%\"'.$id.'\"%');
+                        });
                     });
             });
         }
-
         if (Auth::user()->role?->nama_role === 'kepala_sekolah') {
-            $query->where(function ($query) {
-                $query->whereIn('target', ['semua', 'guru'])
-                    ->orWhere('created_by', Auth::id());
-            });
+            $query->where(fn ($q) => $q->whereIn('target', ['semua', 'guru'])->orWhere('created_by', Auth::id()));
         }
 
-        $pengumuman = $query->paginate(15);
-        $kelas = Kelas::orderBy('tingkat')->orderBy('nama_kelas')->get();
-        $kelasMapel = KelasMapel::with(['kelas', 'mataPelajaran'])
-            ->when(Auth::user()->isGuru(), fn ($query) => $query->where('guru_id', Auth::id()))
-            ->orderBy('kelas_id')
-            ->get();
-        $targetKelasOptions = Auth::user()->isGuru()
-            ? $kelasMapel->pluck('kelas')->filter()->unique('id')->sortBy(fn (Kelas $kelas) => $kelas->tingkat . ' ' . $kelas->nama_kelas)->values()
-            : $kelas;
-        $routePrefix = $this->routePrefix();
+        $pengumuman = $query->paginate(15)->withQueryString();
+        $pengumuman->through(function (Pengumuman $item) {
+            $prefix = $this->routePrefix();
+            $item->can_edit = Auth::user()->isAdmin() || (Auth::user()->isGuru() && (int) $item->created_by === (int) Auth::id());
+            $item->can_delete = $item->can_edit;
+            $item->update_url = route($prefix.'.update', $item);
+            $item->delete_url = route($prefix.'.destroy', $item);
+            $item->show_url = route($prefix.'.show', $item);
+            $item->target_kelas_ids = $item->targetKelasIds();
+            return $item;
+        });
 
-        return view('admin.pengumuman.index', compact('pengumuman', 'kelas', 'kelasMapel', 'targetKelasOptions', 'routePrefix'));
+        $kelas = Kelas::orderBy('tingkat')->orderBy('nama_kelas')->get();
+        $kelasMapel = KelasMapel::with(['kelas','mataPelajaran'])
+            ->when(Auth::user()->isGuru(), fn ($q) => $q->where('guru_id', Auth::id()))
+            ->orderBy('kelas_id')->get();
+        $targetKelasOptions = Auth::user()->isGuru()
+            ? $kelasMapel->pluck('kelas')->filter()->unique('id')->sortBy(fn (Kelas $k) => $k->tingkat.' '.$k->nama_kelas)->values()
+            : $kelas;
+
+        $role = Auth::user()->role?->nama_role;
+        return match ($role) {
+            'admin', 'guru' => Inertia::render('Admin/Pengumuman/Index', compact('pengumuman','kelas','kelasMapel','targetKelasOptions') + [
+                'routePrefix' => $this->routePrefix(),
+                'storeUrl' => route($this->routePrefix().'.store'),
+            ]),
+            'kepala_sekolah' => Inertia::render('Kepsek/Pengumuman/Index', compact('pengumuman') + ['routePrefix' => $this->routePrefix()]),
+            default => abort(403),
+        };
     }
 
     public function show(Pengumuman $pengumuman)
     {
         $role = Auth::user()->role?->nama_role;
-
         abort_unless($this->canView($pengumuman, $role), 403);
-
-        $pengumuman->loadMissing(['creator', 'kelasMapel.kelas', 'kelasMapel.mataPelajaran']);
+        $pengumuman->loadMissing(['creator','kelasMapel.kelas','kelasMapel.mataPelajaran']);
         $targetKelasLabels = Kelas::whereIn('id', $pengumuman->targetKelasIds())
-            ->orderBy('tingkat')
-            ->orderBy('nama_kelas')
-            ->get()
-            ->map(fn (Kelas $kelas) => trim($kelas->tingkat . ' ' . $kelas->nama_kelas));
-        $routePrefix = $this->routePrefix();
+            ->orderBy('tingkat')->orderBy('nama_kelas')->get()
+            ->map(fn (Kelas $k) => trim($k->tingkat.' '.$k->nama_kelas))->values();
 
-        return view('admin.pengumuman.show', compact('pengumuman', 'targetKelasLabels', 'routePrefix'));
+        return match ($role) {
+            'admin', 'guru' => Inertia::render('Admin/Pengumuman/Show', compact('pengumuman','targetKelasLabels') + [
+                'backUrl' => route($this->routePrefix().'.index'),
+            ]),
+            'kepala_sekolah' => Inertia::render('Kepsek/Pengumuman/Show', compact('pengumuman','targetKelasLabels') + [
+                'backUrl' => route($this->routePrefix().'.index'),
+            ]),
+            default => abort(403),
+        };
     }
 
-    /**
-     * Form tambah pengumuman.
-     */
-    public function create()
-    {
-        return view('admin.pengumuman.create');
-    }
-
-    /**
-     * Simpan pengumuman.
-     */
     public function store(Request $request)
     {
         $role = Auth::user()->role?->nama_role;
-        $allowedTargets = match ($role) {
+        $allowed = match ($role) {
             'guru' => ['kelas_mapel'],
-            'admin', 'kepala_sekolah' => ['semua', 'guru', 'siswa', 'kelas_mapel'],
+            'admin' => ['semua','guru','siswa','kelas_mapel'],
             default => [],
         };
-
-        abort_unless($allowedTargets !== [], 403);
-
-        $validated = $request->validate([
-            'judul' => 'required|string|max:200',
-            'isi' => 'required|string',
-            'target' => ['required', Rule::in($allowedTargets)],
+        abort_unless($allowed !== [], 403);
+        $v = $request->validate([
+            'judul' => 'required|string|max:200', 'isi' => 'required|string',
+            'target' => ['required', Rule::in($allowed)],
             'target_kelas_ids' => 'nullable|required_if:target,kelas_mapel|array',
             'target_kelas_ids.*' => 'integer|exists:kelas,id',
         ]);
-
-        if ($validated['target'] === 'kelas_mapel') {
-            $targetKelasIds = collect($validated['target_kelas_ids'] ?? [])
-                ->map(fn ($id) => (int) $id)
-                ->unique()
-                ->values();
-
-            if ($targetKelasIds->isEmpty()) {
-                throw ValidationException::withMessages([
-                    'target_kelas_ids' => 'Pilih minimal satu kelas tujuan.',
-                ]);
-            }
-
-            if (Auth::user()->isGuru()) {
-                $allowedKelasIds = KelasMapel::where('guru_id', Auth::id())
-                    ->whereIn('kelas_id', $targetKelasIds)
-                    ->pluck('kelas_id')
-                    ->unique()
-                    ->values();
-
-                abort_unless($targetKelasIds->diff($allowedKelasIds)->isEmpty(), 403);
-            }
-
-            $kelasMapelId = KelasMapel::whereIn('kelas_id', $targetKelasIds)->value('id');
-
-            $validated['target_kelas'] = $targetKelasIds->map(fn ($id) => (string) $id)->values()->toJson();
-            $validated['kelas_mapel_id'] = $kelasMapelId;
-        } else {
-            $validated['kelas_mapel_id'] = null;
-            $validated['target_kelas'] = null;
-        }
-
-        unset($validated['target_kelas_ids']);
-        $validated['created_by'] = Auth::id();
-
-        Pengumuman::create($validated);
-
-        return redirect()->route($this->routePrefix() . '.index')
-            ->with('success', 'Pengumuman berhasil dipublikasikan.');
+        $v = $this->prepareTarget($v);
+        $v['created_by'] = Auth::id();
+        $pengumuman = Pengumuman::create($v);
+        $this->notifyRecipients($pengumuman);
+        return redirect()->route($this->routePrefix().'.index')->with('success', 'Pengumuman berhasil dipublikasikan.');
     }
 
-    /**
-     * Form edit pengumuman.
-     */
-    public function edit(Pengumuman $pengumuman)
-    {
-        return view('admin.pengumuman.edit', compact('pengumuman'));
-    }
-
-    /**
-     * Update pengumuman.
-     */
     public function update(Request $request, Pengumuman $pengumuman)
     {
         $role = Auth::user()->role?->nama_role;
-        $allowedTargets = match ($role) {
-            'guru' => ['kelas_mapel'],
-            'admin', 'kepala_sekolah' => ['semua', 'guru', 'siswa', 'kelas_mapel'],
-            default => [],
-        };
-
-        abort_unless($allowedTargets !== [], 403);
-        abort_unless($role === 'admin' || (int) $pengumuman->created_by === (int) Auth::id(), 403);
-
-        $validated = $request->validate([
-            'judul' => 'required|string|max:200',
-            'isi' => 'required|string',
-            'target' => ['required', Rule::in($allowedTargets)],
+        abort_unless($role === 'admin' || ($role === 'guru' && (int) $pengumuman->created_by === (int) Auth::id()), 403);
+        $allowed = $role === 'guru' ? ['kelas_mapel'] : ['semua','guru','siswa','kelas_mapel'];
+        $v = $request->validate([
+            'judul' => 'required|string|max:200', 'isi' => 'required|string',
+            'target' => ['required', Rule::in($allowed)],
             'target_kelas_ids' => 'nullable|required_if:target,kelas_mapel|array',
             'target_kelas_ids.*' => 'integer|exists:kelas,id',
         ]);
-
-        if ($validated['target'] === 'kelas_mapel') {
-            $targetKelasIds = collect($validated['target_kelas_ids'] ?? [])
-                ->map(fn ($id) => (int) $id)
-                ->unique()
-                ->values();
-
-            if ($targetKelasIds->isEmpty()) {
-                throw ValidationException::withMessages([
-                    'target_kelas_ids' => 'Pilih minimal satu kelas tujuan.',
-                ]);
-            }
-
-            if (Auth::user()->isGuru()) {
-                $allowedKelasIds = KelasMapel::where('guru_id', Auth::id())
-                    ->whereIn('kelas_id', $targetKelasIds)
-                    ->pluck('kelas_id')
-                    ->unique()
-                    ->values();
-
-                abort_unless($targetKelasIds->diff($allowedKelasIds)->isEmpty(), 403);
-            }
-
-            $validated['target_kelas'] = $targetKelasIds->map(fn ($id) => (string) $id)->values()->toJson();
-            $validated['kelas_mapel_id'] = KelasMapel::whereIn('kelas_id', $targetKelasIds)->value('id');
-        } else {
-            $validated['target_kelas'] = null;
-            $validated['kelas_mapel_id'] = null;
-        }
-
-        unset($validated['target_kelas_ids']);
-
-        $pengumuman->update($validated);
-
-        return redirect()->route($this->routePrefix() . '.index')
-            ->with('success', 'Pengumuman berhasil diperbarui.');
+        $pengumuman->update($this->prepareTarget($v));
+        return redirect()->route($this->routePrefix().'.index')->with('success', 'Pengumuman berhasil diperbarui.');
     }
 
-    /**
-     * Hapus pengumuman.
-     */
     public function destroy(Pengumuman $pengumuman)
     {
         $role = Auth::user()->role?->nama_role;
-        if ($role !== 'admin' && (int) $pengumuman->created_by !== (int) Auth::id()) {
-            abort(403);
-        }
-
+        abort_unless($role === 'admin' || ($role === 'guru' && (int) $pengumuman->created_by === (int) Auth::id()), 403);
         $pengumuman->delete();
-        return redirect()->route($this->routePrefix() . '.index')
-            ->with('success', 'Pengumuman berhasil dihapus.');
+        return redirect()->route($this->routePrefix().'.index')->with('success', 'Pengumuman berhasil dihapus.');
+    }
+
+    private function prepareTarget(array $v): array
+    {
+        if ($v['target'] === 'kelas_mapel') {
+            $ids = collect($v['target_kelas_ids'] ?? [])->map(fn ($id) => (int) $id)->unique()->values();
+            if ($ids->isEmpty()) throw ValidationException::withMessages(['target_kelas_ids' => 'Pilih minimal satu kelas tujuan.']);
+            if (Auth::user()->isGuru()) {
+                $allowed = KelasMapel::where('guru_id', Auth::id())->whereIn('kelas_id', $ids)->pluck('kelas_id')->unique();
+                abort_unless($ids->diff($allowed)->isEmpty(), 403);
+            }
+            $v['target_kelas'] = $ids->map(fn ($id) => (string) $id)->values()->toJson();
+            $v['kelas_mapel_id'] = KelasMapel::whereIn('kelas_id', $ids)->value('id');
+        } else {
+            $v['target_kelas'] = null;
+            $v['kelas_mapel_id'] = null;
+        }
+        unset($v['target_kelas_ids']);
+        return $v;
     }
 
     private function routePrefix(): string
     {
         return match (Auth::user()->role?->nama_role) {
-            'guru' => 'guru.pengumuman',
-            'kepala_sekolah' => 'kepsek.pengumuman',
-            default => 'admin.pengumuman',
+            'guru' => 'guru.pengumuman', 'kepala_sekolah' => 'kepsek.pengumuman', default => 'admin.pengumuman',
         };
     }
 
-    private function canView(Pengumuman $pengumuman, ?string $role): bool
+    private function canView(Pengumuman $p, ?string $role): bool
     {
-        if ($role === 'admin') {
-            return true;
-        }
-
-        if ($role === 'kepala_sekolah') {
-            return in_array($pengumuman->target, ['semua', 'guru'], true) || (int) $pengumuman->created_by === (int) Auth::id();
-        }
-
+        if ($role === 'admin') return true;
+        if ($role === 'kepala_sekolah') return in_array($p->target, ['semua','guru'], true) || (int) $p->created_by === (int) Auth::id();
         if ($role === 'guru') {
-            if (in_array($pengumuman->target, ['semua', 'guru'], true) || (int) $pengumuman->created_by === (int) Auth::id()) {
-                return true;
-            }
-
-            $targetKelasIds = $pengumuman->targetKelasIds();
-            if ($pengumuman->target === 'kelas_mapel' && $targetKelasIds !== []) {
-                return KelasMapel::whereIn('kelas_id', $targetKelasIds)
-                    ->where('guru_id', Auth::id())
-                    ->exists();
-            }
-
-            return $pengumuman->target === 'kelas_mapel'
-                && KelasMapel::whereKey($pengumuman->kelas_mapel_id)
-                    ->where('guru_id', Auth::id())
-                    ->exists();
+            if (in_array($p->target, ['semua','guru'], true) || (int) $p->created_by === (int) Auth::id()) return true;
+            return $p->target === 'kelas_mapel' && KelasMapel::whereIn('kelas_id', $p->targetKelasIds())->where('guru_id', Auth::id())->exists();
         }
-
         return false;
+    }
+
+    private function notifyRecipients(Pengumuman $pengumuman): void
+    {
+        $query = User::query()->where('is_active', true)->where('id', '!=', Auth::id());
+        $target = $pengumuman->target;
+        if ($target === 'guru') $query->whereHas('role', fn ($q) => $q->where('nama_role', 'guru'));
+        elseif ($target === 'siswa') $query->whereHas('role', fn ($q) => $q->where('nama_role', 'siswa'));
+        elseif ($target === 'kelas_mapel') $query->whereHas('role', fn ($q) => $q->where('nama_role', 'siswa'))->whereHas('siswa', fn ($q) => $q->whereIn('kelas_id', $pengumuman->targetKelasIds())->where('status', 'aktif'));
+        else $query->whereHas('role', fn ($q) => $q->whereIn('nama_role', ['admin','guru','siswa','kepala_sekolah']));
+        foreach ($query->with('role')->get(['id','role_id']) as $user) {
+            Notifikasi::create(['user_id'=>$user->id,'tipe'=>'pengumuman_baru','judul'=>'Pengumuman baru','pesan'=>$pengumuman->judul,'link'=>$this->notificationLinkForUser($user,$pengumuman)]);
+        }
+    }
+
+    private function notificationLinkForUser(User $user, Pengumuman $pengumuman): string
+    {
+        return match ($user->role?->nama_role) {
+            'siswa' => route('siswa.pengumuman.show', $pengumuman), 'guru' => route('guru.pengumuman.show', $pengumuman),
+            'kepala_sekolah' => route('kepsek.pengumuman.show', $pengumuman), default => route('admin.pengumuman.show', $pengumuman),
+        };
     }
 }

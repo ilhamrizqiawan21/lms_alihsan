@@ -1,5 +1,5 @@
 <script setup>
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { reactive } from 'vue';
 import PageHeader from '../../../Components/AppShell/PageHeader.vue';
 import { SelectInput, TextInput } from '../../../Components/Form';
@@ -73,9 +73,9 @@ async function toggleActive(user) {
 }
 
 async function resetPassword(user) {
-    const confirmed = await window.confirmDialog?.(`Reset password ${user.nama_lengkap} ke 123456?`, {
+    const confirmed = await window.confirmDialog?.(`Generate password sementara baru untuk ${user.nama_lengkap}?`, {
         title: 'Reset Password',
-        confirmText: 'Ya, reset',
+        confirmText: 'Ya, generate password',
     });
 
     if (!confirmed) {
@@ -107,23 +107,21 @@ async function destroy(user) {
 </script>
 
 <template>
-    <Head title="Guru & Staf" />
+    <Head title="Guru dan Staf" />
 
-    <AppShell title="Guru & Staf">
+    <AppShell title="Guru dan Staf">
         <PageHeader
-            title="Guru & Staf"
+            title="Guru dan Staf"
             subtitle="Kelola akun guru, staf, dan admin sekolah."
             icon="bi-people-fill"
         />
 
-        <Card title="Daftar Guru & Staf" icon="bi-people-fill">
+        <Card title="Daftar Guru dan Staf" icon="bi-people-fill">
             <template #actions>
                 <a :href="exportExcelUrl()" class="btn btn-outline-success btn-sm">
                     <i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i> Excel
                 </a>
-                <a href="/admin/users/create" class="btn btn-success btn-sm">
-                    <i class="bi bi-plus-lg me-1" aria-hidden="true"></i> Tambah Guru/Staf
-                </a>
+                <Link href="/admin/users/create" class="btn btn-success btn-sm"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i> Tambah Guru dan Staf</Link>
             </template>
 
             <form class="row g-2 app-table-filter mb-3" @submit.prevent="applyFilters">

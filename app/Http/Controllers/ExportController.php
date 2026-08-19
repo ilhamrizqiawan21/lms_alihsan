@@ -14,6 +14,9 @@ use App\Models\TahunAjaran;
 use App\Models\Tugas;
 use App\Models\Pengaturan;
 use App\Models\PengumpulanTugas;
+use App\Services\Reports\Exports\AbsensiExportService;
+use App\Services\Reports\Exports\NilaiExportService;
+use App\Services\Reports\Exports\TugasExportService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -33,192 +36,34 @@ class ExportController extends Controller
     // ─────────────────────────────────────────────
     // EXPORT EXCEL - REKAP NILAI
     // ─────────────────────────────────────────────
-    public function excelNilai(Request $request)
+    public function excelNilai(Request $request, NilaiExportService $exportService)
     {
         $filters = $this->validatedExportFilters($request);
-        $kelasId = $filters['kelas_id'];
-        $semester = $filters['semester'];
-        $taAktif = TahunAjaran::getAktif();
+        [$path, $filename] = $exportService->export($filters['kelas_id'], $filters['semester']);
 
-        $kelas = Kelas::findOrFail($kelasId);
-        $siswaList = Siswa::with('user')->where('kelas_id', $kelasId)->where('status', 'aktif')->orderBy('nis')->get();
-        $mapelList = $this->mapelListUntukKelas($kelasId, $taAktif?->id, $semester);
-
-        $nilaiData = NilaiAkhir::whereIn('siswa_id', $siswaList->pluck('id'))
-            ->where('tahun_ajaran_id', $taAktif?->id)->where('semester', $semester)
-            ->get()->groupBy('siswa_id');
-
-        $writer = new Writer();
-        $filename = "rekap_nilai_{$kelas->tingkat}_{$kelas->nama_kelas}_semester_{$semester}.xlsx";
-        $filePath = $this->temporaryExcelPath('rekap_nilai_');
-
-        $writer->openToFile($filePath);
-        $this->prepareWorksheet($writer, 12);
-
-        $reportSchool = $this->reportSchool($taAktif, $semester);
-        $this->writeExcelReportHeader($writer, 'REKAP NILAI', $reportSchool, "Kelas {$kelas->tingkat} {$kelas->nama_kelas}");
-
-        $headers = array_merge(
-            ['No', 'NIS', 'Nama'],
-            $mapelList->pluck('nama_mapel')->toArray(),
-            ['Rata-rata']
-        );
-        $this->writeExcelTableHeader($writer, $headers);
-
-        // Data
-        foreach ($siswaList as $i => $s) {
-            $sn = $nilaiData->get($s->id, collect());
-            $nilaiRow = [];
-            foreach ($mapelList as $mp) {
-                $n = $sn->firstWhere('kelas_mapel_id', $mp->kelas_mapel_id);
-                $nilaiRow[] = $n ? (float) $n->rata_akhir : '';
-            }
-            $validNilai = array_filter($nilaiRow, fn($v) => $v !== '');
-            $rata = count($validNilai) > 0 ? round(array_sum($validNilai) / count($validNilai), 2) : '';
-
-            $this->writeExcelDataRow($writer, array_merge(
-                [$i + 1, $s->nis, $s->user->nama_lengkap ?? '-'],
-                $nilaiRow,
-                [$rata]
-            ), $i);
-        }
-
-        $writer->close();
-
-        return response()->download($filePath, $filename)->deleteFileAfterSend(true);
+        return response()->download($path, $filename)->deleteFileAfterSend(true);
     }
 
     // ─────────────────────────────────────────────
     // EXPORT EXCEL - REKAP ABSENSI
     // ─────────────────────────────────────────────
-    public function excelAbsensi(Request $request)
+    public function excelAbsensi(Request $request, AbsensiExportService $exportService)
     {
         $filters = $this->validatedExportFilters($request, withMonth: true);
-        $kelasId = $filters['kelas_id'];
-        $bulan = $filters['bulan'];
-        $semester = $filters['semester'];
-        $taAktif = TahunAjaran::getAktif();
+        [$path, $filename] = $exportService->export($filters['kelas_id'], $filters['semester'], $filters['bulan']);
 
-        $kelas = Kelas::findOrFail($kelasId);
-        $siswaList = Siswa::with('user')->where('kelas_id', $kelasId)->where('status', 'aktif')->orderBy('nis')->get();
-
-        $tanggalList = Absensi::whereHas('kelasMapel', fn($q) => $q
-                ->where('kelas_id', $kelasId)
-                ->where('tahun_ajaran_id', $taAktif?->id)
-                ->where('semester', $semester))
-            ->whereBetween('tanggal', ["{$bulan}-01", date('Y-m-t', strtotime("{$bulan}-01"))])
-            ->orderBy('tanggal')->pluck('tanggal')->unique()->map(fn($d) => $d->format('Y-m-d'))->values();
-
-        $absensiData = Absensi::whereIn('siswa_id', $siswaList->pluck('id'))
-            ->whereHas('kelasMapel', fn($q) => $q
-                ->where('kelas_id', $kelasId)
-                ->where('tahun_ajaran_id', $taAktif?->id)
-                ->where('semester', $semester))
-            ->whereBetween('tanggal', ["{$bulan}-01", date('Y-m-t', strtotime("{$bulan}-01"))])
-            ->get()->groupBy('siswa_id');
-
-        $writer = new Writer();
-        $filename = "rekap_absensi_{$kelas->tingkat}_{$kelas->nama_kelas}_{$bulan}.xlsx";
-        $filePath = $this->temporaryExcelPath('rekap_absensi_');
-
-        $writer->openToFile($filePath);
-        $this->prepareWorksheet($writer, 12);
-
-        $reportSchool = $this->reportSchool($taAktif, $semester);
-        $this->writeExcelReportHeader($writer, 'REKAP ABSENSI', $reportSchool, "Kelas {$kelas->tingkat} {$kelas->nama_kelas} - Bulan {$bulan}");
-
-        $headers = array_merge(
-            ['No', 'NIS', 'Nama'],
-            $tanggalList->map(fn($t) => date('d', strtotime($t)))->toArray(),
-            ['H', 'S', 'I', 'A']
-        );
-        $this->writeExcelTableHeader($writer, $headers);
-
-        // Data
-        foreach ($siswaList as $i => $s) {
-            $sa = $absensiData->get($s->id, collect());
-            $absenRow = [];
-            $hadir = $sakit = $izin = $alpha = 0;
-            foreach ($tanggalList as $tgl) {
-                $ab = $sa->firstWhere('tanggal', $tgl);
-                $st = $ab ? $ab->status : '';
-                $absenRow[] = match($st) {
-                    'hadir' => 'H',
-                    'sakit' => 'S',
-                    'izin' => 'I',
-                    'alpha' => 'A',
-                    default => ''
-                };
-                if ($st === 'hadir') $hadir++;
-                elseif ($st === 'sakit') $sakit++;
-                elseif ($st === 'izin') $izin++;
-                elseif ($st === 'alpha') $alpha++;
-            }
-
-            $this->writeExcelDataRow($writer, array_merge(
-                [$i + 1, $s->nis, $s->user->nama_lengkap ?? '-'],
-                $absenRow,
-                [$hadir, $sakit, $izin, $alpha]
-            ), $i);
-        }
-
-        $writer->close();
-
-        return response()->download($filePath, $filename)->deleteFileAfterSend(true);
+        return response()->download($path, $filename)->deleteFileAfterSend(true);
     }
 
     // ─────────────────────────────────────────────
     // EXPORT EXCEL - REKAP TUGAS
     // ─────────────────────────────────────────────
-    public function excelTugas(Request $request)
+    public function excelTugas(Request $request, TugasExportService $exportService)
     {
         $filters = $this->validatedExportFilters($request);
-        $kelasId = $filters['kelas_id'];
-        $semester = $filters['semester'];
-        $taAktif = TahunAjaran::getAktif();
+        [$path, $filename] = $exportService->export($filters['kelas_id'], $filters['semester']);
 
-        $kelas = Kelas::findOrFail($kelasId);
-        $totalSiswa = Siswa::where('kelas_id', $kelasId)->where('status', 'aktif')->count();
-
-        $tugasList = Tugas::with(['kelasMapel.mataPelajaran', 'kelasMapel.guru'])
-            ->whereHas('kelasMapel', fn($q) => $q->where('kelas_id', $kelasId)->where('tahun_ajaran_id', $taAktif?->id)->where('semester', $semester))
-            ->withCount(['pengumpulan as sudah_kumpul' => fn($q) => $q
-                ->whereIn('status', ['sudah', 'terlambat', 'dinilai'])
-                ->whereHas('siswa', fn($siswa) => $siswa->where('kelas_id', $kelasId)->where('status', 'aktif'))])
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $writer = new Writer();
-        $filename = "rekap_tugas_{$kelas->tingkat}_{$kelas->nama_kelas}_semester_{$semester}.xlsx";
-        $filePath = $this->temporaryExcelPath('rekap_tugas_');
-
-        $writer->openToFile($filePath);
-        $this->prepareWorksheet($writer, 9);
-
-        $reportSchool = $this->reportSchool($taAktif, $semester);
-        $this->writeExcelReportHeader($writer, 'REKAP TUGAS', $reportSchool, "Kelas {$kelas->tingkat} {$kelas->nama_kelas}");
-
-        $this->writeExcelTableHeader($writer, ['No', 'Judul Tugas', 'Mata Pelajaran', 'Guru', 'Deadline', 'Kategori', 'Sudah Kumpul', 'Total Siswa', 'Persentase']);
-
-        // Data
-        foreach ($tugasList as $i => $t) {
-            $persen = $totalSiswa > 0 ? round(($t->sudah_kumpul / $totalSiswa) * 100, 2) : 0;
-            $this->writeExcelDataRow($writer, [
-                $i + 1,
-                $t->judul,
-                $t->kelasMapel?->mataPelajaran?->nama_mapel ?? '-',
-                $t->kelasMapel?->guru?->nama_lengkap ?? '-',
-                $t->batas_waktu ? date('d/m/Y', strtotime($t->batas_waktu)) : '-',
-                $t->kategori_nilai ?? 'NH',
-                $t->sudah_kumpul,
-                $totalSiswa,
-                "{$persen}%",
-            ], $i);
-        }
-
-        $writer->close();
-
-        return response()->download($filePath, $filename)->deleteFileAfterSend(true);
+        return response()->download($path, $filename)->deleteFileAfterSend(true);
     }
 
     // ─────────────────────────────────────────────

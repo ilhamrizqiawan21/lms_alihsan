@@ -89,7 +89,7 @@ function exportUrl(format) {
                         v-model="filterForm.kelas_mapel_id"
                         name="kelas_mapel_id"
                         wrapper-class="mb-0"
-                        placeholder="Semua Kelas & Mapel"
+                        placeholder="Semua Kelas dan Mapel"
                         search-placeholder="Cari kelas atau mapel..."
                         :options="kelasMapelOptions"
                     />
@@ -136,13 +136,15 @@ function exportUrl(format) {
             </form>
         </Card>
 
-        <div v-if="absensi.data.length" class="d-flex flex-wrap gap-2 mb-3">
-            <a :href="exportUrl('excel')" class="btn btn-sm btn-outline-success">
-                <i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i> Excel
-            </a>
-            <a :href="exportUrl('pdf')" class="btn btn-sm btn-outline-danger">
-                <i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i> PDF
-            </a>
+        <div v-if="absensi.data.length" class="content-summary">
+            <div>
+                <div class="content-summary-title">Hasil pencarian siap diekspor</div>
+                <div class="content-summary-text">Menampilkan {{ absensi.data.length }} baris data berdasarkan filter aktif saat ini.</div>
+            </div>
+            <div class="content-summary-actions">
+                <Button :href="exportUrl('excel')" color="outline-success" icon="bi-file-earmark-excel" size="sm">Excel</Button>
+                <Button :href="exportUrl('pdf')" color="outline-danger" icon="bi-file-earmark-pdf" size="sm">PDF</Button>
+            </div>
         </div>
 
         <Card body-class="p-0">

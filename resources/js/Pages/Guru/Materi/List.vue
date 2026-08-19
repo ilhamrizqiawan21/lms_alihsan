@@ -1,10 +1,9 @@
 <script setup>
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
-import PageHeader from '../../../Components/AppShell/PageHeader.vue';
 import { FileInput, TextareaInput, TextInput } from '../../../Components/Form';
 import AppShell from '../../../Layouts/AppShell.vue';
-import { Button, Card, EmptyState, IconButton, TableWrapper } from '../../../Components/UI';
+import { Button, Card, DashboardHero, EmptyState, IconButton, QuickActionBar, TableWrapper } from '../../../Components/UI';
 
 const props = defineProps({
     kelasMapel: { type: Object, required: true },
@@ -17,6 +16,15 @@ const form = useForm({
     deskripsi: '',
     file_materi: null,
 });
+
+const courseTabs = [
+    { label: 'Ringkasan', href: props.kelasMapel.workspace_url, icon: 'bi-grid-1x2' },
+    { label: 'Materi', href: '#', icon: 'bi-file-earmark-text', active: true },
+    { label: 'Tugas', href: `/guru/tugas/${props.kelasMapel.id}/list`, icon: 'bi-journal-check' },
+    { label: 'Nilai', href: `/guru/nilai/${props.kelasMapel.id}/input`, icon: 'bi-bar-chart' },
+    { label: 'Absensi', href: `/guru/absensi/${props.kelasMapel.id}/create`, icon: 'bi-clipboard-check' },
+    { label: 'Chat', href: `/guru/chat/${props.kelasMapel.id}`, icon: 'bi-chat-dots' },
+];
 
 function submit() {
     form.post(props.kelasMapel.store_url, {
@@ -50,16 +58,23 @@ async function destroy(item) {
     <Head :title="`Materi: ${kelasMapel.mata_pelajaran} - ${kelasMapel.kelas}`" />
 
     <AppShell title="Materi">
-        <PageHeader
-            :title="`Materi ${kelasMapel.mata_pelajaran} - ${kelasMapel.kelas}`"
+        <DashboardHero
+            eyebrow="Workspace Kelas/Mapel"
+            :title="kelasMapel.mata_pelajaran"
+            :subtitle="`${kelasMapel.kelas} - Kelola materi pembelajaran untuk kelas ini.`"
             icon="bi-file-earmark-text-fill"
+            tone="teacher"
         >
             <template #actions>
-                <a :href="kelasMapel.back_url" class="btn btn-sm btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-1" aria-hidden="true"></i> Kembali
-                </a>
+                <QuickActionBar :actions="[{ label: 'Ringkasan', href: kelasMapel.workspace_url, icon: 'bi-grid-1x2', color: 'light' }]" />
             </template>
-        </PageHeader>
+        </DashboardHero>
+
+        <nav class="workspace-tabs" aria-label="Navigasi kelas dan mata pelajaran">
+            <a v-for="tab in courseTabs" :key="tab.label" :href="tab.href" class="workspace-tab" :class="{ 'is-active': tab.active }">
+                <i class="bi" :class="tab.icon" aria-hidden="true"></i>{{ tab.label }}
+            </a>
+        </nav>
 
         <div class="row">
             <div class="col-md-5 mb-4">
@@ -95,7 +110,7 @@ async function destroy(item) {
                             color="success"
                             size=""
                             icon="bi-upload"
-                            class="w-100"
+                            class="w-100 mt-2"
                             :disabled="form.processing"
                         >
                             {{ form.processing ? 'Mengupload...' : 'Upload' }}
@@ -123,7 +138,7 @@ async function destroy(item) {
                                         <td style="font-size:0.82rem;">{{ item.deskripsi_ringkas }}</td>
                                         <td style="white-space:nowrap;font-size:0.82rem;">{{ item.tanggal }}</td>
                                         <td>
-                                            <div class="d-inline-flex align-items-center gap-1">
+                                            <div class="d-inline-flex align-items-center gap-1 flex-wrap">
                                                 <a
                                                     v-if="item.download_url"
                                                     :href="item.download_url"

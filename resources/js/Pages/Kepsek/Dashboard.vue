@@ -1,9 +1,8 @@
 <script setup>
 import { Head } from '@inertiajs/vue3';
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import PageHeader from '../../Components/AppShell/PageHeader.vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import AppShell from '../../Layouts/AppShell.vue';
-import { Badge, Card, EmptyState, StatCard, TableWrapper } from '../../Components/UI';
+import { Badge, Card, DashboardHero, EmptyState, MetricStrip, TableWrapper } from '../../Components/UI';
 
 const props = defineProps({
     statistik: { type: Object, default: () => ({}) },
@@ -12,6 +11,13 @@ const props = defineProps({
     pengumuman: { type: Array, default: () => [] },
     loginTerbaru: { type: Array, default: () => [] },
 });
+
+const metrics = computed(() => [
+    { label: 'Total Siswa', value: props.statistik.total_siswa ?? 0, icon: 'bi-people-fill', tone: 'success' },
+    { label: 'Total Guru', value: props.statistik.total_guru ?? 0, icon: 'bi-person-workspace', tone: 'primary' },
+    { label: 'Total Kelas', value: props.statistik.total_kelas ?? 0, icon: 'bi-building', tone: 'info' },
+    { label: 'Mata Pelajaran', value: props.statistik.total_mapel ?? 0, icon: 'bi-book-fill', tone: 'warning' },
+]);
 
 const absensiCanvas = ref(null);
 let absensiChart = null;
@@ -61,18 +67,15 @@ onBeforeUnmount(() => absensiChart?.destroy());
     <Head title="Dashboard Kepala Sekolah" />
 
     <AppShell title="Dashboard Kepala Sekolah">
-        <PageHeader
+        <DashboardHero
+            eyebrow="Ringkasan Sekolah"
             title="Dashboard Kepala Sekolah"
+            subtitle="Pantau absensi, nilai, dan aktivitas terbaru dari satu layar yang lebih ringkas."
             icon="bi-speedometer2"
-            subtitle="Pantau ringkasan sekolah, absensi, dan pengumuman terbaru."
+            tone="warning"
         />
 
-        <div class="stats-grid">
-            <StatCard label="Total Siswa" :value="statistik.total_siswa ?? 0" icon="bi-people-fill" />
-            <StatCard label="Total Guru" :value="statistik.total_guru ?? 0" icon="bi-person-workspace" />
-            <StatCard label="Total Kelas" :value="statistik.total_kelas ?? 0" icon="bi-building" />
-            <StatCard label="Mata Pelajaran" :value="statistik.total_mapel ?? 0" icon="bi-book-fill" />
-        </div>
+        <MetricStrip :items="metrics" />
 
         <div class="row">
             <div class="col-md-6 mb-4">

@@ -1,12 +1,13 @@
 <script setup>
 import { Head } from '@inertiajs/vue3';
-import PageHeader from '../../../Components/AppShell/PageHeader.vue';
 import AppShell from '../../../Layouts/AppShell.vue';
-import { Badge, Button, Card, EmptyState, TableWrapper } from '../../../Components/UI';
+import { Badge, Button, Card, DashboardHero, EmptyState, QuickActionBar, TableWrapper } from '../../../Components/UI';
 
-defineProps({
+const props = defineProps({
     tugas: { type: Array, default: () => [] },
 });
+
+const openTasks = () => props.tugas.filter((item) => !item.status).length;
 
 function statusColor(status) {
     return {
@@ -25,9 +26,25 @@ function statusLabel(status) {
     <Head title="Tugas Saya" />
 
     <AppShell title="Tugas Saya">
-        <PageHeader title="Tugas Saya" icon="bi-journal-fill" />
+        <DashboardHero
+            eyebrow="Pembelajaran Saya"
+            title="Tugas Saya"
+            :subtitle="`${openTasks()} tugas belum dikumpulkan. Buka detail tugas untuk mengirim jawaban.`"
+            icon="bi-journal-check"
+            tone="student"
+        >
+            <template #actions>
+                <QuickActionBar :actions="[{ label: 'Materi', href: '/siswa/materi', icon: 'bi-file-earmark-text', color: 'light' }]" />
+            </template>
+        </DashboardHero>
 
         <Card title="Daftar Tugas" icon="bi-journal-fill" body-class="p-0">
+            <div v-if="tugas.length" class="p-3 border-bottom bg-light-subtle">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <span class="text-muted small">Tugas yang sudah dikumpulkan dan yang masih menunggu.</span>
+                    <span class="badge bg-soft-primary">{{ openTasks() }} belum dikumpulkan</span>
+                </div>
+            </div>
             <TableWrapper v-if="tugas.length">
                 <table class="table table-hover mb-0">
                     <thead>
@@ -43,7 +60,10 @@ function statusLabel(status) {
                     <tbody>
                         <tr v-for="item in tugas" :key="item.id">
                             <td><a :href="item.show_url" class="text-decoration-none fw-bold">{{ item.judul }}</a></td>
-                            <td>{{ item.mata_pelajaran }}</td>
+                            <td>
+                                <a v-if="item.workspace_url" :href="item.workspace_url" class="text-decoration-none">{{ item.mata_pelajaran }}</a>
+                                <span v-else>{{ item.mata_pelajaran }}</span>
+                            </td>
                             <td>{{ item.batas_waktu }}</td>
                             <td><Badge :color="statusColor(item.status)">{{ statusLabel(item.status) }}</Badge></td>
                             <td>{{ item.nilai }}</td>

@@ -8,7 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (DB::getDriverName() !== 'mysql' || !Schema::hasColumn('nilai_akhir', 'rata_akhir')) {
+        if (
+            DB::getDriverName() !== 'mysql' ||
+            !Schema::hasColumn('nilai_akhir', 'rata_akhir')
+        ) {
             return;
         }
 
@@ -18,7 +21,10 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (DB::getDriverName() !== 'mysql' || !Schema::hasColumn('nilai_akhir', 'rata_akhir')) {
+        if (
+            DB::getDriverName() !== 'mysql' ||
+            !Schema::hasColumn('nilai_akhir', 'rata_akhir')
+        ) {
             return;
         }
 
@@ -39,11 +45,9 @@ return new class extends Migration
             (CASE WHEN sat IS NOT NULL THEN 1 ELSE 0 END)
         ";
 
-        if ($safeDivision) {
-            $denominator = "NULLIF(($denominator), 0)";
-        } else {
-            $denominator = "($denominator)";
-        }
+        $denominator = $safeDivision
+            ? "NULLIF(($denominator), 0)"
+            : "($denominator)";
 
         return "
             ALTER TABLE nilai_akhir

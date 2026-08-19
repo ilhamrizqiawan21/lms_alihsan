@@ -38,6 +38,7 @@ class DashboardController extends Controller
         $statistik = $this->statistikService->dashboardSiswa($siswa->id);
 
         $kelasMapel = KelasMapel::with(['mataPelajaran', 'guru', 'tahunAjaran'])
+            ->withCount(['materi', 'tugas'])
             ->where('kelas_id', $siswa->kelas_id)
             ->aktif()
             ->get();
@@ -108,6 +109,14 @@ class DashboardController extends Controller
                     'selesai' => (bool) $pengumpulan,
                 ];
             })->values(),
+            'courses' => $kelasMapel->map(fn (KelasMapel $item) => [
+                'id' => $item->id,
+                'title' => $item->mataPelajaran?->nama_mapel ?? '-',
+                'subtitle' => $item->guru?->nama_lengkap ?? 'Guru belum ditetapkan',
+                'meta' => ($item->materi_count ?? 0) . ' materi · ' . ($item->tugas_count ?? 0) . ' tugas',
+                'href' => route('siswa.kelas-mapel.show', $item),
+                'badges' => [['label' => 'Kelas saya', 'color' => 'primary']],
+            ])->values(),
             'notifikasi' => $notifikasi->map(fn (Notifikasi $item) => [
                 'id' => $item->id,
                 'tipe' => $item->tipe,
@@ -125,6 +134,8 @@ class DashboardController extends Controller
             'links' => [
                 'notifikasi' => route('siswa.notifikasi.index'),
                 'pengumuman' => route('siswa.pengumuman.index'),
+                'materi' => route('siswa.materi.index'),
+                'tugas' => route('siswa.tugas.index'),
             ],
         ]);
     }

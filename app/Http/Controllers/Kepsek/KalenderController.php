@@ -8,7 +8,8 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
-//Kalender untuk Kepala Sekolah, menampilkan kalender dengan event sekolah dan event milik kepala sekolah, serta fitur CRUD untuk event
+
+// Kalender Kepala Sekolah bersifat monitoring-only.
 class KalenderController extends Controller
 {
     public function index(Request $request)
@@ -40,77 +41,28 @@ class KalenderController extends Controller
         return Inertia::render('Kepsek/Kalender/Index', [
             'calendar' => $this->calendarProps($year, $month, $daysInMonth, $startDayOfWeek, $prevMonth, $nextMonth, $eventProps),
             'monthEvents' => $eventProps,
-            'storeUrl' => route('kepsek.kalender.store'),
-            'createTitle' => 'Tambah Event Sekolah',
-            'fixedScope' => 'school',
             'pageTitle' => 'Kalender & Monitoring Event Sekolah',
         ]);
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'event_date' => 'required|date',
-            'description' => 'nullable|string',
-            'is_holiday' => 'boolean',
-            'scope' => 'required|in:school',
-            'is_done' => 'boolean',
-        ]);
-
-        $validated['is_holiday'] = $request->boolean('is_holiday');
-        $validated['is_done'] = $request->boolean('is_done');
-
-        CalendarEvent::create($validated + ['user_id' => auth()->id()]);
-
-        return back()->with('success', 'Event berhasil ditambahkan.');
+        abort(403, 'Kepala sekolah hanya dapat memantau kalender.');
     }
 
     public function update(Request $request, CalendarEvent $calendarEvent)
     {
-        $this->authorizeSchoolEvent($calendarEvent);
-
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'event_date' => 'required|date',
-            'description' => 'nullable|string',
-            'is_holiday' => 'boolean',
-            'is_done' => 'boolean',
-        ]);
-
-        $validated['is_holiday'] = $request->boolean('is_holiday');
-        $validated['is_done'] = $request->boolean('is_done');
-
-        $calendarEvent->update($validated);
-
-        return back()->with('success', 'Event berhasil diperbarui.');
+        abort(403, 'Kepala sekolah hanya dapat memantau kalender.');
     }
 
     public function destroy(CalendarEvent $calendarEvent)
     {
-        $this->authorizeSchoolEvent($calendarEvent);
-
-        $calendarEvent->delete();
-        return back()->with('success', 'Event berhasil dihapus.');
+        abort(403, 'Kepala sekolah hanya dapat memantau kalender.');
     }
 
-    /**
-     * Toggle status selesai event.
-     */
     public function toggleDone(CalendarEvent $calendarEvent)
     {
-        $this->authorizeSchoolEvent($calendarEvent);
-
-        $calendarEvent->update(['is_done' => !$calendarEvent->is_done]);
-
-        return back()->with('success', $calendarEvent->is_done
-            ? 'Event ditandai selesai.'
-            : 'Event dibuka kembali.');
-    }
-
-    private function authorizeSchoolEvent(CalendarEvent $calendarEvent): void
-    {
-        abort_unless($calendarEvent->scope === 'school', 403);
+        abort(403, 'Kepala sekolah hanya dapat memantau kalender.');
     }
 
     private function calendarProps(int $year, int $month, int $daysInMonth, int $startDayOfWeek, Carbon $prevMonth, Carbon $nextMonth, $eventProps): array
@@ -181,10 +133,7 @@ class KalenderController extends Controller
             'is_done' => $event->is_done,
             'scope' => $event->scope,
             'created_by' => $event->user?->nama_lengkap ?? '-',
-            'can_manage' => true,
-            'update_url' => route('kepsek.kalender.update', $event),
-            'delete_url' => route('kepsek.kalender.destroy', $event),
-            'toggle_done_url' => route('kepsek.kalender.toggle-done', $event),
+            'can_manage' => false,
         ];
     }
 }

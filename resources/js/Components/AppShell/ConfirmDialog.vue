@@ -1,8 +1,9 @@
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue';
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 
 const visible = ref(false);
 const options = ref({});
+const dialog = ref(null);
 let resolver = null;
 let previousFocus = null;
 
@@ -42,8 +43,36 @@ function handleKeydown(event) {
 
     if (event.key === 'Escape') {
         close(false);
+        return;
+    }
+
+    if (event.key !== 'Tab' || !dialog.value) {
+        return;
+    }
+
+    const focusable = [...dialog.value.querySelectorAll('button:not([disabled])')];
+    if (!focusable.length) return;
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
     }
 }
+
+watch(visible, async (isVisible) => {
+    document.body.classList.toggle('modal-open', isVisible);
+
+    if (isVisible) {
+        await nextTick();
+        dialog.value?.querySelector('button')?.focus();
+    }
+});
 
 onMounted(() => {
     window.confirmAction = (message, callback, config = {}) => {
@@ -54,13 +83,21 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+    document.body.classList.remove('modal-open');
     document.removeEventListener('keydown', handleKeydown);
 });
 </script>
 
 <template>
     <div v-if="visible" class="confirm-overlay" @click.self="close(false)">
-        <div class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmMessage">
+        <div
+            ref="dialog"
+            class="confirm-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="confirmTitle"
+            aria-describedby="confirmMessage"
+        >
             <div class="confirm-icon" :class="options.danger ? 'danger' : 'warning'">
                 <i class="bi" :class="options.danger ? 'bi-exclamation-triangle-fill' : 'bi-question-circle-fill'" aria-hidden="true"></i>
             </div>
@@ -68,7 +105,7 @@ onUnmounted(() => {
             <p id="confirmMessage" class="confirm-message">{{ options.message }}</p>
             <div class="confirm-actions">
                 <button type="button" class="btn btn-outline-secondary" @click="close(false)">{{ options.cancelText }}</button>
-                <button type="button" class="btn" :class="options.danger ? 'btn-danger' : 'btn-success'" autofocus @click="close(true)">
+                <button type="button" class="btn" :class="options.danger ? 'btn-danger' : 'btn-success'" @click="close(true)">
                     {{ options.confirmText }}
                 </button>
             </div>

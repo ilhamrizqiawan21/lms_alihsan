@@ -75,6 +75,7 @@ class AbsensiController extends Controller
                 'kelas' => $item->kelas?->nama_kelas ?? '-',
                 'mata_pelajaran' => $item->mataPelajaran?->nama_mapel ?? '-',
                 'pertemuan_per_minggu' => (int) $item->pertemuan_per_minggu,
+                'workspace_url' => route('guru.kelas-mapel.show', $item),
             ])->values(),
             'filters' => [
                 'kelas_mapel_id' => $kelasMapelId ? (string) $kelasMapelId : '',
@@ -85,6 +86,7 @@ class AbsensiController extends Controller
                 'kelas' => $kmData->kelas?->nama_kelas ?? '-',
                 'mata_pelajaran' => $kmData->mataPelajaran?->nama_mapel ?? '-',
                 'pertemuan_per_minggu' => (int) $kmData->pertemuan_per_minggu,
+                'workspace_url' => route('guru.kelas-mapel.show', $kmData),
                 'store_url' => route('guru.absensi.store', $kmData),
                 'export_excel_url' => route('guru.absensi.export.excel', $kmData),
                 'export_pdf_url' => route('guru.absensi.export.pdf', $kmData),

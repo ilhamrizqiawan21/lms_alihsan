@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Kelas;
 use App\Models\Siswa;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class KelasController extends Controller
@@ -15,12 +17,30 @@ class KelasController extends Controller
      */
     public function index()
     {
-        $kelas = Kelas::withCount(['siswa' => function ($q) {
-            $q->where('status', 'aktif');
-        }])->orderBy('tingkat')->orderBy('nama_kelas')->get();
+        $kelas = Kelas::withCount([
+            'siswa' => fn ($query) => $query->where('status', 'aktif'),
+            'kelasMapel',
+            'waliKelas',
+        ])
+            ->orderByRaw("CASE tingkat WHEN 'VII' THEN 1 WHEN 'VIII' THEN 2 WHEN 'IX' THEN 3 ELSE 4 END")
+            ->orderBy('nama_kelas')
+            ->get();
 
         return Inertia::render('Admin/Kelas/Index', [
-            'kelas' => $kelas,
+            'kelas' => $kelas->map(fn (Kelas $item) => [
+                'id' => $item->id,
+                'tingkat' => $item->tingkat,
+                'nama_kelas' => $item->nama_kelas,
+                'siswa_count' => $item->siswa_count,
+                'kelas_mapel_count' => $item->kelas_mapel_count,
+                'wali_kelas_count' => $item->wali_kelas_count,
+                'siswa_url' => route('admin.kelas-siswa.index', ['kelas_id' => $item->id]),
+            ])->values(),
+            'metrics' => [
+                'total_kelas' => $kelas->count(),
+                'total_siswa' => $kelas->sum('siswa_count'),
+                'total_penugasan' => $kelas->sum('kelas_mapel_count'),
+            ],
         ]);
     }
 
@@ -29,9 +49,14 @@ class KelasController extends Controller
      */
     public function store(Request $request)
     {
+        $this->normalizeNamaKelas($request);
+
         $validated = $request->validate([
             'tingkat' => 'required|in:VII,VIII,IX',
-            'nama_kelas' => 'required|string|max:20|unique:kelas,nama_kelas',
+            'nama_kelas' => [
+                'required', 'string', 'max:20', 'regex:/^[A-Z0-9][A-Z0-9 .-]*$/',
+                Rule::unique('kelas', 'nama_kelas')->where(fn ($query) => $query->where('tingkat', $request->input('tingkat'))),
+            ],
         ]);
 
         Kelas::create($validated);
@@ -45,9 +70,16 @@ class KelasController extends Controller
      */
     public function update(Request $request, Kelas $kelas)
     {
+        $this->normalizeNamaKelas($request);
+
         $validated = $request->validate([
             'tingkat' => 'required|in:VII,VIII,IX',
-            'nama_kelas' => 'required|string|max:20|unique:kelas,nama_kelas,' . $kelas->id,
+            'nama_kelas' => [
+                'required', 'string', 'max:20', 'regex:/^[A-Z0-9][A-Z0-9 .-]*$/',
+                Rule::unique('kelas', 'nama_kelas')
+                    ->ignore($kelas->id)
+                    ->where(fn ($query) => $query->where('tingkat', $request->input('tingkat'))),
+            ],
         ]);
 
         $kelas->update($validated);
@@ -69,6 +101,10 @@ class KelasController extends Controller
             return back()->with('error', 'Tidak dapat menghapus kelas yang masih memiliki pengaturan pengajaran. Hapus pengaturan pengajarannya terlebih dahulu.');
         }
 
+        if ($kelas->waliKelas()->exists()) {
+            return back()->with('error', 'Tidak dapat menghapus kelas yang masih memiliki wali kelas. Hapus penetapan wali kelas terlebih dahulu.');
+        }
+
         $kelas->delete();
         return redirect()->route('admin.kelas.index')
             ->with('success', 'Kelas berhasil dihapus.');
@@ -81,5 +117,12 @@ class KelasController extends Controller
     {
         $siswa = $kelas->siswa()->with('user')->where('status', 'aktif')->get();
         return view('admin.kelas.siswa', compact('kelas', 'siswa'));
+    }
+
+    private function normalizeNamaKelas(Request $request): void
+    {
+        $request->merge([
+            'nama_kelas' => Str::upper(trim((string) $request->input('nama_kelas'))),
+        ]);
     }
 }

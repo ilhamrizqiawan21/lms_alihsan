@@ -1,14 +1,20 @@
 <script setup>
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import PageHeader from '../../../Components/AppShell/PageHeader.vue';
 import { SelectInput, TextInput } from '../../../Components/Form';
 import AppShell from '../../../Layouts/AppShell.vue';
-import { Badge, Button, Card, EmptyState, IconButton, TableWrapper } from '../../../Components/UI';
+import { Badge, Button, Card, DashboardHero, EmptyState, IconButton, MetricStrip, TableWrapper } from '../../../Components/UI';
 
 const props = defineProps({
     kelas: { type: Array, default: () => [] },
+    metrics: { type: Object, default: () => ({}) },
 });
+
+const metrics = computed(() => [
+    { label: 'Kelas', value: props.metrics.total_kelas ?? 0, icon: 'bi-building', tone: 'primary' },
+    { label: 'Siswa aktif', value: props.metrics.total_siswa ?? 0, icon: 'bi-people-fill', tone: 'success', href: '/admin/kelas-siswa' },
+    { label: 'Penugasan mapel', value: props.metrics.total_penugasan ?? 0, icon: 'bi-diagram-3-fill', tone: 'info', href: '/admin/kelas-mapel' },
+]);
 
 const tingkatOptions = [
     { value: 'VII', label: 'VII' },
@@ -89,11 +95,15 @@ async function destroy(item) {
     <Head title="Data Kelas" />
 
     <AppShell title="Data Kelas">
-        <PageHeader
+        <DashboardHero
+            eyebrow="Master Data"
             title="Data Kelas"
-            subtitle="Kelola rombongan belajar dan tingkat kelas."
-            icon="bi-building"
+            subtitle="Kelola rombongan belajar, siswa aktif, dan kesiapan penugasan mengajar."
+            icon="bi-building-fill"
+            tone="admin"
         />
+
+        <MetricStrip :items="metrics" />
 
         <div class="row">
             <div class="col-md-5 mb-4">
@@ -112,7 +122,8 @@ async function destroy(item) {
                             v-model="createForm.nama_kelas"
                             name="nama_kelas"
                             label="Nama Kelas"
-                            placeholder="Contoh: VII-A"
+                            placeholder="Contoh: A"
+                            help="Tingkat dipilih terpisah. Nama kelas dapat dipakai kembali pada tingkat lain."
                             maxlength="20"
                             required
                             :error="createForm.errors.nama_kelas"
@@ -173,7 +184,9 @@ async function destroy(item) {
                                 <tr>
                                     <th>Tingkat</th>
                                     <th>Nama Kelas</th>
-                                    <th>Jumlah Siswa</th>
+                                    <th>Siswa Aktif</th>
+                                    <th>Penugasan</th>
+                                    <th>Wali Kelas</th>
                                     <th class="table-action-column">Aksi</th>
                                 </tr>
                             </thead>
@@ -182,8 +195,11 @@ async function destroy(item) {
                                     <td><Badge color="secondary">{{ item.tingkat }}</Badge></td>
                                     <td><strong>{{ item.nama_kelas }}</strong></td>
                                     <td>{{ item.siswa_count ?? 0 }} siswa</td>
+                                    <td>{{ item.kelas_mapel_count ?? 0 }} mapel</td>
+                                    <td>{{ item.wali_kelas_count ? 'Sudah ada' : 'Belum ada' }}</td>
                                     <td class="table-action-column">
                                         <div class="d-flex justify-content-end gap-1">
+                                            <Button :href="item.siswa_url" color="outline-secondary" icon="bi-people" aria-label="Lihat siswa">Siswa</Button>
                                             <IconButton
                                                 icon="bi-pencil"
                                                 :label="`Edit kelas ${item.nama_kelas}`"

@@ -157,8 +157,11 @@ class UserController extends Controller
      */
     public function create()
     {
-        $roles = $this->staffRoles();
-        return view('admin.users.create', compact('roles'));
+        return Inertia::render('Admin/Users/Form', [
+            'user' => null,
+            'roles' => $this->staffRoleProps(),
+            'storeUrl' => route('admin.users.store'),
+        ]);
     }
 
     /**
@@ -169,6 +172,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'username' => 'required|string|max:50|unique:users,username',
             'nama_lengkap' => 'required|string|max:100',
+            'email' => 'nullable|email|max:255|unique:users,email',
             'password' => 'nullable|string|min:6',
             'role_id' => 'required|exists:roles,id',
             'nip_nis' => 'nullable|string|max:20|unique:users,nip_nis',
@@ -224,8 +228,22 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $this->ensureNotSiswaUser($user);
-        $roles = $this->staffRoles();
-        return view('admin.users.edit', compact('user', 'roles'));
+
+        return Inertia::render('Admin/Users/Form', [
+            'user' => [
+                'id' => $user->id,
+                'username' => $user->username,
+                'nama_lengkap' => $user->nama_lengkap,
+                'email' => $user->email,
+                'role_id' => $user->role_id,
+                'nip_nis' => $user->nip_nis,
+                'jenis_kelamin' => $user->jenis_kelamin,
+                'is_active' => (bool) $user->is_active,
+                'update_url' => route('admin.users.update', $user),
+            ],
+            'roles' => $this->staffRoleProps(),
+            'storeUrl' => null,
+        ]);
     }
 
     /**
@@ -238,6 +256,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'username' => 'required|string|max:50|unique:users,username,' . $user->id,
             'nama_lengkap' => 'required|string|max:100',
+            'email' => 'nullable|email|max:255|unique:users,email,' . $user->id,
             'role_id' => 'required|exists:roles,id',
             'nip_nis' => 'nullable|string|max:20|unique:users,nip_nis,' . $user->id,
             'jenis_kelamin' => 'nullable|in:L,P',
@@ -354,6 +373,14 @@ class UserController extends Controller
     private function staffRoles()
     {
         return Role::where('nama_role', '!=', 'siswa')->orderBy('nama_role')->get();
+    }
+
+    private function staffRoleProps()
+    {
+        return $this->staffRoles()->map(fn (Role $role) => [
+            'id' => $role->id,
+            'nama_role' => $role->nama_role,
+        ])->values();
     }
 
     private function ensureStaffRole(Role $role): void

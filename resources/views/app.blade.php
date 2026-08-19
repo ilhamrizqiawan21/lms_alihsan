@@ -150,7 +150,6 @@
         }
     </style>
     @vite(['resources/css/app.css', 'resources/js/inertia.js'])
-    <link rel="stylesheet" href="{{ asset('css/lms-app.css') }}">
     @inertiaHead
 </head>
 <body>

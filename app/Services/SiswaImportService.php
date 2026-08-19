@@ -45,7 +45,8 @@ class SiswaImportService
                     'nip_nis' => $row['nis'],
                     'jenis_kelamin' => $row['jenis_kelamin'] ?: null,
                     'role_id' => $roleSiswa->id,
-                    'is_active' => $this->parseBoolean($row['is_active'], true),
+                    'is_active' => ($row['status'] ?: 'aktif') === 'aktif'
+                        && $this->parseBoolean($row['is_active'], true),
                 ]);
 
                 Siswa::create([
@@ -54,7 +55,7 @@ class SiswaImportService
                     'kelas_id' => (int) $row['kelas_id'],
                     'angkatan' => $row['angkatan'] ?: null,
                     'status' => $row['status'] ?: 'aktif',
-                ]);
+            ]);
             }
         });
 
@@ -192,6 +193,8 @@ class SiswaImportService
             $errors[] = "{$prefix} nis duplikat di file.";
         } elseif (Siswa::where('nis', $data['nis'])->exists()) {
             $errors[] = "{$prefix} nis sudah digunakan.";
+        } elseif (User::where('username', $data['nis'])->exists()) {
+            $errors[] = "{$prefix} nis sudah digunakan sebagai username akun lain.";
         }
 
         if ($data['kelas_id'] === '') {

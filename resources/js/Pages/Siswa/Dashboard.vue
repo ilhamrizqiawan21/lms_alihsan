@@ -1,11 +1,12 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
-import PageHeader from '../../Components/AppShell/PageHeader.vue';
 import AppShell from '../../Layouts/AppShell.vue';
-import { Badge, Card, EmptyState, InfoListItem, StatCard, TableWrapper } from '../../Components/UI';
+import { computed } from 'vue';
+import { ActionQueue, CourseCard, DashboardHero, MetricStrip, QuickActionBar } from '../../Components/UI';
 
-defineProps({
+const props = defineProps({
     stats: { type: Object, required: true },
+    courses: { type: Array, default: () => [] },
     tugasTerbaru: { type: Array, default: () => [] },
     notifikasi: { type: Array, default: () => [] },
     pengumuman: { type: Array, default: () => [] },
@@ -13,123 +14,66 @@ defineProps({
 });
 
 const iconMap = {
-    tugas_baru: { icon: 'bi-journal-plus', color: '#3b82f6' },
-    nilai_baru: { icon: 'bi-bar-chart-fill', color: '#22c55e' },
-    chat_baru: { icon: 'bi-chat-dots-fill', color: '#8b5cf6' },
-    komentar_tugas: { icon: 'bi-chat-square-text-fill', color: '#f59e0b' },
-    kumpul_tugas: { icon: 'bi-check-circle-fill', color: '#06b6d4' },
-    absensi: { icon: 'bi-clipboard-check-fill', color: '#ef4444' },
+    tugas_baru: { icon: 'bi-journal-plus', color: '#3b82f6' }, nilai_baru: { icon: 'bi-bar-chart-fill', color: '#22c55e' },
+    chat_baru: { icon: 'bi-chat-dots-fill', color: '#8b5cf6' }, komentar_tugas: { icon: 'bi-chat-square-text-fill', color: '#f59e0b' },
+    kumpul_tugas: { icon: 'bi-check-circle-fill', color: '#06b6d4' }, absensi: { icon: 'bi-clipboard-check-fill', color: '#ef4444' },
 };
+function iconFor(type) { return iconMap[type] ?? { icon: 'bi-bell-fill', color: '#6b7280' }; }
 
-function iconFor(type) {
-    return iconMap[type] ?? { icon: 'bi-bell-fill', color: '#6b7280' };
-}
+const metrics = computed(() => [
+    { label: 'Total tugas', value: props.stats.total_tugas ?? 0, icon: 'bi-journal-fill', tone: 'primary', href: props.links.tugas },
+    { label: 'Selesai', value: props.stats.tugas_selesai ?? 0, icon: 'bi-check-circle-fill', tone: 'success', href: props.links.tugas },
+    { label: 'Belum', value: props.stats.tugas_belum ?? 0, icon: 'bi-exclamation-circle-fill', tone: 'warning', href: props.links.tugas },
+    { label: 'Materi', value: props.stats.total_materi ?? 0, icon: 'bi-file-earmark-text-fill', tone: 'info', href: props.links.materi },
+]);
+const quickActions = computed(() => [
+    { label: 'Tugas Saya', href: props.links.tugas || '/siswa/tugas', icon: 'bi-journal-check', color: 'primary' },
+    { label: 'Materi', href: props.links.materi || '/siswa/materi', icon: 'bi-file-earmark-text', color: 'light' },
+    { label: 'Nilai', href: '/siswa/nilai', icon: 'bi-bar-chart', color: 'light' },
+    { label: 'Chat', href: '/siswa/chat', icon: 'bi-chat-dots', color: 'light' },
+]);
+const taskItems = computed(() => props.tugasTerbaru.map((item) => ({ id: item.id, title: item.judul, meta: item.mata_pelajaran, detail: `Deadline ${item.batas_waktu}`, href: item.show_url || props.links.tugas || '/siswa/tugas', badge: item.selesai ? 'Selesai' : 'Belum', badgeColor: item.selesai ? 'success' : 'warning text-dark', icon: item.selesai ? 'bi-check-circle' : 'bi-journal-text', accent: item.selesai ? '#16a34a' : '#f59e0b' })));
+const notificationItems = computed(() => props.notifikasi.map((item) => ({ id: item.id, title: item.judul, meta: item.created_at, detail: item.pesan, href: props.links.notifikasi, badge: item.is_read ? '' : 'Baru', badgeColor: 'danger', icon: iconFor(item.tipe).icon, accent: iconFor(item.tipe).color })));
+const announcementItems = computed(() => props.pengumuman.map((item) => ({ id: item.id, title: item.judul, meta: item.created_at, href: item.show_url, icon: 'bi-megaphone-fill', accent: '#2563eb' })));
 </script>
 
 <template>
     <Head title="Dashboard Siswa" />
-
     <AppShell title="Dashboard Siswa">
-        <PageHeader
-            title="Dashboard Siswa"
-            icon="bi-speedometer2"
-            subtitle="Ringkasan tugas, materi, dan kabar kelas terbaru."
-        />
+        <DashboardHero eyebrow="Hari Ini" title="Siap lanjut belajar?" :subtitle="`${stats.tugas_belum ?? 0} tugas belum dikerjakan dan ${stats.total_materi ?? 0} materi tersedia untuk dipelajari.`" icon="bi-mortarboard" tone="student">
+            <template #actions><QuickActionBar :actions="quickActions" /></template>
+        </DashboardHero>
+        <MetricStrip :items="metrics" />
 
-        <div class="stats-grid">
-            <StatCard label="Total Tugas" :value="stats.total_tugas ?? 0" icon="bi-journal-fill" />
-            <StatCard label="Tugas Selesai" :value="stats.tugas_selesai ?? 0" icon="bi-check-circle-fill" />
-            <StatCard label="Belum Dikerjakan" :value="stats.tugas_belum ?? 0" icon="bi-exclamation-circle-fill" />
-            <StatCard label="Total Materi" :value="stats.total_materi ?? 0" icon="bi-file-earmark-text-fill" />
+        <div class="dashboard-grid dashboard-grid-student student-priority-grid">
+            <ActionQueue title="Tugas Terdekat" icon="bi-journal-check" :items="taskItems" empty-title="Belum ada tugas" />
+            <ActionQueue title="Notifikasi" icon="bi-bell-fill" :items="notificationItems" empty-title="Belum ada notifikasi">
+                <template v-if="notifikasi.length" #actions><Link :href="links.notifikasi" class="app-card-action-link">Lihat Semua</Link></template>
+            </ActionQueue>
         </div>
 
-        <div class="row">
-            <div class="col-md-6 mb-4">
-                <Card title="Tugas Terbaru" icon="bi-journal-fill" body-class="p-0">
-                    <TableWrapper v-if="tugasTerbaru.length" class="d-none d-md-block">
-                        <table class="table table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Tugas</th>
-                                    <th>Mapel</th>
-                                    <th>Deadline</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="item in tugasTerbaru" :key="item.id">
-                                    <td>{{ item.judul }}</td>
-                                    <td>{{ item.mata_pelajaran }}</td>
-                                    <td>{{ item.batas_waktu }}</td>
-                                    <td>
-                                        <Badge :color="item.selesai ? 'success' : 'warning text-dark'">
-                                            {{ item.selesai ? 'Selesai' : 'Belum' }}
-                                        </Badge>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </TableWrapper>
-                    <div v-if="tugasTerbaru.length" class="app-mobile-list d-md-none">
-                        <div v-for="item in tugasTerbaru" :key="item.id" class="app-mobile-list-item">
-                            <div class="app-mobile-list-row">
-                                <span class="app-mobile-list-title">{{ item.judul }}</span>
-                                <Badge :color="item.selesai ? 'success' : 'warning text-dark'">
-                                    {{ item.selesai ? 'Selesai' : 'Belum' }}
-                                </Badge>
-                            </div>
-                            <span class="app-mobile-list-meta">{{ item.mata_pelajaran }}</span>
-                            <span class="app-mobile-list-meta">Deadline {{ item.batas_waktu }}</span>
-                        </div>
-                    </div>
-                    <EmptyState v-else title="Belum ada tugas" icon="bi-journal" />
-                </Card>
+        <section class="workspace-panel student-courses-panel">
+            <header class="workspace-panel-header">
+                <span class="workspace-panel-title"><i class="bi bi-compass" aria-hidden="true"></i> Lanjutkan Belajar</span>
+                <Link :href="links.materi || '/siswa/materi'" class="app-card-action-link">Buka Materi</Link>
+            </header>
+            <div v-if="courses.length" class="course-card-grid">
+                <CourseCard v-for="(course, index) in courses" :key="course.id" :title="course.title" :subtitle="course.subtitle" :meta="course.meta" :href="course.href" icon="bi-book" :badges="course.badges" :accent="['#2563eb', '#16a34a', '#f59e0b', '#dc2626'][index % 4]" />
             </div>
+            <ActionQueue v-else :items="[]" empty-title="Belum ada kelas aktif" icon="bi-book" />
+        </section>
 
-            <div class="col-md-6 mb-4">
-                <Card title="Notifikasi" icon="bi-bell-fill" body-class="p-0">
-                    <template v-if="notifikasi.length" #actions>
-                        <a :href="links.notifikasi" class="app-card-action-link">
-                            Lihat Semua
-                        </a>
-                    </template>
-                    <div v-if="notifikasi.length" class="app-list">
-                        <InfoListItem
-                            v-for="item in notifikasi"
-                            :key="item.id"
-                            :title="item.judul"
-                            :message="item.pesan"
-                            :meta="item.created_at"
-                            :icon="iconFor(item.tipe).icon"
-                            :accent="iconFor(item.tipe).color"
-                            :unread="!item.is_read"
-                            compact
-                        />
-                    </div>
-                    <EmptyState v-else title="Belum ada notifikasi" icon="bi-bell" />
-                </Card>
-
-                <Card title="Pengumuman" icon="bi-megaphone-fill" body-class="p-0">
-                    <template v-if="pengumuman.length" #actions>
-                        <Link :href="links.pengumuman" class="app-card-action-link">
-                            Lihat Semua
-                        </Link>
-                    </template>
-                    <div v-if="pengumuman.length" class="app-list">
-                        <InfoListItem
-                            v-for="item in pengumuman"
-                            :key="item.id"
-                            :title="item.judul"
-                            :meta="item.created_at"
-                            :href="item.show_url"
-                            icon="bi-megaphone-fill"
-                            accent="var(--primary-500)"
-                            compact
-                        />
-                    </div>
-                    <EmptyState v-else title="Tidak ada pengumuman" icon="bi-megaphone" />
-                </Card>
-            </div>
-        </div>
+        <ActionQueue title="Pengumuman" icon="bi-megaphone-fill" :items="announcementItems" empty-title="Tidak ada pengumuman">
+            <template v-if="pengumuman.length" #actions><Link :href="links.pengumuman" class="app-card-action-link">Lihat Semua</Link></template>
+        </ActionQueue>
     </AppShell>
 </template>
+
+<style scoped>
+.student-priority-grid { align-items: stretch; }
+.student-courses-panel { min-width: 0; }
+@media (max-width: 767.98px) {
+    .student-priority-grid { grid-template-columns: minmax(0, 1fr); }
+    .student-courses-panel .course-card-grid { grid-template-columns: minmax(0, 1fr); }
+}
+</style>

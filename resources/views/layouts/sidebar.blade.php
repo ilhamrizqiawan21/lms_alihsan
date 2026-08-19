@@ -5,9 +5,9 @@
 @if($role == 'admin')
 <li class="nav-section">Master Data</li>
 <li><a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"><i class="bi bi-speedometer2"></i><span>Dashboard</span></a></li>
-<li><a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"><i class="bi bi-people-fill"></i><span>Guru & Staf</span></a></li>
+<li><a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"><i class="bi bi-people-fill"></i><span>Guru dan Staf</span></a></li>
 <li><a href="{{ route('admin.kelas.index') }}" class="nav-link {{ request()->routeIs('admin.kelas.*') ? 'active' : '' }}"><i class="bi bi-building"></i><span>Data Kelas</span></a></li>
-<li><a href="{{ route('admin.kelas-siswa.index') }}" class="nav-link {{ request()->routeIs('admin.kelas-siswa.*') ? 'active' : '' }}"><i class="bi bi-mortarboard-fill"></i><span>Kelas & Siswa</span></a></li>
+<li><a href="{{ route('admin.kelas-siswa.index') }}" class="nav-link {{ request()->routeIs('admin.kelas-siswa.*') ? 'active' : '' }}"><i class="bi bi-mortarboard-fill"></i><span>Kelas dan Siswa</span></a></li>
 <li><a href="{{ route('admin.mata-pelajaran.index') }}" class="nav-link {{ request()->routeIs('admin.mata-pelajaran.*') ? 'active' : '' }}"><i class="bi bi-book-fill"></i><span>Mata Pelajaran</span></a></li>
 <li><a href="{{ route('admin.kelas-mapel.index') }}" class="nav-link {{ request()->routeIs('admin.kelas-mapel.*') ? 'active' : '' }}"><i class="bi bi-diagram-3-fill"></i><span>Penugasan Guru</span></a></li>
 <li><a href="{{ route('admin.tahun-ajaran.index') }}" class="nav-link {{ request()->routeIs('admin.tahun-ajaran.*') ? 'active' : '' }}"><i class="bi bi-calendar-event-fill"></i><span>Tahun Ajaran</span></a></li>
