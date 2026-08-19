@@ -29,7 +29,7 @@ class PengumumanController extends Controller
             $prefix = $this->routePrefix();
             $item->can_edit = Auth::user()->isAdmin() || (Auth::user()->isGuru() && (int) $item->created_by === (int) Auth::id());
             $item->can_delete = $item->can_edit;
-            $item->update_url = route($prefix.'.store');
+            $item->update_url = route($prefix.'.update', $item);
             $item->delete_url = route($prefix.'.destroy', $item);
             $item->show_url = route($prefix.'.show', $item);
             $item->target_kelas_ids = $item->targetKelasIds();
@@ -53,27 +53,18 @@ class PengumumanController extends Controller
 
     public function store(Request $request)
     {
-        if ($request->input('action') === 'update') {
-            return $this->updateFromStore($request);
-        }
-
         $role=Auth::user()->role?->nama_role;$allowed=match($role){'guru'=>['kelas_mapel'],'admin','kepala_sekolah'=>['semua','guru','siswa','kelas_mapel'],default=>[]};abort_unless($allowed!==[],403);abort_if($role==='kepala_sekolah',403);$v=$request->validate(['judul'=>'required|string|max:200','isi'=>'required|string','target'=>['required',Rule::in($allowed)],'target_kelas_ids'=>'nullable|required_if:target,kelas_mapel|array','target_kelas_ids.*'=>'integer|exists:kelas,id']);$v=$this->prepareTarget($v);$v['created_by']=Auth::id();$pengumuman = Pengumuman::create($v);
         $this->notifyRecipients($pengumuman);
         return redirect()->route($this->routePrefix().'.index')->with('success','Pengumuman berhasil dipublikasikan.');
     }
 
-    public function destroy(Pengumuman $pengumuman){$role=Auth::user()->role?->nama_role;abort_unless($role==='admin'||(int)$pengumuman->created_by===(int)Auth::id(),403);abort_if($role==='kepala_sekolah',403);$pengumuman->delete();return redirect()->route($this->routePrefix().'.index')->with('success','Pengumuman berhasil dihapus.');}
-
-    private function updateFromStore(Request $request)
+    public function update(Request $request, Pengumuman $pengumuman)
     {
-        $pengumuman = Pengumuman::findOrFail((int) $request->input('pengumuman_id'));
         $role = Auth::user()->role?->nama_role;
         abort_unless($role === 'admin' || ($role === 'guru' && (int) $pengumuman->created_by === (int) Auth::id()), 403);
-        abort_if($role === 'kepala_sekolah', 403);
 
         $allowed = $role === 'guru' ? ['kelas_mapel'] : ['semua','guru','siswa','kelas_mapel'];
         $v = $request->validate([
-            'pengumuman_id' => 'required|integer|exists:pengumuman,id',
             'judul' => 'required|string|max:200',
             'isi' => 'required|string',
             'target' => ['required', Rule::in($allowed)],
@@ -81,11 +72,12 @@ class PengumumanController extends Controller
             'target_kelas_ids.*' => 'integer|exists:kelas,id',
         ]);
         $v = $this->prepareTarget($v);
-        unset($v['pengumuman_id']);
         $pengumuman->update($v);
 
         return redirect()->route($this->routePrefix().'.index')->with('success','Pengumuman berhasil diperbarui.');
     }
+
+    public function destroy(Pengumuman $pengumuman){$role=Auth::user()->role?->nama_role;abort_unless($role==='admin'||(int)$pengumuman->created_by===(int)Auth::id(),403);abort_if($role==='kepala_sekolah',403);$pengumuman->delete();return redirect()->route($this->routePrefix().'.index')->with('success','Pengumuman berhasil dihapus.');}
 
     private function prepareTarget(array $v):array{if($v['target']==='kelas_mapel'){$ids=collect($v['target_kelas_ids']??[])->map(fn($id)=>(int)$id)->unique()->values();if($ids->isEmpty())throw ValidationException::withMessages(['target_kelas_ids'=>'Pilih minimal satu kelas tujuan.']);if(Auth::user()->isGuru()){$allowed=KelasMapel::where('guru_id',Auth::id())->whereIn('kelas_id',$ids)->pluck('kelas_id')->unique();abort_unless($ids->diff($allowed)->isEmpty(),403);}$v['target_kelas']=$ids->map(fn($id)=>(string)$id)->values()->toJson();$v['kelas_mapel_id']=KelasMapel::whereIn('kelas_id',$ids)->value('id');}else{$v['target_kelas']=null;$v['kelas_mapel_id']=null;}unset($v['target_kelas_ids']);return $v;}
     private function routePrefix():string{return match(Auth::user()->role?->nama_role){'guru'=>'guru.pengumuman','kepala_sekolah'=>'kepsek.pengumuman',default=>'admin.pengumuman'};}
@@ -95,7 +87,6 @@ class PengumumanController extends Controller
     {
         $query = User::query()->where('is_active', true)->where('id', '!=', Auth::id());
         $target = $pengumuman->target;
-
         if ($target === 'guru') {
             $query->whereHas('role', fn ($q) => $q->where('nama_role', 'guru'));
         } elseif ($target === 'siswa') {
@@ -107,7 +98,6 @@ class PengumumanController extends Controller
         } else {
             $query->whereHas('role', fn ($q) => $q->whereIn('nama_role', ['admin', 'guru', 'siswa', 'kepala_sekolah']));
         }
-
         $users = $query->with('role')->get(['id', 'role_id']);
         foreach ($users as $user) {
             Notifikasi::create([
