@@ -3,11 +3,12 @@ defineProps({
     title: { type: String, default: 'Data belum tersedia' },
     message: { type: String, default: '' },
     icon: { type: String, default: 'bi-inbox' },
+    tone: { type: String, default: 'neutral' },
 });
 </script>
 
 <template>
-    <div class="empty-state">
+    <div class="empty-state" :class="`empty-state-${tone}`" role="status">
         <div class="empty-state-icon">
             <i class="bi" :class="icon" aria-hidden="true"></i>
         </div>
