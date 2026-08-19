@@ -24,12 +24,23 @@ const pageTitle = computed(() => props.title || document.title.replace(' - LMS S
 const shellClass = computed(() => `app-shell app-shell-${user.value?.role ?? 'guest'}`);
 const commandItems = computed(() => sidebarMenu(user.value?.role, capabilities.value));
 
+function syncSidebarWithViewport() {
+    if (window.innerWidth >= 992) {
+        sidebarOpen.value = true;
+        return;
+    }
+
+    sidebarOpen.value = false;
+}
+
 onMounted(() => {
-    sidebarOpen.value = window.innerWidth >= 992;
+    syncSidebarWithViewport();
+    window.addEventListener('resize', syncSidebarWithViewport, { passive: true });
     window.addEventListener('keydown', openCommandShortcut);
 });
 
 onBeforeUnmount(() => {
+    window.removeEventListener('resize', syncSidebarWithViewport);
     window.removeEventListener('keydown', openCommandShortcut);
 });
 
@@ -74,8 +85,10 @@ function closeSidebar() {
             <div class="page-content">
                 <slot />
             </div>
-            <footer>
-                &copy; {{ new Date().getFullYear() }} {{ school.name }} - {{ school.app_name }}
+            <footer class="app-footer">
+                <span>&copy; {{ new Date().getFullYear() }} {{ school.name }}</span>
+                <span v-if="school.app_name" class="app-footer-separator" aria-hidden="true">•</span>
+                <span v-if="school.app_name">{{ school.app_name }}</span>
             </footer>
         </main>
 
@@ -85,3 +98,34 @@ function closeSidebar() {
         <NavigationLoading />
     </div>
 </template>
+
+<style scoped>
+.app-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    min-height: 52px;
+    padding: 0.9rem 1rem 1.2rem;
+    color: var(--text-muted, #64748b);
+    font-size: 0.72rem;
+    text-align: center;
+}
+
+.app-footer-separator {
+    opacity: 0.5;
+}
+
+@media (max-width: 991.98px) {
+    .app-footer {
+        padding-bottom: 5.75rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .app-footer {
+        flex-wrap: wrap;
+        line-height: 1.4;
+    }
+}
+</style>
