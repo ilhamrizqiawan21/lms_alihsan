@@ -66,7 +66,7 @@
     margin-bottom: 1rem;
     border: 1px solid var(--bs-border-color-translucent);
     border-radius: var(--bs-border-radius-lg);
-    background: linear-gradient(135deg, rgba(13, 110, 253, 0.05), rgba(255, 255, 255, 0.8));
+    background: var(--app-surface-subtle, var(--bs-tertiary-bg));
 }
 
 .content-summary-title {
@@ -86,6 +86,130 @@
     gap: 0.5rem;
 }
 
+/* Phase 9: shared responsive data surfaces */
+.app-table-wrapper {
+    width: 100%;
+    max-width: 100%;
+    border: 1px solid var(--bs-border-color-translucent);
+    border-radius: var(--bs-border-radius-lg);
+    background: var(--bs-body-bg);
+}
+
+.app-table-wrapper.table-responsive {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+}
+
+.app-table-wrapper .app-table {
+    min-width: var(--app-table-min-width, 720px);
+}
+
+.app-table-wrapper .table > :not(caption) > * > * {
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.app-table-filter {
+    align-items: end;
+}
+
+.app-table-filter .form-control,
+.app-table-filter .form-select,
+.app-table-filter .btn {
+    min-height: 38px;
+}
+
+.app-table-filter .form-control,
+.app-table-filter .form-select {
+    width: 100%;
+}
+
+.empty-state,
+.loading-state,
+.error-state {
+    display: flex;
+    min-height: 190px;
+    padding: 2rem 1rem;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0.55rem;
+    text-align: center;
+    color: var(--bs-secondary-color);
+}
+
+.empty-state-icon,
+.error-state-icon {
+    display: grid;
+    width: 48px;
+    height: 48px;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--bs-tertiary-bg);
+    color: var(--bs-secondary-color);
+    font-size: 1.15rem;
+}
+
+.empty-state-title,
+.loading-state-title,
+.error-state-title {
+    color: var(--bs-emphasis-color);
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.empty-state-message,
+.loading-state-message,
+.error-state-message {
+    max-width: 520px;
+    color: var(--bs-secondary-color);
+    font-size: 0.82rem;
+}
+
+.empty-state-action,
+.error-state-action {
+    margin-top: 0.4rem;
+}
+
+.loading-state-spinner {
+    width: 1.8rem;
+    height: 1.8rem;
+    margin-bottom: 0.25rem;
+}
+
+.error-state-icon {
+    background: var(--bs-danger-bg-subtle);
+    color: var(--bs-danger-text-emphasis);
+}
+
+/* Bootstrap surfaces follow the active color scheme instead of fixed light colors. */
+[data-bs-theme="dark"] .searchable-select-menu,
+[data-bs-theme="dark"] .app-table-wrapper,
+[data-bs-theme="dark"] .modal-content,
+[data-bs-theme="dark"] .dropdown-menu {
+    color: var(--bs-body-color);
+    background-color: var(--bs-body-bg);
+    border-color: var(--bs-border-color);
+}
+
+[data-bs-theme="dark"] .content-summary {
+    background: var(--bs-tertiary-bg);
+}
+
+@media (max-width: 991.98px) {
+    .app-page-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .app-table-filter > [class*="col-"] {
+        width: 100%;
+    }
+}
+
 @media (max-width: 767.98px) {
     .page-content {
         padding: 1rem 0.9rem;
@@ -101,14 +225,58 @@
         justify-content: flex-start;
     }
 
-    .table-responsive {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+    .app-table-wrapper {
+        border-radius: var(--bs-border-radius);
+    }
+
+    .app-table-wrapper .app-table {
+        min-width: var(--app-table-min-width, 680px);
+    }
+
+    .app-table-filter {
+        margin-bottom: 1rem !important;
+    }
+
+    .app-table-filter .btn {
+        width: 100%;
     }
 
     .card-body,
     .card-header,
     .card-footer {
         min-width: 0;
+    }
+
+    .modal-dialog {
+        margin: 0.75rem;
+    }
+
+    .modal-content {
+        max-height: calc(100vh - 1.5rem);
+        overflow-y: auto;
+    }
+
+    .modal-footer {
+        flex-wrap: wrap;
+    }
+
+    .modal-footer .btn {
+        flex: 1 1 auto;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .app-page-actions > .btn,
+    .app-page-actions > a,
+    .content-summary-actions > .btn,
+    .content-summary-actions > a {
+        flex: 1 1 100%;
+    }
+
+    .empty-state,
+    .loading-state,
+    .error-state {
+        min-height: 160px;
+        padding: 1.5rem 0.75rem;
     }
 }
