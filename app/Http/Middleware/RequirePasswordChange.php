@@ -16,7 +16,16 @@ class RequirePasswordChange
             return $next($request);
         }
 
-        if ($request->routeIs('*.pengaturan-akun') || $request->routeIs('*.pengaturan.update') || $request->routeIs('login') || $request->routeIs('login.post') || $request->routeIs('logout')) {
+        if (
+            $request->routeIs('*.pengaturan-akun') ||
+            $request->routeIs('*.pengaturan') ||
+            $request->routeIs('*.pengaturan.update') ||
+            $request->routeIs('*.profil') ||
+            $request->routeIs('*.profil.update') ||
+            $request->routeIs('login') ||
+            $request->routeIs('login.post') ||
+            $request->routeIs('logout')
+        ) {
             return $next($request);
         }
 
@@ -25,7 +34,7 @@ class RequirePasswordChange
             'admin' => 'admin.pengaturan-akun',
             'guru' => 'guru.pengaturan',
             'siswa' => 'siswa.pengaturan',
-            'kepala_sekolah' => null,
+            'kepala_sekolah' => 'kepsek.pengaturan',
             default => null,
         };
 
