@@ -105,7 +105,7 @@ class PengumumanController extends Controller
             $query->whereHas('role', fn ($q) => $q->where('nama_role', 'siswa'))
                 ->whereHas('siswa', fn ($q) => $q->whereIn('kelas_id', $kelasIds)->where('status', 'aktif'));
         } else {
-            $query->whereHas('role', fn ($q) => $q->whereIn('nama_role', ['guru', 'siswa', 'kepala_sekolah']));
+            $query->whereHas('role', fn ($q) => $q->whereIn('nama_role', ['admin', 'guru', 'siswa', 'kepala_sekolah']));
         }
 
         $users = $query->with('role')->get(['id', 'role_id']);
