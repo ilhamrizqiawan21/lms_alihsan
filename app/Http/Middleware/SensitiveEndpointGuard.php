@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Siswa;
 use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
@@ -25,13 +26,17 @@ class SensitiveEndpointGuard
         }
 
         if ($request->routeIs('admin.users.reset-password')) {
-            return $this->secureResetPassword($request);
+            return $this->secureStaffResetPassword($request);
+        }
+
+        if ($request->routeIs('admin.kelas-siswa.reset-password')) {
+            return $this->secureStudentResetPassword($request);
         }
 
         return $next($request);
     }
 
-    private function secureResetPassword(Request $request): Response
+    private function secureStaffResetPassword(Request $request): Response
     {
         /** @var User|null $user */
         $user = $request->route('user');
@@ -48,6 +53,32 @@ class SensitiveEndpointGuard
         return back()
             ->with('success', "Password {$user->nama_lengkap} berhasil direset. Password sementara hanya ditampilkan sekali.")
             ->with('temporary_password', $temporaryPassword);
+    }
+
+    private function secureStudentResetPassword(Request $request): Response
+    {
+        /** @var Siswa|null $siswa */
+        $siswa = $request->route('siswa');
+        $siswa?->loadMissing('user');
+        $user = $siswa?->user;
+
+        abort_unless($siswa instanceof Siswa && $user instanceof User && $user->isSiswa(), 404);
+
+        $temporaryPassword = Str::password(20);
+
+        $user->forceFill([
+            'password' => Hash::make($temporaryPassword),
+            'is_password_default' => true,
+        ])->save();
+
+        return back()
+            ->with('success', 'Password siswa berhasil direset. Password sementara hanya ditampilkan sekali.')
+            ->with('student_password', [
+                'title' => 'Password sementara siswa',
+                'name' => $user->nama_lengkap,
+                'username' => $user->username,
+                'password' => $temporaryPassword,
+            ]);
     }
 
     private function safeUserPasswordStatusExport(Request $request): Response
