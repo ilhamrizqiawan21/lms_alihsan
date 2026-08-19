@@ -194,8 +194,13 @@
     border-color: var(--bs-border-color);
 }
 
-[data-bs-theme="dark"] .content-summary {
-    background: var(--bs-tertiary-bg);
+[data-bs-theme="dark"] .content-summary,
+[data-bs-theme="dark"] .bg-light-subtle {
+    background: var(--bs-tertiary-bg) !important;
+}
+
+[data-bs-theme="dark"] .text-dark {
+    color: var(--bs-body-color) !important;
 }
 
 @media (max-width: 991.98px) {
