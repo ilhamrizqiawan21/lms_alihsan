@@ -8,7 +8,6 @@ use App\Http\Controllers\Guru\NilaiController;
 use App\Http\Controllers\Guru\SikapController;
 use App\Http\Controllers\Guru\TugasController as GuruTugasController;
 use App\Http\Controllers\Guru\WaliKelasController as GuruWaliKelasController;
-use App\Http\Controllers\Kepsek\DashboardController as KepsekDashboardController;
 use Illuminate\Support\Facades\Route;
 
 // Phase 10 security route completion. These routes are intentionally isolated
@@ -60,7 +59,7 @@ Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(f
     Route::post('/chat/{kelasMapel}/send', [GuruChatController::class, 'send'])->name('chat.send')->middleware('can:mengajar,kelasMapel');
     Route::get('/notifikasi', [GuruNotifikasiController::class, 'index'])->name('notifikasi.index');
     Route::post('/notifikasi/{notifikasi}/read', [GuruNotifikasiController::class, 'markRead'])->name('notifikasi.mark-read');
-    Route::post('/notifikasi/mark-all-read', [GuruNotifikasiController::class, 'mark-all-read');
+    Route::post('/notifikasi/mark-all-read', [GuruNotifikasiController::class, 'markAllRead'])->name('notifikasi.mark-all-read');
 });
 
 Route::middleware(['auth', 'role:kepala_sekolah'])->prefix('kepsek')->name('kepsek.')->group(function () {
