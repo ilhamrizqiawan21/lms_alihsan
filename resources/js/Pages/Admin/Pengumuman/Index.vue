@@ -9,25 +9,54 @@ const props = defineProps({
     kelas: { type: Array, default: () => [] },
     targetKelasOptions: { type: Array, default: () => [] },
     routePrefix: { type: String, default: 'admin.pengumuman' },
+    storeUrl: { type: String, default: '/admin/pengumuman' },
 });
 
 const showForm = ref(false);
-const form = useForm({ judul: '', isi: '', target: 'semua', target_kelas_ids: [] });
+const editingId = ref(null);
+const form = useForm({ judul: '', isi: '', target: 'semua', target_kelas_ids: [], action: 'create', pengumuman_id: null });
 const isAdmin = computed(() => page.props.auth?.user?.role === 'admin');
+const canPublish = computed(() => ['admin', 'guru'].includes(page.props.auth?.user?.role));
+
+function resetForm() {
+    form.reset();
+    form.clearErrors();
+    form.action = 'create';
+    form.pengumuman_id = null;
+    editingId.value = null;
+}
+
+function openCreate() {
+    resetForm();
+    showForm.value = true;
+}
+
+function openEdit(item) {
+    form.clearErrors();
+    form.judul = item.judul ?? '';
+    form.isi = item.isi ?? '';
+    form.target = item.target ?? 'semua';
+    form.target_kelas_ids = Array.isArray(item.target_kelas_ids) ? [...item.target_kelas_ids] : [];
+    form.action = 'update';
+    form.pengumuman_id = item.id;
+    editingId.value = item.id;
+    showForm.value = true;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
 function submit() {
-    form.post('/admin/pengumuman', {
+    form.post(props.storeUrl, {
         preserveScroll: true,
         onSuccess: () => {
-            form.reset();
+            resetForm();
             showForm.value = false;
         },
     });
 }
 
-function remove(id) {
+function remove(item) {
     if (window.confirm('Hapus pengumuman ini?')) {
-        form.delete(`/admin/pengumuman/${id}`, { preserveScroll: true });
+        form.delete(item.delete_url, { preserveScroll: true });
     }
 }
 </script>
@@ -35,32 +64,83 @@ function remove(id) {
 <template>
     <AppShell title="Pengumuman">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-            <div><h1 class="h3 mb-1">Pengumuman</h1><p class="text-muted mb-0">Kelola informasi resmi sekolah dan distribusi kepada pengguna.</p></div>
-            <button class="btn btn-success" type="button" @click="showForm = !showForm"><i class="bi bi-plus-lg me-1"></i>{{ showForm ? 'Tutup Form' : 'Buat Pengumuman' }}</button>
+            <div>
+                <h1 class="h3 mb-1">Pengumuman</h1>
+                <p class="text-muted mb-0">Kelola informasi resmi sekolah dan distribusi kepada pengguna.</p>
+            </div>
+            <button v-if="canPublish" class="btn btn-success" type="button" @click="showForm ? (showForm = false) : openCreate()">
+                <i class="bi bi-plus-lg me-1"></i>{{ showForm ? 'Tutup Form' : 'Buat Pengumuman' }}
+            </button>
         </div>
 
         <div v-if="showForm" class="card border-0 shadow-sm mb-4">
             <div class="card-body">
-                <h5 class="mb-3">Pengumuman Baru</h5>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">{{ editingId ? 'Edit Pengumuman' : 'Pengumuman Baru' }}</h5>
+                    <span v-if="editingId" class="badge bg-warning-subtle text-warning-emphasis">Mode edit</span>
+                </div>
                 <form @submit.prevent="submit">
                     <div class="row g-3">
-                        <div class="col-md-8"><label class="form-label">Judul</label><input v-model="form.judul" class="form-control" maxlength="200" required><div v-if="form.errors.judul" class="text-danger small mt-1">{{ form.errors.judul }}</div></div>
-                        <div class="col-md-4"><label class="form-label">Target</label><select v-model="form.target" class="form-select"><option value="semua">Semua</option><option value="guru">Guru</option><option value="siswa">Siswa</option><option value="kelas_mapel">Kelas tertentu</option></select></div>
-                        <div v-if="form.target === 'kelas_mapel'" class="col-12"><label class="form-label">Kelas Tujuan</label><select v-model="form.target_kelas_ids" class="form-select" multiple size="5"><option v-for="kelasItem in targetKelasOptions" :key="kelasItem.id" :value="kelasItem.id">{{ kelasItem.tingkat }} {{ kelasItem.nama_kelas }}</option></select><div v-if="form.errors.target_kelas_ids" class="text-danger small mt-1">{{ form.errors.target_kelas_ids }}</div></div>
-                        <div class="col-12"><label class="form-label">Isi</label><textarea v-model="form.isi" class="form-control" rows="6" required></textarea><div v-if="form.errors.isi" class="text-danger small mt-1">{{ form.errors.isi }}</div></div>
-                        <div class="col-12 d-flex justify-content-end"><button class="btn btn-success" :disabled="form.processing">{{ form.processing ? 'Mempublikasikan...' : 'Publikasikan' }}</button></div>
+                        <div class="col-md-8">
+                            <label class="form-label">Judul</label>
+                            <input v-model="form.judul" class="form-control" maxlength="200" required>
+                            <div v-if="form.errors.judul" class="text-danger small mt-1">{{ form.errors.judul }}</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Target</label>
+                            <select v-model="form.target" class="form-select">
+                                <option v-if="isAdmin" value="semua">Semua</option>
+                                <option v-if="isAdmin" value="guru">Guru</option>
+                                <option v-if="isAdmin" value="siswa">Siswa</option>
+                                <option value="kelas_mapel">Kelas tertentu</option>
+                            </select>
+                        </div>
+                        <div v-if="form.target === 'kelas_mapel'" class="col-12">
+                            <label class="form-label">Kelas Tujuan</label>
+                            <select v-model="form.target_kelas_ids" class="form-select" multiple size="5">
+                                <option v-for="kelasItem in targetKelasOptions" :key="kelasItem.id" :value="kelasItem.id">
+                                    {{ kelasItem.tingkat }} {{ kelasItem.nama_kelas }}
+                                </option>
+                            </select>
+                            <div v-if="form.errors.target_kelas_ids" class="text-danger small mt-1">{{ form.errors.target_kelas_ids }}</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Isi</label>
+                            <textarea v-model="form.isi" class="form-control" rows="6" required></textarea>
+                            <div v-if="form.errors.isi" class="text-danger small mt-1">{{ form.errors.isi }}</div>
+                        </div>
+                        <div class="col-12 d-flex justify-content-end gap-2">
+                            <button class="btn btn-outline-secondary" type="button" @click="resetForm(); showForm = false">Batal</button>
+                            <button class="btn btn-success" :disabled="form.processing">
+                                {{ form.processing ? 'Menyimpan...' : (editingId ? 'Simpan Perubahan' : 'Publikasikan') }}
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>
         </div>
 
-        <div v-if="!pengumuman.data?.length" class="card border-0 shadow-sm"><div class="card-body text-center py-5 text-muted"><i class="bi bi-megaphone fs-1 d-block mb-3"></i>Belum ada pengumuman.</div></div>
+        <div v-if="!pengumuman.data?.length" class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5 text-muted">
+                <i class="bi bi-megaphone fs-1 d-block mb-3"></i>Belum ada pengumuman.
+            </div>
+        </div>
         <div v-else class="d-grid gap-3">
             <article v-for="item in pengumuman.data" :key="item.id" class="card border-0 shadow-sm">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between gap-3"><div><h5 class="mb-1">{{ item.judul }}</h5><div class="small text-muted">{{ item.creator?.nama_lengkap || '-' }} · {{ new Date(item.created_at).toLocaleDateString('id-ID') }}</div></div><span class="badge bg-light text-dark align-self-start">{{ item.target }}</span></div>
+                    <div class="d-flex justify-content-between gap-3">
+                        <div>
+                            <h5 class="mb-1">{{ item.judul }}</h5>
+                            <div class="small text-muted">{{ item.creator?.nama_lengkap || '-' }} · {{ new Date(item.created_at).toLocaleDateString('id-ID') }}</div>
+                        </div>
+                        <span class="badge bg-light text-dark align-self-start">{{ item.target }}</span>
+                    </div>
                     <p class="mt-3 mb-3 text-secondary" style="white-space: pre-line">{{ item.isi }}</p>
-                    <div class="d-flex gap-2"><Link :href="`/admin/pengumuman/${item.id}`" class="btn btn-sm btn-outline-primary">Detail</Link><button v-if="isAdmin" class="btn btn-sm btn-outline-danger" type="button" @click="remove(item.id)">Hapus</button></div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <Link :href="`/admin/pengumuman/${item.id}`" class="btn btn-sm btn-outline-primary">Detail</Link>
+                        <button v-if="item.can_edit" class="btn btn-sm btn-outline-warning" type="button" @click="openEdit(item)">Edit</button>
+                        <button v-if="item.can_delete" class="btn btn-sm btn-outline-danger" type="button" @click="remove(item)">Hapus</button>
+                    </div>
                 </div>
             </article>
         </div>
