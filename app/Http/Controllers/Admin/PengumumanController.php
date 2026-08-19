@@ -26,10 +26,12 @@ class PengumumanController extends Controller
         if(Auth::user()->role?->nama_role==='kepala_sekolah')$query->where(fn($q)=>$q->whereIn('target',['semua','guru'])->orWhere('created_by',Auth::id()));
         $pengumuman=$query->paginate(15)->withQueryString();
         $pengumuman->through(function (Pengumuman $item) {
+            $prefix = $this->routePrefix();
             $item->can_edit = Auth::user()->isAdmin() || (Auth::user()->isGuru() && (int) $item->created_by === (int) Auth::id());
-            $item->can_delete = Auth::user()->isAdmin() || (Auth::user()->isGuru() && (int) $item->created_by === (int) Auth::id());
-            $item->update_url = route($this->routePrefix().'.store');
-            $item->delete_url = route($this->routePrefix().'.destroy', $item);
+            $item->can_delete = $item->can_edit;
+            $item->update_url = route($prefix.'.store');
+            $item->delete_url = route($prefix.'.destroy', $item);
+            $item->show_url = route($prefix.'.show', $item);
             $item->target_kelas_ids = $item->targetKelasIds();
             return $item;
         });
