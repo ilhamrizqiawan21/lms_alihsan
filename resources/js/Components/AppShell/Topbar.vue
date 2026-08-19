@@ -16,18 +16,9 @@ function logout() {
 }
 
 function profileHref(role) {
-    if (role === 'admin') {
-        return '/admin/pengaturan-akun';
-    }
-
-    if (role === 'guru') {
-        return '/guru/pengaturan';
-    }
-
-    if (role === 'siswa') {
-        return '/siswa/pengaturan';
-    }
-
+    if (role === 'admin') return '/admin/pengaturan-akun';
+    if (role === 'guru') return '/guru/pengaturan';
+    if (role === 'siswa') return '/siswa/pengaturan';
     return null;
 }
 
@@ -81,36 +72,17 @@ function profileIsInertia(role) {
                 <ul class="dropdown-menu dropdown-menu-end notification-menu">
                     <li class="dropdown-item-text d-flex justify-content-between align-items-center">
                         <strong class="notification-title">Notifikasi</strong>
-                        <Link
-                            v-if="notifications.unread_count > 0 && notifications.mark_all_route"
-                            :href="notifications.mark_all_route"
-                            method="post"
-                            as="button"
-                            type="button"
-                            class="btn btn-link btn-sm text-decoration-none notification-mark-all"
-                        >
-                            Tandai semua dibaca
-                        </Link>
+                        <Link v-if="notifications.unread_count > 0 && notifications.mark_all_route" :href="notifications.mark_all_route" method="post" as="button" type="button" class="btn btn-link btn-sm text-decoration-none notification-mark-all">Tandai semua dibaca</Link>
                     </li>
                     <li><hr class="dropdown-divider my-1"></li>
                     <li v-for="notification in notifications.latest ?? []" :key="notification.id">
-                        <Link
-                            v-if="notification.mark_read_route"
-                            :href="notification.mark_read_route"
-                            method="post"
-                            as="button"
-                            type="button"
-                            class="dropdown-item notification-link"
-                            :class="{ unread: !notification.is_read }"
-                        >
+                        <Link v-if="notification.mark_read_route" :href="notification.mark_read_route" method="post" as="button" type="button" class="dropdown-item notification-link" :class="{ unread: !notification.is_read }">
                             <div class="notification-item-title">{{ notification.judul }}</div>
                             <div class="notification-item-message">{{ notification.pesan }}</div>
                             <small class="notification-item-time">{{ notification.created_at }}</small>
                         </Link>
                     </li>
-                    <li v-if="!notifications.latest?.length">
-                        <span class="dropdown-item-text text-muted text-center notification-action-link">Belum ada notifikasi</span>
-                    </li>
+                    <li v-if="!notifications.latest?.length"><span class="dropdown-item-text text-muted text-center notification-action-link">Belum ada notifikasi</span></li>
                     <li><hr class="dropdown-divider my-1"></li>
                     <li><Link :href="notifications.route" class="dropdown-item text-center notification-action-link">Lihat Semua Notifikasi</Link></li>
                 </ul>
@@ -120,26 +92,54 @@ function profileIsInertia(role) {
             <div class="dropdown">
                 <button class="btn btn-sm dropdown-toggle topbar-account-btn" type="button" data-bs-toggle="dropdown" aria-label="Menu akun">
                     <i class="bi bi-person-circle me-1" aria-hidden="true"></i>
+                    <span class="topbar-account-label">{{ user?.nama_lengkap ?? 'Akun' }}</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li><span class="dropdown-item-text fw-bold">{{ user?.nama_lengkap ?? '-' }}</span></li>
                     <li><span class="dropdown-item-text text-muted small">{{ user?.username ?? '-' }} - {{ user?.role_label ?? '-' }}</span></li>
                     <li><hr class="dropdown-divider"></li>
                     <li v-if="profileHref(user?.role)">
-                        <Link v-if="profileIsInertia(user?.role)" :href="profileHref(user?.role)" class="dropdown-item">
-                            <i class="bi bi-person-gear me-1" aria-hidden="true"></i> Pengaturan
-                        </Link>
-                        <a v-else :href="profileHref(user?.role)" class="dropdown-item">
-                            <i class="bi bi-person-gear me-1" aria-hidden="true"></i> Pengaturan
-                        </a>
+                        <Link v-if="profileIsInertia(user?.role)" :href="profileHref(user?.role)" class="dropdown-item"><i class="bi bi-person-gear me-1" aria-hidden="true"></i> Pengaturan</Link>
+                        <a v-else :href="profileHref(user?.role)" class="dropdown-item"><i class="bi bi-person-gear me-1" aria-hidden="true"></i> Pengaturan</a>
                     </li>
-                    <li>
-                        <button type="button" class="dropdown-item text-danger" @click="logout">
-                            <i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i> Logout
-                        </button>
-                    </li>
+                    <li><button type="button" class="dropdown-item text-danger" @click="logout"><i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i> Logout</button></li>
                 </ul>
             </div>
         </div>
     </header>
 </template>
+
+<style scoped>
+.topbar-search {
+    min-width: 0;
+    max-width: 420px;
+    flex: 1 1 320px;
+}
+.topbar-account-label { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+@media (max-width: 991.98px) {
+    .topbar { gap: .5rem; padding-inline: .65rem; }
+    .topbar-brand { gap: .45rem; }
+    .topbar-logo-icon { width: 32px; height: 32px; }
+    .topbar-title-main { font-size: .78rem; }
+    .topbar-title-sub { display: none; }
+    .topbar-search { order: 5; flex: 0 0 100%; max-width: none; height: 36px; }
+    .topbar-actions { margin-left: auto; }
+    .topbar-account-label { display: none; }
+    .topbar-account-btn { width: 38px; height: 38px; padding: 0; }
+    .topbar-account-btn i { margin: 0 !important; }
+    .topbar-search kbd { display: none; }
+    .topbar-search span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+@media (max-width: 575.98px) {
+    .topbar { height: auto; min-height: var(--topbar-height); flex-wrap: wrap; padding-block: .5rem; }
+    .topbar-toggle-btn { width: 34px; height: 34px; flex: 0 0 34px; }
+    .topbar-brand { flex: 1 1 auto; min-width: 0; }
+    .topbar-actions { gap: .25rem; }
+    .topbar-actions > .dropdown:first-child .topbar-icon-btn { width: 34px; height: 34px; padding: 0; }
+    .topbar-search { flex-basis: 100%; }
+    .notification-menu { width: min(340px, calc(100vw - 1rem)); max-height: min(60vh, 400px); }
+}
+@media (min-width: 992px) {
+    .topbar-search { flex: 0 1 420px; }
+}
+</style>
