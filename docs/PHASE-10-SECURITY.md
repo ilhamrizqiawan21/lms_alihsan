@@ -1,33 +1,61 @@
 # PHASE 10 — Security Hardening
 
-Status: **in progress / not production-ready yet**.
+Status: **code-level hardening complete; production deployment gate remains runtime verification**.
 
 ## Implemented
 
-- Role middleware protects the main Admin, Guru, Siswa and Kepala Sekolah route groups.
+- Role middleware protects the Admin, Guru, Siswa and Kepala Sekolah route groups.
 - Object-level authorization is enforced for `KelasMapel` and `WaliKelas` through policies and route `can:` middleware.
-- Student task access performs ownership/class checks before viewing, submitting or downloading files.
-- Teacher task/material routes verify the teacher owns the `KelasMapel` before operating on nested records.
+- `TugasPolicy` now protects teacher task deletion with `can:mengajar-tugas,tugas`, while the controller keeps its own authorization check as defense-in-depth.
+- Student task access verifies the authenticated student's class before viewing, submitting or downloading task data.
+- Student submission/file access is bound to both the supplied task and the authenticated student's own submission.
+- Teacher task/material/attendance/nilai/sikap/chat routes with `{kelasMapel}` are protected by the teacher ownership policy.
+- Nested teacher resources validate their parent relationship before mutation or download.
 - Uploads are stored on the private `local` disk instead of the public disk for task submissions/materials.
-- Student task uploads now require both a safe extension and server-detected MIME type (`image/jpeg` or `application/pdf`) with a 5 MB per-file limit and a 5-file limit.
-- Download responses sanitize the supplied download filename with `basename()`.
-- Laravel's `web` middleware remains enabled for the application routes, preserving session, cookie and CSRF protection.
+- Student task uploads require a safe extension plus server-detected MIME type (`image/jpeg` or `application/pdf`), with a 5 MB per-file limit and a 5-file limit.
+- Download responses sanitize supplied download filenames with `basename()`.
+- Laravel's `web` middleware remains enabled, preserving session, cookie and CSRF protection.
 - Login attempts are rate limited to 5 attempts per minute per username/IP combination.
-- A general per-route request limiter is now applied to web traffic.
+- A general per-route request limiter is applied to web traffic.
 - Security headers include CSP, clickjacking protection, MIME sniffing protection, Referrer-Policy, Permissions-Policy and COOP; HSTS is enabled in production over HTTPS.
 - Authenticated responses are marked `no-store` to reduce sensitive browser/proxy caching.
 - Production can force users with default credentials to change their password before accessing the application.
 - Account password changes require current-password confirmation and a stronger password policy.
 - Production environment controls are documented in `.env.example`.
+- Legacy admin password export is intercepted by `SensitiveEndpointGuard` and replaced with a CSV containing account identity and password-status metadata only; no password value is exported.
+- Legacy admin and student password-reset routes are intercepted by `SensitiveEndpointGuard` and use unique generated temporary credentials with hashed storage. The temporary credential is exposed only once to the authenticated admin initiating the reset.
+- Added `tests/Feature/Phase10AuthorizationTest.php` covering cross-guru task deletion, owner task deletion, secure student password reset and role-boundary rejection.
 
-## Audit findings still requiring closure
+## Authorization / IDOR completion
 
-1. `UserController::exportExcel()` currently contains the legacy default password in the generated spreadsheet. This must be removed before production.
-2. Legacy admin/siswa password-reset flows still depend on the application's default-password convention and should be changed to generated temporary credentials or a secure reset workflow.
-3. A complete controller-by-controller authorization matrix should be executed against every parameterized route, not only the high-risk academic routes already covered by policies/ownership checks.
-4. Full automated test execution must be performed on the deployment environment; this sandbox cannot execute the project's PHP dependencies.
+The controller-by-controller matrix is documented in `docs/security/phase10-authorization-matrix.md`.
 
-## Production deployment requirements
+The source audit covers parameterized routes for Admin, Guru, Siswa and Kepala Sekolah, with explicit attention to:
+
+- parent/child ownership;
+- same-role cross-user access;
+- student class boundaries;
+- task/submission/file relationships;
+- Wali Kelas ownership;
+- notification ownership; and
+- monitoring-only Kepala Sekolah routes.
+
+No unmitigated high-risk IDOR was identified in the audited route set.
+
+## Runtime verification gate
+
+The repository CI workflow runs:
+
+```text
+composer install
+npm ci
+php artisan test --colors=never
+npm run build
+```
+
+The Phase 10 feature tests are now part of that suite. Runtime execution must be confirmed by GitHub Actions/deployment infrastructure before the application is declared production-ready.
+
+## Production deployment checklist
 
 - Set `APP_ENV=production` and `APP_DEBUG=false`.
 - Generate a unique `APP_KEY`; never commit `.env`.
@@ -37,5 +65,6 @@ Status: **in progress / not production-ready yet**.
 - Use a non-default database account with only the privileges required by the application.
 - Ensure `storage/` and `bootstrap/cache/` are writable by the application process, while `.env` and source files are not web-writable.
 - Keep private user/task files outside the public web root and serve them through authorized download controllers.
-- Run `php artisan config:cache`, `php artisan route:cache`, and `php artisan view:cache` during deployment after environment configuration is finalized.
-- Run the complete test suite and manually verify 401/403/404 behavior for each role before opening the system to school users.
+- Run `php artisan config:cache`, `php artisan route:cache`, and `php artisan view:cache` after environment configuration is finalized.
+- Confirm the complete CI test/build suite is green.
+- Manually verify 401/403/404 behavior for every role before opening the system to school users.
