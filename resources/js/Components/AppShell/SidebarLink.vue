@@ -8,7 +8,13 @@ defineProps({
 </script>
 
 <template>
-    <Link v-if="entry.inertia" :href="entry.href" class="nav-link" :class="{ active }">
+    <Link
+        v-if="entry.inertia"
+        :href="entry.href"
+        prefetch="hover"
+        class="nav-link"
+        :class="{ active }"
+    >
         <i class="bi" :class="entry.icon" aria-hidden="true"></i>
         <span>{{ entry.label }}</span>
         <small v-if="entry.hint">{{ entry.hint }}</small>
