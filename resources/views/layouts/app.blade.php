@@ -220,7 +220,6 @@
             background:linear-gradient(165deg, var(--sidebar-bg) 0%, var(--primary-700) 45%, var(--primary-800) 100%);
         }
     </style>
-    <link rel="stylesheet" href="{{ asset('css/lms-app.css') }}">
     @stack('styles')
 </head>
 <body>

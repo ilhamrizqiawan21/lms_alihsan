@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, markRaw } from 'vue';
 import InputError from './InputError.vue';
 
 defineOptions({
@@ -7,6 +7,7 @@ defineOptions({
 });
 
 const props = defineProps({
+    modelValue: { type: [Array, Object, String], default: null },
     name: { type: String, required: true },
     label: { type: String, default: '' },
     help: { type: String, default: '' },
@@ -15,6 +16,7 @@ const props = defineProps({
     error: { type: [String, Array], default: '' },
     wrapperClass: { type: String, default: 'mb-3' },
     required: { type: Boolean, default: false },
+    multiple: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -24,6 +26,11 @@ const helpText = computed(() => props.help || meta.value);
 const helpId = computed(() => helpText.value ? `${inputId.value}Help` : null);
 const errorId = computed(() => props.error ? `${inputId.value}Error` : null);
 const describedBy = computed(() => [helpId.value, errorId.value].filter(Boolean).join(' ') || null);
+
+function updateFileValue(event) {
+    const files = Array.from(event.target.files ?? []).map((file) => markRaw(file));
+    emit('update:modelValue', props.multiple ? files : (files[0] ?? null));
+}
 </script>
 
 <template>
@@ -42,8 +49,9 @@ const describedBy = computed(() => [helpId.value, errorId.value].filter(Boolean)
             :class="{ 'is-invalid': error }"
             :aria-describedby="describedBy"
             :aria-invalid="error ? 'true' : null"
+            :multiple="multiple"
             v-bind="$attrs"
-            @change="emit('update:modelValue', $attrs.multiple ? Array.from($event.target.files ?? []) : ($event.target.files?.[0] ?? null))"
+            @change="updateFileValue"
         >
         <InputError :id="errorId" :message="error" />
         <div v-if="helpText" :id="helpId" class="form-text">{{ helpText }}</div>

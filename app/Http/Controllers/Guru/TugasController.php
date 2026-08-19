@@ -49,6 +49,10 @@ class TugasController extends Controller
             ->withCount(['pengumpulan as sudah_mengumpulkan' => function ($q) {
                 $q->whereIn('status', ['sudah', 'terlambat', 'dinilai']);
             }])
+            ->withCount(['pengumpulan as perlu_dinilai' => function ($q) {
+                $q->whereIn('status', ['sudah', 'terlambat'])
+                    ->whereNull('nilai');
+            }])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -73,6 +77,13 @@ class TugasController extends Controller
                         ->where('kelas_id', $kelasMapel->kelas_id)
                         ->where('status', 'aktif'));
             }])
+            ->withCount(['pengumpulan as perlu_dinilai' => function ($q) use ($kelasMapel) {
+                $q->whereIn('status', ['sudah', 'terlambat'])
+                    ->whereNull('nilai')
+                    ->whereHas('siswa', fn ($siswa) => $siswa
+                        ->where('kelas_id', $kelasMapel->kelas_id)
+                        ->where('status', 'aktif'));
+            }])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -88,6 +99,7 @@ class TugasController extends Controller
                 'store_url' => route('guru.tugas.store', $kelasMapel),
                 'export_excel_url' => route('guru.tugas.export.excel', $kelasMapel),
                 'export_pdf_url' => route('guru.tugas.export.pdf', $kelasMapel),
+                'workspace_url' => route('guru.kelas-mapel.show', $kelasMapel),
             ],
             'tugas' => $tugas->map(fn (Tugas $item) => [
                 'id' => $item->id,
@@ -95,6 +107,9 @@ class TugasController extends Controller
                 'deskripsi' => Str::limit((string) $item->deskripsi, 80),
                 'batas_waktu' => $item->batas_waktu?->format('d M Y'),
                 'sudah_mengumpulkan' => $item->sudah_mengumpulkan ?? 0,
+                'perlu_dinilai' => $item->perlu_dinilai ?? 0,
+                'progress_percent' => $totalSiswa > 0 ? round((($item->sudah_mengumpulkan ?? 0) / $totalSiswa) * 100) : 0,
+                'is_overdue' => $item->batas_waktu ? now()->startOfDay()->gt($item->batas_waktu->copy()->startOfDay()) : false,
                 'pengumpulan_url' => route('guru.tugas.pengumpulan', [$kelasMapel, $item]),
                 'delete_url' => route('guru.tugas.destroy', $item),
             ])->values(),
@@ -195,13 +210,15 @@ class TugasController extends Controller
                 'id' => $kelasMapel->id,
                 'kelas' => $kelasMapel->kelas?->nama_kelas ?? '-',
                 'mata_pelajaran' => $kelasMapel->mataPelajaran?->nama_mapel ?? '-',
-                'back_url' => route('guru.tugas.index'),
+                'back_url' => route('guru.tugas.list', $kelasMapel),
+                'workspace_url' => route('guru.kelas-mapel.show', $kelasMapel),
                 'export_excel_url' => route('guru.tugas.pengumpulan.export.excel', [$kelasMapel, $tugas]),
                 'export_pdf_url' => route('guru.tugas.pengumpulan.export.pdf', [$kelasMapel, $tugas]),
             ],
             'tugas' => [
                 'id' => $tugas->id,
                 'judul' => $tugas->judul,
+                'deskripsi' => $tugas->deskripsi,
                 'batas_waktu' => $tugas->batas_waktu?->format('d/m/Y'),
             ],
             'pengumpulan' => $siswa->map(function (Siswa $student, int $index) use ($pengumpulan, $kelasMapel, $tugas) {
@@ -289,7 +306,7 @@ class TugasController extends Controller
 
         $tugas->delete();
 
-        return redirect()->route('guru.tugas.index')
+        return back()
             ->with('success', 'Tugas berhasil dihapus.');
     }
 
@@ -396,7 +413,10 @@ class TugasController extends Controller
             'deskripsi' => Str::limit((string) $item->deskripsi, 80),
             'batas_waktu' => $item->batas_waktu?->format('d M Y'),
             'sudah_mengumpulkan' => $item->sudah_mengumpulkan ?? 0,
+            'perlu_dinilai' => $item->perlu_dinilai ?? 0,
             'total_siswa' => $totalSiswa,
+            'progress_percent' => $totalSiswa > 0 ? round((($item->sudah_mengumpulkan ?? 0) / $totalSiswa) * 100) : 0,
+            'is_overdue' => $item->batas_waktu ? now()->startOfDay()->gt($item->batas_waktu->copy()->startOfDay()) : false,
             'kelas' => trim(($kelasMapel?->kelas?->tingkat ? $kelasMapel->kelas->tingkat . ' ' : '') . ($kelasMapel?->kelas?->nama_kelas ?? '-')),
             'mata_pelajaran' => $kelasMapel?->mataPelajaran?->nama_mapel ?? '-',
             'pengumpulan_url' => $kelasMapel ? route('guru.tugas.pengumpulan', [$kelasMapel, $item]) : null,

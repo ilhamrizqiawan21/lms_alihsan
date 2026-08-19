@@ -10,7 +10,7 @@ defineProps({
     storeUrl: { type: String, required: true },
     createTitle: { type: String, default: 'Tambah Event Sekolah' },
     fixedScope: { type: String, default: 'school' },
-    pageTitle: { type: String, default: 'Kalender & Monitoring Event Sekolah' },
+    pageTitle: { type: String, default: 'Kalender dan Monitoring Event Sekolah' },
 });
 </script>
 

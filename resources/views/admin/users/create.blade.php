@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Tambah Guru & Staf')
-@section('page_title', 'Tambah Guru & Staf')
+@section('title', 'Tambah Guru dan Staf')
+@section('page_title', 'Tambah Guru dan Staf')
 
 @section('content')
-<x-card title="Form Tambah Guru & Staf" icon="bi-plus-circle">
+<x-card title="Form Tambah Guru dan Staf" icon="bi-plus-circle">
         <form action="{{ route('admin.users.store') }}" method="POST">
             @csrf
             <x-form.section title="Identitas Akun" icon="bi-person-badge" class="mb-3">
@@ -18,7 +18,7 @@
                 </div>
             </x-form.section>
 
-            <x-form.section title="Akses & Role" icon="bi-shield-lock" class="mb-3">
+            <x-form.section title="Akses dan Role" icon="bi-shield-lock" class="mb-3">
                 <div class="row">
                     <div class="col-md-6">
                         <x-form.input name="password" type="password" label="Password" help="Kosongkan untuk memakai password default 123456." />

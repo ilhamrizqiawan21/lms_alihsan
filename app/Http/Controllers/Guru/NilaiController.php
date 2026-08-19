@@ -74,6 +74,7 @@ class NilaiController extends Controller
                 'id' => $kelasMapel->id,
                 'kelas' => $kelasMapel->kelas?->nama_kelas ?? '-',
                 'mata_pelajaran' => $kelasMapel->mataPelajaran?->nama_mapel ?? '-',
+                'workspace_url' => route('guru.kelas-mapel.show', $kelasMapel),
                 'store_url' => route('guru.nilai.store', $kelasMapel),
                 'export_excel_url' => route('guru.nilai.export.excel', $kelasMapel),
                 'export_pdf_url' => route('guru.nilai.export.pdf', $kelasMapel),

@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\WaliKelas;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
 
 class KelasMapelController extends Controller
 {
@@ -38,7 +39,40 @@ class KelasMapelController extends Controller
             ->get();
         $tahunAjaran = TahunAjaran::orderBy('tahun', 'desc')->get();
 
-        return view('admin.kelas-mapel.index', compact('kelasMapel', 'waliKelas', 'kelas', 'mapel', 'guru', 'tahunAjaran'));
+        return Inertia::render('Admin/KelasMapel/Index', [
+            'kelasMapel' => $kelasMapel->through(fn (KelasMapel $item) => [
+                'id' => $item->id,
+                'kelas' => trim(($item->kelas?->tingkat ? $item->kelas->tingkat . ' ' : '') . ($item->kelas?->nama_kelas ?? '-')),
+                'mapel' => $item->mataPelajaran?->nama_mapel ?? '-',
+                'mapel_kode' => $item->mataPelajaran?->kode ?? '-',
+                'guru' => $item->guru?->nama_lengkap ?? '-',
+                'pertemuan_per_minggu' => (int) $item->pertemuan_per_minggu,
+                'semester' => $item->semester,
+                'tahun_ajaran' => $item->tahunAjaran?->tahun ?? '-',
+            ]),
+            'waliKelas' => $waliKelas->through(fn (WaliKelas $item) => [
+                'id' => $item->id,
+                'kelas' => trim(($item->kelas?->tingkat ? $item->kelas->tingkat . ' ' : '') . ($item->kelas?->nama_kelas ?? '-')),
+                'guru' => $item->guru?->nama_lengkap ?? '-',
+                'tahun_ajaran' => $item->tahunAjaran?->tahun ?? '-',
+            ]),
+            'kelasOptions' => $kelas->map(fn (Kelas $item) => [
+                'value' => $item->id,
+                'label' => trim(($item->tingkat ? $item->tingkat . ' ' : '') . $item->nama_kelas),
+            ])->values(),
+            'mapelOptions' => $mapel->map(fn (MataPelajaran $item) => [
+                'value' => $item->id,
+                'label' => trim($item->kode . ' - ' . $item->nama_mapel),
+            ])->values(),
+            'guruOptions' => $guru->map(fn (User $item) => [
+                'value' => $item->id,
+                'label' => $item->nama_lengkap,
+            ])->values(),
+            'tahunAjaranOptions' => $tahunAjaran->map(fn (TahunAjaran $item) => [
+                'value' => $item->id,
+                'label' => $item->tahun . ($item->is_active ? ' - Aktif' : ''),
+            ])->values(),
+        ]);
     }
 
     /**

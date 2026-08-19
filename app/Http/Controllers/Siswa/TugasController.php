@@ -50,6 +50,7 @@ class TugasController extends Controller
                     'status' => $pengumpulan?->status,
                     'nilai' => $pengumpulan?->nilai ?? '-',
                     'show_url' => route('siswa.tugas.show', $item),
+                    'workspace_url' => $item->kelasMapel ? route('siswa.kelas-mapel.show', $item->kelasMapel) : null,
                 ];
             })->values(),
         ]);
@@ -109,9 +110,18 @@ class TugasController extends Controller
 
         $validated = $request->validate([
             'files' => 'nullable|array|max:' . self::MAX_UPLOAD_FILES,
-            'file_upload' => 'nullable|file|mimes:jpg,jpeg,pdf|extensions:jpg,jpeg,pdf|max:5120',
-            'files.*' => 'nullable|file|mimes:jpg,jpeg,pdf|extensions:jpg,jpeg,pdf|max:5120',
+            'file_upload' => 'nullable|file|extensions:jpg,jpeg,pdf|max:5120',
+            'files.*' => 'nullable|file|extensions:jpg,jpeg,pdf|max:5120',
             'teks_jawaban' => 'nullable|string|max:5000',
+        ], [
+            'file_upload.file' => 'Upload harus berupa file.',
+            'file_upload.extensions' => 'Ekstensi file harus .jpg, .jpeg, atau .pdf.',
+            'file_upload.max' => 'Ukuran file maksimal 5MB.',
+            'files.array' => 'Upload file tidak valid. Silakan pilih file ulang.',
+            'files.max' => 'Maksimal ' . self::MAX_UPLOAD_FILES . ' file untuk satu pengumpulan tugas.',
+            'files.*.file' => 'Upload harus berupa file.',
+            'files.*.extensions' => 'Ekstensi file harus .jpg, .jpeg, atau .pdf.',
+            'files.*.max' => 'Ukuran setiap file maksimal 5MB.',
         ]);
 
         $tugas->loadMissing('kelasMapel.tahunAjaran');

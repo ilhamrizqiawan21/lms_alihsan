@@ -10,11 +10,27 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class UploadValidationTest extends TestCase
 {
+    public function test_tugas_upload_accepts_jpeg_and_pdf_extensions_without_mime_guessing(): void
+    {
+        $validator = Validator::make([
+            'files' => [
+                UploadedFile::fake()->createWithContent('KTP_Ilham.jpeg', 'konten gambar dari perangkat siswa'),
+                UploadedFile::fake()->createWithContent('jawaban.pdf', 'konten dokumen dari perangkat siswa'),
+            ],
+        ], [
+            'files' => 'required|array|max:5',
+            'files.*' => 'required|file|extensions:jpg,jpeg,pdf|max:5120',
+        ]);
+
+        $this->assertTrue($validator->passes(), $validator->errors()->first());
+    }
+
     public function test_tugas_upload_rejects_disallowed_document_formats(): void
     {
         $user = new User();

@@ -20,6 +20,7 @@ use App\Http\Controllers\Guru\AbsensiController;
 use App\Http\Controllers\Guru\MateriController as GuruMateriController;
 use App\Http\Controllers\Guru\TugasController as GuruTugasController;
 use App\Http\Controllers\Guru\KalenderController as GuruKalenderController;
+use App\Http\Controllers\Guru\KelasMapelWorkspaceController;
 use App\Http\Controllers\Guru\NilaiController;
 use App\Http\Controllers\Guru\SikapController;
 use App\Http\Controllers\Guru\ChatController as GuruChatController;
@@ -30,6 +31,7 @@ use App\Http\Controllers\Siswa\MateriController as SiswaMateriController;
 use App\Http\Controllers\Siswa\TugasController as SiswaTugasController;
 use App\Http\Controllers\Siswa\NilaiController as SiswaNilaiController;
 use App\Http\Controllers\Siswa\KalenderController as SiswaKalenderController;
+use App\Http\Controllers\Siswa\KelasMapelWorkspaceController as SiswaKelasMapelWorkspaceController;
 use App\Http\Controllers\Siswa\ProgressController;
 use App\Http\Controllers\Siswa\ChatController as SiswaChatController;
 use App\Http\Controllers\Siswa\NotifikasiController as SiswaNotifikasiController;
@@ -150,6 +152,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 // ────────────────────────────────────────────
 Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(function () {
     Route::get('/dashboard', [GuruDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/kelas-mapel/{kelasMapel}', [KelasMapelWorkspaceController::class, 'show'])
+        ->name('kelas-mapel.show')
+        ->middleware('can:mengajar,kelasMapel');
 
     // Kalender
     Route::get('/kalender', [GuruKalenderController::class, 'index'])->name('kalender');
@@ -248,6 +253,7 @@ Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(f
 // ────────────────────────────────────────────
 Route::middleware(['auth', 'role:siswa'])->prefix('siswa')->name('siswa.')->group(function () {
     Route::get('/dashboard', [SiswaDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/kelas-mapel/{kelasMapel}', [SiswaKelasMapelWorkspaceController::class, 'show'])->name('kelas-mapel.show');
 
     // Progress
     Route::get('/progress', [ProgressController::class, 'index'])->name('progress');

@@ -1,9 +1,8 @@
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
 import { computed, watch } from 'vue';
-import PageHeader from '../../../Components/AppShell/PageHeader.vue';
 import AppShell from '../../../Layouts/AppShell.vue';
-import { Badge, Button, Card, EmptyState, TableWrapper } from '../../../Components/UI';
+import { Badge, Button, Card, DashboardHero, EmptyState, QuickActionBar, TableWrapper } from '../../../Components/UI';
 
 const props = defineProps({
     kelasMapel: { type: Object, required: true },
@@ -29,6 +28,15 @@ const form = useForm({
 });
 
 const title = computed(() => `Input Nilai - ${props.kelasMapel.mata_pelajaran}`);
+
+const courseTabs = computed(() => [
+    { label: 'Ringkasan', href: props.kelasMapel.workspace_url, icon: 'bi-grid-1x2' },
+    { label: 'Materi', href: `/guru/materi/${props.kelasMapel.id}/list`, icon: 'bi-file-earmark-text' },
+    { label: 'Tugas', href: `/guru/tugas/${props.kelasMapel.id}/list`, icon: 'bi-journal-check' },
+    { label: 'Nilai', href: '#', icon: 'bi-bar-chart', active: true },
+    { label: 'Absensi', href: `/guru/absensi/${props.kelasMapel.id}/create`, icon: 'bi-clipboard-check' },
+    { label: 'Chat', href: `/guru/chat/${props.kelasMapel.id}`, icon: 'bi-chat-dots' },
+]);
 
 watch(() => props.students, () => {
     form.semester = props.semester;
@@ -85,23 +93,34 @@ function submit() {
     <Head :title="title" />
 
     <AppShell title="Input Nilai">
-        <PageHeader title="Input Nilai" icon="bi-pencil-square">
+        <DashboardHero
+            eyebrow="Workspace Kelas/Mapel"
+            :title="kelasMapel.mata_pelajaran"
+            :subtitle="`${kelasMapel.kelas} - Input dan pantau nilai siswa.`"
+            icon="bi-bar-chart-fill"
+            tone="teacher"
+        >
             <template #actions>
-                <Badge color="primary">{{ kelasMapel.mata_pelajaran }}</Badge>
-                <Badge color="secondary">{{ kelasMapel.kelas }}</Badge>
-                <Badge color="info">
-                    <template v-if="tahunAjaran">TA {{ tahunAjaran.tahun }}</template>
-                    <template v-else>-</template>
-                    &middot; Semester {{ semester }}
-                </Badge>
-                <a :href="kelasMapel.export_excel_url" class="btn btn-sm btn-outline-success">
-                    <i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i> Excel
-                </a>
-                <a :href="kelasMapel.export_pdf_url" class="btn btn-sm btn-outline-danger">
-                    <i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i> PDF
-                </a>
+                <QuickActionBar :actions="[{ label: 'Ringkasan', href: kelasMapel.workspace_url, icon: 'bi-grid-1x2', color: 'light' }]" />
             </template>
-        </PageHeader>
+        </DashboardHero>
+
+        <nav class="workspace-tabs" aria-label="Navigasi kelas dan mata pelajaran">
+            <a v-for="tab in courseTabs" :key="tab.label" :href="tab.href" class="workspace-tab" :class="{ 'is-active': tab.active }">
+                <i class="bi" :class="tab.icon" aria-hidden="true"></i>{{ tab.label }}
+            </a>
+        </nav>
+
+        <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
+            <div class="d-flex gap-2 flex-wrap">
+                <Badge color="secondary">{{ kelasMapel.kelas }}</Badge>
+                <Badge color="info">TA {{ tahunAjaran?.tahun ?? '-' }} &middot; Semester {{ semester }}</Badge>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a :href="kelasMapel.export_excel_url" class="btn btn-sm btn-outline-success"><i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i>Excel</a>
+                <a :href="kelasMapel.export_pdf_url" class="btn btn-sm btn-outline-danger"><i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>PDF</a>
+            </div>
+        </div>
 
         <form @submit.prevent="submit">
             <Card title="Input Nilai Kurikulum Merdeka" icon="bi-table" body-class="p-0">
@@ -112,6 +131,12 @@ function submit() {
                 </template>
 
                 <TableWrapper>
+                    <div class="p-3 border-bottom bg-light-subtle">
+                        <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+                            <span class="text-muted small">Input nilai per siswa, gunakan tombol Enter untuk berpindah kolom.</span>
+                            <span class="badge bg-soft-primary">{{ students.length }} siswa</span>
+                        </div>
+                    </div>
                     <table class="table table-bordered table-hover app-table mb-0">
                         <thead class="table-light">
                             <tr>
@@ -216,5 +241,13 @@ function submit() {
     border-radius: 6px;
     background: #f8f9fa;
     font-weight: 700;
+}
+
+@media (max-width: 767px) {
+    .score-input {
+        min-width: 56px;
+        padding: 0.25rem 0.35rem;
+        font-size: 0.78rem;
+    }
 }
 </style>

@@ -10,7 +10,7 @@ defineProps({
     storeUrl: { type: String, required: true },
     createTitle: { type: String, default: 'Tambah Event Pribadi' },
     fixedScope: { type: String, default: 'user' },
-    pageTitle: { type: String, default: 'Kalender & Reminder' },
+    pageTitle: { type: String, default: 'Kalender dan Reminder' },
 });
 </script>
 

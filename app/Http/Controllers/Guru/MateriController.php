@@ -49,6 +49,7 @@ class MateriController extends Controller
                 'mata_pelajaran' => $kelasMapel->mataPelajaran?->nama_mapel ?? '-',
                 'store_url' => route('guru.materi.store', $kelasMapel),
                 'back_url' => route('guru.materi.index'),
+                'workspace_url' => route('guru.kelas-mapel.show', $kelasMapel),
             ],
             'materi' => $materi->map(fn (Materi $item) => [
                 'id' => $item->id,
@@ -86,7 +87,7 @@ class MateriController extends Controller
                 'kelas_mapel_id' => $item->id,
                 'judul' => $validated['judul'],
                 'deskripsi' => $validated['deskripsi'] ?? null,
-                'file_path' => $file->store('materi/' . $item->id, 'public'),
+                'file_path' => $file->store('materi/' . $item->id, 'local'),
             ]);
         }
 
@@ -105,7 +106,7 @@ class MateriController extends Controller
         ]);
 
         $file = $request->file('file_materi');
-        $path = $file->store('materi/' . $kelasMapel->id, 'public');
+        $path = $file->store('materi/' . $kelasMapel->id, 'local');
 
         Materi::create([
             'kelas_mapel_id' => $kelasMapel->id,
@@ -123,8 +124,8 @@ class MateriController extends Controller
         $this->authorize('mengajar', $kelasMapel);
         $this->ensureMateriBelongsToKelasMapel($materi, $kelasMapel);
 
-        $disk = Storage::disk('public');
-        if (!$materi->file_path || !$disk->exists($materi->file_path)) {
+        $disk = $this->materiDisk($materi->file_path);
+        if (!$materi->file_path || !$disk) {
             return back()->with('error', 'File materi tidak ditemukan.');
         }
 
@@ -138,6 +139,7 @@ class MateriController extends Controller
         $this->ensureMateriBelongsToKelasMapel($materi, $kelasMapel);
 
         if ($materi->file_path) {
+            Storage::disk('local')->delete($materi->file_path);
             Storage::disk('public')->delete($materi->file_path);
         }
 
@@ -150,6 +152,17 @@ class MateriController extends Controller
     private function ensureMateriBelongsToKelasMapel(Materi $materi, KelasMapel $kelasMapel): void
     {
         abort_unless((int) $materi->kelas_mapel_id === (int) $kelasMapel->id, 403);
+    }
+
+    private function materiDisk(?string $path): ?\Illuminate\Filesystem\FilesystemAdapter
+    {
+        if (!$path) {
+            return null;
+        }
+
+        $local = Storage::disk('local');
+
+        return $local->exists($path) ? $local : (Storage::disk('public')->exists($path) ? Storage::disk('public') : null);
     }
 
     private function assignedKelasMapelQuery()

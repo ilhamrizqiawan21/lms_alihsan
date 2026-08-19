@@ -9,7 +9,7 @@ defineProps({
     sidebarOpen: { type: Boolean, default: false },
 });
 
-defineEmits(['toggle-sidebar']);
+const emit = defineEmits(['toggle-sidebar', 'open-command']);
 
 function logout() {
     router.post('/logout');
@@ -37,7 +37,7 @@ function profileIsInertia(role) {
 </script>
 
 <template>
-    <header class="topbar">
+    <header class="topbar modern-topbar">
         <button
             class="topbar-toggle-btn"
             type="button"
@@ -63,6 +63,12 @@ function profileIsInertia(role) {
             <span class="topbar-context-label">{{ user?.role_label ?? '-' }}</span>
             <span class="topbar-context-title">{{ pageTitle }}</span>
         </div>
+
+        <button class="topbar-search" type="button" aria-label="Buka akses cepat" @click="emit('open-command')">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <span>Cari kelas, tugas, siswa...</span>
+            <kbd>/</kbd>
+        </button>
 
         <div class="topbar-actions">
             <div v-if="notifications.route" class="dropdown">

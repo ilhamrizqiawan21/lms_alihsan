@@ -10,6 +10,7 @@ use App\Models\SchoolSetting;
 use App\Models\SystemError;
 use App\Models\TahunAjaran;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Common\Entity\Style\Border;
@@ -139,7 +140,24 @@ class SystemController extends Controller
         $tahunAjaranAktif = TahunAjaran::getAktif();
         $schoolSetting = SchoolSetting::query()->first() ?: new SchoolSetting(SchoolSetting::fallback());
 
-        return view('admin.pengaturan', compact('settings', 'tahunAjaranAktif', 'schoolSetting'));
+        return Inertia::render('Admin/Pengaturan/Index', [
+            'settings' => [
+                'warna_tema' => $settings['warna_tema'] ?? 'hijau',
+                'semester_aktif' => $settings['semester_aktif'] ?? '1',
+                'mode_kenaikan' => $settings['mode_kenaikan'] ?? 'manual',
+            ],
+            'tahunAjaranAktif' => $tahunAjaranAktif ? [
+                'id' => $tahunAjaranAktif->id,
+                'tahun' => $tahunAjaranAktif->tahun,
+            ] : null,
+            'schoolSetting' => $this->schoolSettingPayload($schoolSetting),
+            'urls' => [
+                'save_system' => route('admin.pengaturan.save'),
+                'save_school' => route('admin.school-settings.update'),
+                'tahun_ajaran' => route('admin.tahun-ajaran.index'),
+                'blocked_ips' => route('admin.blocked-ips'),
+            ],
+        ]);
     }
     //Simpan pengaturan sistem
     public function savePengaturan(Request $request)
@@ -161,8 +179,21 @@ class SystemController extends Controller
     //Memblokir IP tertentu agar tidak bisa mengakses sistem
     public function blockedIps()
     {
-        $ips = BlockedIp::orderBy('created_at', 'desc')->paginate(25);
-        return view('admin.blocked-ips', compact('ips'));
+        $ips = BlockedIp::orderBy('created_at', 'desc')
+            ->paginate(25)
+            ->through(fn (BlockedIp $ip) => [
+                'id' => $ip->id,
+                'ip_address' => $ip->ip_address,
+                'blocked_until' => optional($ip->blocked_until)->format('d M Y H:i'),
+                'is_expired' => $ip->blocked_until ? $ip->blocked_until->isPast() : false,
+                'reason' => $ip->reason,
+                'created_at' => optional($ip->created_at)->format('d M Y H:i'),
+                'unblock_url' => route('admin.blocked-ips.unblock', $ip),
+            ]);
+
+        return Inertia::render('Admin/BlockedIps/Index', [
+            'ips' => $ips,
+        ]);
     }
     //Membuka blokir IP tertentu agar bisa mengakses sistem kembali
     public function unblockIp(BlockedIp $blockedIp)
@@ -191,6 +222,39 @@ class SystemController extends Controller
     private function roleLabel(?string $role): string
     {
         return $role ? str_replace('_', ' ', ucwords($role, '_')) : '-';
+    }
+
+    private function schoolSettingPayload(SchoolSetting $setting): array
+    {
+        return [
+            'school_name' => $setting->school_name,
+            'school_short_name' => $setting->school_short_name,
+            'address' => $setting->address,
+            'village' => $setting->village,
+            'district' => $setting->district,
+            'city' => $setting->city,
+            'province' => $setting->province,
+            'postal_code' => $setting->postal_code,
+            'phone' => $setting->phone,
+            'whatsapp' => $setting->whatsapp,
+            'email' => $setting->email,
+            'website' => $setting->website,
+            'npsn' => $setting->npsn,
+            'nsm' => $setting->nsm,
+            'accreditation' => $setting->accreditation,
+            'school_status' => $setting->school_status,
+            'principal_name' => $setting->principal_name,
+            'principal_nip' => $setting->principal_nip,
+            'principal_nuptk' => $setting->principal_nuptk,
+            'foundation_name' => $setting->foundation_name,
+            'school_year' => $setting->school_year,
+            'semester' => $setting->semester,
+            'vision' => $setting->vision,
+            'mission' => $setting->mission,
+            'motto' => $setting->motto,
+            'logo_url' => $setting->logo_path ? Storage::url($setting->logo_path) : null,
+            'favicon_url' => $setting->favicon_path ? Storage::url($setting->favicon_path) : null,
+        ];
     }
 
     private function excelStyles(): array

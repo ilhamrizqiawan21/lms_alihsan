@@ -32,6 +32,7 @@ class DashboardController extends Controller
         $statistik = $this->statistikService->dashboardGuru($guruId);
 
         $kelasMapel = KelasMapel::with(['kelas', 'mataPelajaran', 'tahunAjaran'])
+            ->withCount(['materi', 'tugas'])
             ->where('guru_id', $guruId)
             ->aktif()
             ->get();
@@ -77,6 +78,9 @@ class DashboardController extends Controller
                 'kelas' => $item->kelas?->nama_kelas ?? '-',
                 'mata_pelajaran' => $item->mataPelajaran?->nama_mapel ?? '-',
                 'semester' => $item->semester === '1' ? 'Ganjil' : 'Genap',
+                'workspace_url' => route('guru.kelas-mapel.show', $item),
+                'materi_count' => (int) $item->materi_count,
+                'tugas_count' => (int) $item->tugas_count,
             ])->values(),
             'tugasBelumDikumpulkan' => $tugasBelumDikumpulkan,
             'siswaJarangMasuk' => $siswaJarangMasuk,

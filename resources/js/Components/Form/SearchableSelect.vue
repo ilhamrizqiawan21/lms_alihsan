@@ -27,12 +27,19 @@ const open = ref(false);
 const query = ref('');
 const root = ref(null);
 const searchInput = ref(null);
+const activeIndex = ref(-1);
 
 const inputId = computed(() => props.name.replaceAll('[', '_').replaceAll(']', '_'));
 const helpId = computed(() => props.help ? `${inputId.value}Help` : null);
 const errorId = computed(() => props.error ? `${inputId.value}Error` : null);
 const describedBy = computed(() => [helpId.value, errorId.value].filter(Boolean).join(' ') || null);
 const listboxId = computed(() => `${inputId.value}Listbox`);
+const activeOptionId = computed(() => {
+    if (activeIndex.value < 0) return null;
+    if (props.clearable && activeIndex.value === 0) return `${listboxId.value}Clear`;
+    const option = filteredOptions.value[activeIndex.value - (props.clearable ? 1 : 0)];
+    return option ? optionId(option) : null;
+});
 
 const normalizedOptions = computed(() => Array.isArray(props.options)
     ? props.options
@@ -53,6 +60,7 @@ const filteredOptions = computed(() => {
 watch(open, async (value) => {
     if (value) {
         query.value = '';
+        activeIndex.value = -1;
         await nextTick();
         searchInput.value?.focus();
     }
@@ -69,6 +77,23 @@ function close() {
 function selectOption(option) {
     emit('update:modelValue', option.value);
     close();
+}
+
+function optionId(option) {
+    return `${listboxId.value}-${String(option.value).replaceAll(/[^a-zA-Z0-9_-]/g, '-')}`;
+}
+
+function moveActive(direction) {
+    const offset = props.clearable ? 1 : 0;
+    const count = filteredOptions.value.length + offset;
+    if (!count) return;
+    activeIndex.value = (activeIndex.value + direction + count) % count;
+}
+
+function selectActive() {
+    if (props.clearable && activeIndex.value === 0) return clearValue();
+    const option = filteredOptions.value[activeIndex.value - (props.clearable ? 1 : 0)];
+    if (option) selectOption(option);
 }
 
 function clearValue() {
@@ -104,10 +129,15 @@ onBeforeUnmount(() => {
                 :class="{ 'is-invalid': error }"
                 :aria-expanded="open ? 'true' : 'false'"
                 :aria-controls="listboxId"
+                aria-haspopup="listbox"
                 :aria-describedby="describedBy"
                 :aria-invalid="error ? 'true' : null"
                 v-bind="$attrs"
                 @click.stop="toggle"
+                @keydown.down.prevent="open = true; moveActive(1)"
+                @keydown.up.prevent="open = true; moveActive(-1)"
+                @keydown.enter.prevent="open ? selectActive() : toggle()"
+                @keydown.esc.prevent="close"
             >
                 <span :class="{ 'text-muted': !selectedOption }">
                     {{ selectedOption?.label ?? placeholder }}
@@ -128,7 +158,14 @@ onBeforeUnmount(() => {
                     type="search"
                     class="form-control form-control-sm"
                     :placeholder="searchPlaceholder"
+                    role="combobox"
+                    :aria-expanded="open ? 'true' : 'false'"
+                    :aria-controls="listboxId"
+                    :aria-activedescendant="activeOptionId"
                     @keydown.esc.prevent="close"
+                    @keydown.down.prevent="moveActive(1)"
+                    @keydown.up.prevent="moveActive(-1)"
+                    @keydown.enter.prevent="selectActive"
                 />
 
                 <div :id="listboxId" class="searchable-select-options" role="listbox">
@@ -136,16 +173,21 @@ onBeforeUnmount(() => {
                         v-if="clearable"
                         type="button"
                         class="searchable-select-option text-muted"
+                        :class="{ active: activeIndex === 0 }"
+                        :id="`${listboxId}Clear`"
+                        role="option"
+                        :aria-selected="String(modelValue) === ''"
                         @click="clearValue"
                     >
                         {{ placeholder }}
                     </button>
                     <button
-                        v-for="option in filteredOptions"
+                        v-for="(option, index) in filteredOptions"
                         :key="option.value"
                         type="button"
                         class="searchable-select-option"
-                        :class="{ active: String(option.value) === String(modelValue) }"
+                        :class="{ active: String(option.value) === String(modelValue) || activeIndex === index + (clearable ? 1 : 0) }"
+                        :id="optionId(option)"
                         role="option"
                         :aria-selected="String(option.value) === String(modelValue)"
                         @click="selectOption(option)"

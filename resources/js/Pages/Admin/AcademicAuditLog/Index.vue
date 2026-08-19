@@ -56,7 +56,7 @@ function formatValues(values) {
     <AppShell title="Log Akademik">
         <PageHeader title="Log Akademik" icon="bi-clipboard-data-fill" />
 
-        <Card title="Riwayat Perubahan Nilai & Absensi" icon="bi-list-ul" body-class="p-0">
+        <Card title="Riwayat Perubahan Nilai dan Absensi" icon="bi-list-ul" body-class="p-0">
             <template #actions>
                 <form class="d-flex flex-wrap gap-2" @submit.prevent="applyFilters">
                     <SelectInput

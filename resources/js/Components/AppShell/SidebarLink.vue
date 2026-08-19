@@ -11,9 +11,11 @@ defineProps({
     <Link v-if="entry.inertia" :href="entry.href" class="nav-link" :class="{ active }">
         <i class="bi" :class="entry.icon" aria-hidden="true"></i>
         <span>{{ entry.label }}</span>
+        <small v-if="entry.hint">{{ entry.hint }}</small>
     </Link>
     <a v-else :href="entry.href" class="nav-link" :class="{ active }">
         <i class="bi" :class="entry.icon" aria-hidden="true"></i>
         <span>{{ entry.label }}</span>
+        <small v-if="entry.hint">{{ entry.hint }}</small>
     </a>
 </template>

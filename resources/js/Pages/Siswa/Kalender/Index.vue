@@ -7,7 +7,7 @@ import AppShell from '../../../Layouts/AppShell.vue';
 defineProps({
     calendar: { type: Object, required: true },
     monthEvents: { type: Array, default: () => [] },
-    pageTitle: { type: String, default: 'Kalender & Reminder' },
+    pageTitle: { type: String, default: 'Kalender dan Reminder' },
 });
 </script>
 

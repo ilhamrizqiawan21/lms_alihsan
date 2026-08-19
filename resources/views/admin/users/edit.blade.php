@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Guru & Staf')
-@section('page_title', 'Edit Guru & Staf')
+@section('title', 'Edit Guru dan Staf')
+@section('page_title', 'Edit Guru dan Staf')
 
 @section('content')
-<x-card title="Form Edit Guru & Staf" icon="bi-pencil-square">
+<x-card title="Form Edit Guru dan Staf" icon="bi-pencil-square">
         <form action="{{ route('admin.users.update', $user) }}" method="POST">
             @csrf @method('PUT')
             <x-form.section title="Identitas Akun" icon="bi-person-badge" class="mb-3">
@@ -18,7 +18,7 @@
                 </div>
             </x-form.section>
 
-            <x-form.section title="Akses & Role" icon="bi-shield-lock" class="mb-3">
+            <x-form.section title="Akses dan Role" icon="bi-shield-lock" class="mb-3">
                 <div class="row">
                     <div class="col-md-6">
                         <x-form.input name="password" type="password" label="Password" help="Kosongkan jika tidak ingin mengubah password." />

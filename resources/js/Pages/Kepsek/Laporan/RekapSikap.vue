@@ -86,7 +86,7 @@ function exportUrl(format) {
 
     <AppShell title="Rekap Sikap">
         <PageHeader
-            title="Rekap Sikap Spiritual & Sosial"
+            title="Rekap Sikap Spiritual dan Sosial"
             icon="bi-heart-fill"
             :subtitle="taAktif ? `TA ${taAktif.tahun} - Semester ${semester}` : `Semester ${semester}`"
         />

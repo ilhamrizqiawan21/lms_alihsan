@@ -1,14 +1,44 @@
 <script setup>
 import { Head } from '@inertiajs/vue3';
-import PageHeader from '../../Components/AppShell/PageHeader.vue';
+import { computed } from 'vue';
 import AppShell from '../../Layouts/AppShell.vue';
-import { Badge, Card, EmptyState, InfoListItem, StatCard, TableWrapper } from '../../Components/UI';
+import {
+    ActionQueue,
+    Badge,
+    DashboardHero,
+    MetricStrip,
+    QuickActionBar,
+    TableWrapper,
+} from '../../Components/UI';
 
-defineProps({
+const props = defineProps({
     statistik: { type: Object, default: () => ({}) },
     loginTerbaru: { type: Array, default: () => [] },
     pengumuman: { type: Array, default: () => [] },
 });
+
+const metrics = computed(() => [
+    { label: 'Siswa aktif', value: props.statistik.total_siswa ?? 0, icon: 'bi-mortarboard-fill', tone: 'success', href: '/admin/kelas-siswa' },
+    { label: 'Guru dan staf', value: props.statistik.total_guru ?? 0, icon: 'bi-person-workspace', tone: 'primary', href: '/admin/users' },
+    { label: 'Kelas', value: props.statistik.total_kelas ?? 0, icon: 'bi-building', tone: 'info', href: '/admin/kelas' },
+    { label: 'Mapel', value: props.statistik.total_mapel ?? 0, icon: 'bi-book-fill', tone: 'warning', href: '/admin/mata-pelajaran' },
+]);
+
+const quickActions = [
+    { label: 'Tambah User', href: '/admin/users/create', icon: 'bi-person-plus', color: 'primary' },
+    { label: 'Import Siswa', href: '/admin/kelas-siswa', icon: 'bi-upload', color: 'light' },
+    { label: 'Kalender', href: '/admin/kalender', icon: 'bi-calendar3', color: 'light' },
+    { label: 'Log Error', href: '/admin/log-error', icon: 'bi-bug', color: 'light' },
+];
+
+const announcementItems = computed(() => props.pengumuman.map((item) => ({
+    id: item.id,
+    title: item.judul,
+    meta: item.created_at ?? '',
+    detail: item.creator ? `Dibuat oleh ${item.creator}` : '',
+    icon: 'bi-megaphone-fill',
+    accent: '#f59e0b',
+})));
 
 function roleBadgeColor(role) {
     return {
@@ -24,24 +54,30 @@ function roleBadgeColor(role) {
     <Head title="Dashboard Admin" />
 
     <AppShell title="Dashboard Admin">
-        <PageHeader title="Dashboard Admin" icon="bi-speedometer2">
+        <DashboardHero
+            eyebrow="Health Operasional"
+            title="Pusat Kendali Sekolah"
+            subtitle="Pantau data inti, aktivitas login, dan pengumuman dari satu layar operasional."
+            icon="bi-command"
+            tone="admin"
+        >
             <template #actions>
-                <nav class="breadcrumb mb-0" aria-label="breadcrumb">
-                    <span class="breadcrumb-item active">Dashboard</span>
-                </nav>
+                <QuickActionBar :actions="quickActions" />
             </template>
-        </PageHeader>
+        </DashboardHero>
 
-        <div class="stats-grid">
-            <StatCard label="Total Siswa" :value="statistik.total_siswa ?? 0" icon="bi-mortarboard-fill" />
-            <StatCard label="Total Guru" :value="statistik.total_guru ?? 0" icon="bi-person-workspace" />
-            <StatCard label="Total Kelas" :value="statistik.total_kelas ?? 0" icon="bi-building" />
-            <StatCard label="Mata Pelajaran" :value="statistik.total_mapel ?? 0" icon="bi-book-fill" />
-        </div>
+        <MetricStrip :items="metrics" />
 
-        <div class="row">
-            <div class="col-md-6 mb-4">
-                <Card title="Login Terbaru" icon="bi-clock-history" body-class="p-0">
+        <div class="dashboard-grid dashboard-grid-admin">
+            <section class="workspace-panel">
+                <header class="workspace-panel-header">
+                    <span class="workspace-panel-title">
+                        <i class="bi bi-clock-history" aria-hidden="true"></i>
+                        Login Terbaru
+                    </span>
+                    <a href="/admin/log-login" class="app-card-action-link">Lihat Semua</a>
+                </header>
+                <div class="workspace-panel-body p-0">
                     <TableWrapper v-if="loginTerbaru.length">
                         <table class="table table-hover mb-0">
                             <thead>
@@ -62,34 +98,16 @@ function roleBadgeColor(role) {
                             </tbody>
                         </table>
                     </TableWrapper>
-                    <EmptyState
-                        v-else
-                        title="Belum ada data login"
-                        icon="bi-clock-history"
-                    />
-                </Card>
-            </div>
+                    <ActionQueue v-else :items="[]" empty-title="Belum ada data login" icon="bi-clock-history" />
+                </div>
+            </section>
 
-            <div class="col-md-6 mb-4">
-                <Card title="Pengumuman Terbaru" icon="bi-megaphone-fill" body-class="p-0">
-                    <div v-if="pengumuman.length" class="app-list">
-                        <InfoListItem
-                            v-for="item in pengumuman"
-                            :key="item.id"
-                            :title="item.judul"
-                            :message="item.isi"
-                            :meta="`${item.created_at ?? '-'} - ${item.creator}`"
-                            icon="bi-megaphone-fill"
-                            accent="var(--primary-500)"
-                        />
-                    </div>
-                    <EmptyState
-                        v-else
-                        title="Belum ada pengumuman"
-                        icon="bi-megaphone"
-                    />
-                </Card>
-            </div>
+            <ActionQueue
+                title="Pengumuman Terbaru"
+                icon="bi-megaphone-fill"
+                :items="announcementItems"
+                empty-title="Belum ada pengumuman"
+            />
         </div>
     </AppShell>
 </template>
