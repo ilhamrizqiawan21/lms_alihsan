@@ -22,7 +22,7 @@ class Phase10AuthorizationTest extends TestCase
 
     public function test_guru_cannot_delete_another_gurus_task_by_id(): void
     {
-        [$admin, $guruA, $guruB, $kelas, $tahunAjaran] = $this->fixture();
+        [, $guruA, $guruB, $kelas, $tahunAjaran] = $this->fixture();
         $mapel = MataPelajaran::create(['kode' => 'MTK', 'nama_mapel' => 'Matematika', 'urutan' => 1]);
 
         $kelasMapel = KelasMapel::create([
@@ -39,7 +39,7 @@ class Phase10AuthorizationTest extends TestCase
             'judul' => 'Tugas Guru B',
             'deskripsi' => 'Data yang harus tetap dimiliki Guru B.',
             'batas_waktu' => now()->addDay(),
-            'kategori_nilai' => 'tugas',
+            'kategori_nilai' => 'NH',
         ]);
 
         $this->actingAs($guruA)
@@ -47,7 +47,6 @@ class Phase10AuthorizationTest extends TestCase
             ->assertForbidden();
 
         $this->assertDatabaseHas('tugas', ['id' => $tugas->id]);
-        $this->assertSame($admin->id !== $guruA->id, true);
     }
 
     public function test_owner_guru_can_delete_own_task(): void
@@ -69,7 +68,7 @@ class Phase10AuthorizationTest extends TestCase
             'judul' => 'Tugas Guru A',
             'deskripsi' => 'Boleh dihapus pemiliknya.',
             'batas_waktu' => now()->addDay(),
-            'kategori_nilai' => 'tugas',
+            'kategori_nilai' => 'NH',
         ]);
 
         $this->actingAs($guruA)
