@@ -41,6 +41,7 @@ use App\Http\Controllers\Kepsek\LaporanController;
 use App\Http\Controllers\Kepsek\StatistikController;
 use App\Http\Controllers\Kepsek\KalenderController as KepsekKalenderController;
 use App\Http\Controllers\ExportController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 // ────────────────────────────────────────────
@@ -107,6 +108,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/pengumuman/{pengumuman}', [AdminPengumumanController::class, 'show'])->name('pengumuman.show');
     Route::post('/pengumuman', [AdminPengumumanController::class, 'store'])->name('pengumuman.store');
     Route::delete('/pengumuman/{pengumuman}', [AdminPengumumanController::class, 'destroy'])->name('pengumuman.destroy');
+
+    // Notifikasi
+    Route::get('/notifikasi', [NotificationController::class, 'index'])->name('notifikasi.index');
+    Route::post('/notifikasi/{notifikasi}/read', [NotificationController::class, 'markRead'])->name('notifikasi.mark-read');
+    Route::post('/notifikasi/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifikasi.mark-all-read');
 
     // Kalender & Reminder
     Route::get('/kalender', [KalenderController::class, 'index'])->name('kalender');
@@ -313,6 +319,11 @@ Route::middleware(['auth', 'role:kepala_sekolah'])->prefix('kepsek')->name('keps
     Route::get('/pengumuman/{pengumuman}', [AdminPengumumanController::class, 'show'])->name('pengumuman.show');
     Route::post('/pengumuman', [AdminPengumumanController::class, 'store'])->name('pengumuman.store');
     Route::delete('/pengumuman/{pengumuman}', [AdminPengumumanController::class, 'destroy'])->name('pengumuman.destroy');
+
+    // Notifikasi
+    Route::get('/notifikasi', [NotificationController::class, 'index'])->name('notifikasi.index');
+    Route::post('/notifikasi/{notifikasi}/read', [NotificationController::class, 'markRead'])->name('notifikasi.mark-read');
+    Route::post('/notifikasi/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifikasi.mark-all-read');
 
     // Laporan
     Route::get('/laporan/absensi', [LaporanController::class, 'absensi'])->name('laporan.absensi');
