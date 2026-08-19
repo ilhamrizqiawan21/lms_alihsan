@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - experimental/demo-lms
+  pull_request:
+    branches:
+      - experimental/demo-lms
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_sqlite, sqlite3
+          coverage: none
+          tools: composer:v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Prepare application
+        run: cp .env.example .env && php artisan key:generate --force
+
+      - name: Run test suite
+        run: php artisan test --colors=never
+
+      - name: Build frontend
+        run: npm run build
