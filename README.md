@@ -1,50 +1,123 @@
 # LMS Sekolah
 
-LMS Sekolah adalah aplikasi Learning Management System single-school berbasis Laravel untuk sekolah, madrasah, atau lembaga pendidikan yang ingin menjalankan pembelajaran digital dari satu instalasi mandiri. Identitas sekolah, logo, favicon, warna tema, kepala sekolah, tahun ajaran, dan semester dapat diubah dari dashboard admin tanpa menyentuh kode.
+> **Single-school Learning Management System** untuk sekolah, madrasah, dan lembaga pendidikan yang membutuhkan platform pembelajaran digital mandiri.
 
-Status produk: single-school LMS, bukan SaaS dan bukan multi-school.
+[![CI](https://github.com/ilhamrizqiawan21/lms_alihsan/actions/workflows/ci.yml/badge.svg)](https://github.com/ilhamrizqiawan21/lms_alihsan/actions/workflows/ci.yml)
 
-## Teknologi
+LMS Sekolah adalah aplikasi web yang menangani alur akademik sekolah dari satu instalasi: pengguna dan role, kelas, siswa, guru-mapel, materi, tugas, pengumpulan, penilaian, absensi, komunikasi, notifikasi, kalender, laporan, dan branding sekolah.
+
+**Scope produk:** single-school. Project ini belum dirancang sebagai SaaS atau multi-tenant.
+
+---
+
+## Highlights
+
+- Role-based application untuk **Admin, Kepala Sekolah, Guru, dan Siswa**.
+- Manajemen akademik: tahun ajaran, semester, kelas, siswa, mata pelajaran, guru pengampu, dan kelas-mapel.
+- Pembelajaran: materi, tugas, submission, multi-file submission, penilaian, dan catatan guru.
+- Akademik: absensi, nilai akademik, sikap spiritual, sikap sosial, rekap, dan laporan.
+- Komunikasi: chat kelas, notifikasi, pengumuman, dan kalender akademik.
+- Import siswa dari Excel dengan template.
+- Export laporan ke Excel dan PDF dengan identitas sekolah dinamis.
+- Branding sekolah dari dashboard: nama, logo, favicon, kontak, kepala sekolah, warna tema, visi, misi, dan data legal.
+- Security foundation: policy/authorization, security middleware, rate limiting, sensitive endpoint guard, security headers, dan audit logging.
+- Automated test suite dan CI untuk validasi backend serta frontend build.
+- Dokumentasi instalasi, arsitektur, audit, security, testing, branding, dan kesiapan komersial.
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Backend | PHP 8.3+, Laravel 13 |
+| Frontend | Vue 3, Inertia.js, Blade |
+| UI | Bootstrap 5, Bootstrap Icons |
+| Build | Vite, Node.js |
+| Database | MySQL 8 / MariaDB 10.6+ |
+| Charts | Chart.js |
+| PDF | DomPDF |
+| Spreadsheet | OpenSpout |
+| Testing | PHPUnit / Laravel Test Suite |
+| CI | GitHub Actions |
+
+## Architecture
+
+```text
+Browser
+   │
+   ├── Vue 3 + Inertia
+   │
+   ▼
+Laravel Application
+   ├── Controllers       HTTP orchestration
+   ├── Policies          Authorization
+   ├── Services          Business logic
+   ├── Models            Domain/data access
+   ├── Middleware        Security & request controls
+   └── Helpers           Shared application utilities
+   │
+   ▼
+MySQL / MariaDB
+```
+
+Business logic yang dapat digunakan lintas controller ditempatkan pada service layer. Authorization ditangani melalui policy dan middleware, sedangkan migration menjadi sumber perubahan schema yang versioned.
+
+## User Roles
+
+| Role | Fokus |
+|---|---|
+| **Admin** | User, kelas, siswa, mapel, penugasan guru, pengaturan sekolah, sistem, rekap, dan export |
+| **Kepala Sekolah** | Dashboard, statistik, kalender, pengumuman, dan laporan akademik |
+| **Guru** | Absensi, materi, tugas, nilai, sikap, chat, dan notifikasi kelas yang diampu |
+| **Siswa** | Materi, pengumpulan tugas, nilai/progress, chat, kalender, dan notifikasi |
+
+## Project Structure
+
+```text
+app/
+├── Helpers/
+├── Http/
+│   ├── Controllers/
+│   └── Middleware/
+├── Models/
+├── Policies/
+├── Providers/
+└── Services/
+
+database/
+├── factories/
+├── migrations/
+└── seeders/
+
+resources/
+├── css/
+├── js/
+│   ├── Components/
+│   ├── Layouts/
+│   └── Pages/
+└── views/
+
+tests/
+├── Feature/
+└── Unit/
+
+docs/
+└── project, architecture, security, installation, testing, and product documentation
+```
+
+## Quick Start
+
+### Requirements
 
 - PHP 8.3+
-- Laravel 13.x
-- MySQL 8.0 / MariaDB 10.6+
-- Laravel Blade + Inertia.js + Vue 3
-- Bootstrap 5, Bootstrap Icons, Vite
-- Chart.js lazy-load untuk dashboard/statistik/progress
-- DomPDF untuk PDF
-- OpenSpout untuk import/export Excel
+- Composer 2+
+- Node.js 20+
+- MySQL 8.0+ atau MariaDB 10.6+
 
-## Fitur Utama
-
-- Dashboard untuk admin, kepala sekolah, guru, dan siswa
-- Manajemen pengguna, role, kelas, siswa, mata pelajaran, dan guru pengampu
-- Import siswa massal dari Excel dengan template yang disediakan admin
-- Tahun ajaran dan semester aktif
-- Absensi siswa per kelas-mapel
-- Materi pembelajaran dan upload file
-- Tugas, pengumpulan tugas, multi-file jawaban, nilai, dan catatan guru
-- Penilaian akademik, sikap spiritual, dan sikap sosial
-- Chat kelas, notifikasi, pengumuman, dan kalender
-- Rekap admin dan laporan kepala sekolah
-- Export PDF dan Excel dengan kop sekolah dinamis
-- Pengaturan branding sekolah dari dashboard admin
-- Seeder demo aman dan seeder produk kosong
-
-## Role Pengguna
-
-| Role | Akses Utama |
-|---|---|
-| Admin | Mengelola user, kelas, mapel, siswa, penugasan guru, pengaturan sekolah, sistem, rekap, dan export |
-| Kepala Sekolah | Melihat dashboard, statistik, kalender, pengumuman, dan laporan akademik |
-| Guru | Mengelola absensi, materi, tugas, nilai, sikap, chat, dan notifikasi kelas yang diampu |
-| Siswa | Melihat materi, mengumpulkan tugas, melihat nilai/progress, chat, kalender, dan notifikasi |
-
-## Instalasi Singkat
+### Installation
 
 ```bash
-git clone <repository-url> lms_school
-cd lms_school
+git clone https://github.com/ilhamrizqiawan21/lms_alihsan.git
+cd lms_alihsan
 
 composer install
 npm install
@@ -53,49 +126,28 @@ cp .env.example .env
 php artisan key:generate
 ```
 
-Atur database di `.env`:
-
-```env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=lms_school
-DB_USERNAME=lms_app
-DB_PASSWORD=change-this-db-password
-```
-
-Gunakan user database khusus aplikasi dengan privilege minimal pada database LMS. Hindari memakai user `root` untuk environment production.
-
-Jalankan setup database dan asset produksi:
+Configure database pada `.env`, lalu jalankan:
 
 ```bash
 php artisan migrate --seed
-npm run build
 php artisan storage:link
+npm run build
 php artisan serve
 ```
 
-Aplikasi lokal tersedia di:
-
-```text
-http://127.0.0.1:8000
-```
-
-> Penting: file `.env` berisi konfigurasi lingkungan dan kredensial rahasia. File ini tidak diikutkan ke repositori agar data sensitif tidak bocor. Gunakan `.env.example` sebagai template.
-
-Untuk development frontend gunakan:
+Untuk development dengan Vite:
 
 ```bash
 npm run dev
 ```
 
-Untuk production selalu jalankan `npm run build` agar `public/build/manifest.json` tersedia. Frontend saat ini tidak lagi memakai Alpine.js, jQuery, Select2, atau DataTables.
+> Untuk production, gunakan environment terpisah, `APP_DEBUG=false`, credential database dengan privilege minimal, dan deployment asset hasil `npm run build`.
 
-Panduan lengkap tersedia di [docs/INSTALLATION.md](docs/INSTALLATION.md).
+Panduan lengkap: [`docs/INSTALLATION.md`](docs/INSTALLATION.md).
 
-## Akun Demo
+## Demo Account
 
-Seeder demo default membuat akun berikut:
+Seeder demo menyediakan akun untuk empat role utama:
 
 | Role | Email | Password |
 |---|---|---|
@@ -104,64 +156,89 @@ Seeder demo default membuat akun berikut:
 | Siswa | `siswa@demo.test` | `password` |
 | Kepala Sekolah | `kepsek@demo.test` | `password` |
 
-Untuk instalasi produk kosong tanpa data guru, siswa, kelas, mapel, materi, tugas, absensi, dan nilai demo:
+**Jangan gunakan credential demo pada production.** Untuk instalasi produk kosong, gunakan `EmptyProductSeeder` dan konfigurasi akun admin melalui environment.
+
+## Testing & CI
+
+Jalankan test suite secara lokal:
 
 ```bash
-php artisan migrate:fresh --seeder=EmptyProductSeeder
+php artisan test
 ```
 
-Mode kosong hanya membuat role default, akun admin, pengaturan sekolah default, tahun ajaran default, dan semester aktif. Akun admin awal mengikuti `DEFAULT_ADMIN_USERNAME`, `DEFAULT_ADMIN_EMAIL`, `DEFAULT_ADMIN_PASSWORD`, dan `DEFAULT_ADMIN_NAME` di `.env`.
+Build frontend:
 
-## Custom Nama Sekolah dan Logo
-
-Login sebagai admin, lalu buka:
-
-```text
-Admin > Pengaturan
+```bash
+npm run build
 ```
 
-Dari halaman tersebut admin dapat mengubah:
+CI menjalankan install dependency, test suite Laravel, dan frontend build melalui GitHub Actions.
 
-- Nama sekolah dan nama pendek
-- Logo dan favicon
-- Alamat dan kontak sekolah
-- Kepala sekolah
-- Tahun ajaran dan semester
-- Warna utama, sekunder, sidebar, dan navbar
-- Visi, misi, motto, dan data legal sekolah
+## Security
 
-Perubahan branding digunakan oleh login, layout aplikasi, favicon, laporan cetak, PDF, dan Excel. Panduan detail tersedia di [docs/CUSTOM_BRANDING.md](docs/CUSTOM_BRANDING.md).
+Project memiliki fondasi security yang mencakup authorization policy, security headers, rate limiting, sensitive endpoint protection, password-change enforcement, dan academic audit logging.
 
-## Dokumentasi
+Security-related documentation tersedia di:
 
-- [Installation Guide](docs/INSTALLATION.md)
-- [Architecture Guide](docs/ARCHITECTURE.md)
-- [Import Siswa Excel](docs/IMPORT_SISWA.md)
-- [Code Audit](docs/CODE_AUDIT.md)
-- [Custom Branding](docs/CUSTOM_BRANDING.md)
-- [Security Check Result](docs/SECURITY_CHECK_RESULT.md)
-- [Commercial Readiness Checklist](docs/COMMERCIAL_READY_CHECKLIST.md)
-- [Manual Test Result](docs/MANUAL_TEST_RESULT.md)
+- [`docs/PHASE-10-SECURITY.md`](docs/PHASE-10-SECURITY.md)
+- [`docs/SECURITY_CHECK_RESULT.md`](docs/SECURITY_CHECK_RESULT.md)
 
-## Catatan Production
+## Documentation
 
-- Ubah semua password default setelah instalasi.
-- Set `APP_ENV=production` dan `APP_DEBUG=false`.
-- Jalankan `php artisan optimize`.
-- Pastikan `storage/` dan `bootstrap/cache/` writable oleh web server.
-- Rotasi credential lokal sebelum distribusi atau pemasangan ke klien.
+### Setup & Development
 
-## Lisensi Komersial
+- [`docs/INSTALLATION.md`](docs/INSTALLATION.md) — instalasi dan deployment
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — struktur dan pola arsitektur
+- [`docs/IMPORT_SISWA.md`](docs/IMPORT_SISWA.md) — import siswa melalui Excel
 
-Kode dapat digunakan sebagai basis produk LMS single-school untuk instalasi sekolah/klien. Atur skema lisensi, kontrak support, dan hak distribusi sesuai perjanjian komersial Anda.
+### Engineering & Quality
 
-## Kontak Developer
+- [`docs/CODE_AUDIT.md`](docs/CODE_AUDIT.md) — audit codebase
+- [`docs/PHASE_0_AUDIT.md`](docs/PHASE_0_AUDIT.md) — baseline audit
+- [`docs/PHASE_1_CORE_STABILITY.md`](docs/PHASE_1_CORE_STABILITY.md) — stabilitas core
+- [`docs/PHASE-10-SECURITY.md`](docs/PHASE-10-SECURITY.md) — security hardening
+- [`docs/SECURITY_CHECK_RESULT.md`](docs/SECURITY_CHECK_RESULT.md) — security verification
+- [`docs/MANUAL_TEST_RESULT.md`](docs/MANUAL_TEST_RESULT.md) — hasil pengujian manual
+- [`docs/FRONTEND_CONTRAST_CHECKLIST.md`](docs/FRONTEND_CONTRAST_CHECKLIST.md) — checklist contrast/accessibility
 
-Isi kontak developer atau tim support Anda di bagian ini sebelum diserahkan ke calon pembeli.
+### Product
 
-```text
-Nama Developer/Tim:
-Email:
-WhatsApp:
-Website:
-```
+- [`docs/CUSTOM_BRANDING.md`](docs/CUSTOM_BRANDING.md) — konfigurasi identitas sekolah
+- [`docs/COMMERCIAL_READY_CHECKLIST.md`](docs/COMMERCIAL_READY_CHECKLIST.md) — kesiapan produk
+- [`docs/FRONTEND_TODO.md`](docs/FRONTEND_TODO.md) — pekerjaan frontend yang tersisa
+- [`docs/LMS_MODERN_UI_TODO.md`](docs/LMS_MODERN_UI_TODO.md) — roadmap polish UI
+
+## Engineering Notes
+
+Project ini dikembangkan sebagai aplikasi production-oriented. Fokus utamanya adalah menjaga **stabilitas fungsi, backward compatibility, data integrity, security, dan maintainability** sebelum menambahkan fitur baru.
+
+Beberapa keputusan engineering penting:
+
+- Migration digunakan untuk perubahan schema yang terkontrol dan versioned.
+- Business logic yang reusable dipisahkan ke service layer.
+- Authorization tidak hanya bergantung pada visibility UI.
+- Export dan import dipisahkan dari controller melalui service khusus.
+- Environment secrets tidak disimpan di repository.
+- Dependency lock files dipertahankan untuk reproducible installation.
+
+## Scope & Roadmap
+
+Saat ini project berfokus pada single-school deployment. Pengembangan berikutnya diprioritaskan pada:
+
+1. UI/UX consistency dan responsive polish.
+2. Dark/light theme system.
+3. Test coverage dan regression prevention.
+4. Performance dan production hardening.
+5. Dokumentasi deployment dan operasional yang lebih lengkap.
+
+Multi-tenant SaaS, billing, dan subscription management **belum menjadi scope project saat ini**.
+
+## License
+
+MIT. Lihat [`LICENSE`](LICENSE).
+
+## Developer
+
+**Ilham Rizqiawan**
+
+Repository ini juga berfungsi sebagai portfolio engineering project: menunjukkan pengembangan aplikasi domain-specific dari feature implementation, database evolution, security hardening, testing, hingga deployment.
