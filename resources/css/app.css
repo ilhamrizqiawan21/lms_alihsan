@@ -111,6 +111,28 @@
     white-space: nowrap;
 }
 
+/* Proporsi kolom tabel daftar: layout tetap + teks terpotong dengan ellipsis. */
+.app-table-proportional {
+    table-layout: fixed;
+}
+
+.app-table-proportional th,
+.app-table-proportional td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Kolom judul boleh wrap agar judul tetap terbaca penuh. */
+.app-table-proportional td.app-table-judul {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+/* Blok progress pengumpulan menyesuaikan lebar kolom. */
+.app-table-proportional td .assignment-progress {
+    min-width: 0;
+}
+
 .app-table-filter {
     align-items: end;
 }

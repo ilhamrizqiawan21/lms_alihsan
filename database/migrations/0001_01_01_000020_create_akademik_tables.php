@@ -46,7 +46,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('tugas_id')->constrained('tugas')->cascadeOnDelete();
             $table->foreignId('siswa_id')->constrained('siswa')->cascadeOnDelete();
-            $table->enum('status', ['belum', 'sudah'])->default('belum');
+            $table->enum('status', ['belum', 'sudah', 'terlambat', 'dinilai', 'perlu_perbaikan'])->default('belum');
             $table->decimal('nilai', 5, 2)->nullable();
             $table->string('file_upload', 255)->nullable();
             $table->text('teks_jawaban')->nullable();

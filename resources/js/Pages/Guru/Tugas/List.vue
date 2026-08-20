@@ -159,7 +159,13 @@ async function destroy(item) {
                     </template>
                     <template #default>
                         <TableWrapper v-if="filteredTugas.length" class="d-none d-md-block">
-                            <table class="table table-hover mb-0">
+                            <table class="table table-hover mb-0 app-table-proportional">
+                                <colgroup>
+                                    <col style="width:44%">
+                                    <col style="width:14%">
+                                    <col style="width:20%">
+                                    <col style="width:22%">
+                                </colgroup>
                                 <thead>
                                     <tr>
                                         <th>Judul</th>
@@ -170,7 +176,7 @@ async function destroy(item) {
                                 </thead>
                                 <tbody>
                                     <tr v-for="item in filteredTugas" :key="item.id">
-                                        <td>
+                                        <td class="app-table-judul">
                                             <strong>{{ item.judul }}</strong>
                                             <div v-if="item.deskripsi" class="text-muted small">{{ item.deskripsi }}</div>
                                         </td>

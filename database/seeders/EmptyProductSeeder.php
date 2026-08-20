@@ -74,5 +74,6 @@ class EmptyProductSeeder extends Seeder
 
         Pengaturan::setValue('tahun_ajaran_aktif', (string) $tahunAjaran->id);
         Pengaturan::setValue('semester_aktif', '1');
+        Pengaturan::setValue('penalty_terlambat_poin', '1');
     }
 }

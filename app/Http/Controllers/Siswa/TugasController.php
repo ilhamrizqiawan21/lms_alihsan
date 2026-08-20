@@ -102,7 +102,10 @@ class TugasController extends Controller
                     'url' => route('siswa.tugas.file.download', [$tugas, $file]),
                 ])->values(),
             ] : null,
-            'canSubmit' => !$pengumpulan || $pengumpulan->status === 'belum',
+            'canSubmit' => !$pengumpulan || in_array($pengumpulan->status, [
+                PengumpulanTugas::STATUS_BELUM,
+                PengumpulanTugas::STATUS_PERLU_PERBAIKAN,
+            ]),
         ]);
     }
 
@@ -151,11 +154,16 @@ class TugasController extends Controller
             ->where('siswa_id', $siswa->id)
             ->first();
 
-        if ($existingPengumpulan && $existingPengumpulan->status !== 'belum') {
+        if ($existingPengumpulan && !in_array($existingPengumpulan->status, [
+            PengumpulanTugas::STATUS_BELUM,
+            PengumpulanTugas::STATUS_PERLU_PERBAIKAN,
+        ])) {
             return back()->with('error', 'Tugas ini sudah dikumpulkan dan tidak dapat diubah.');
         }
 
-        $statusPengumpulan = $tugas->batas_waktu && now()->gt($tugas->batas_waktu) ? 'terlambat' : 'sudah';
+        $statusPengumpulan = $tugas->batas_waktu && now()->gt($tugas->batas_waktu)
+            ? PengumpulanTugas::STATUS_TERLAMBAT
+            : PengumpulanTugas::STATUS_SUDAH;
         $uploadedFiles = [];
         $storedPaths = [];
 

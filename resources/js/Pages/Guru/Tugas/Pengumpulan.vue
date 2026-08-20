@@ -32,8 +32,8 @@ const filteredPengumpulan = computed(() => {
 });
 
 const metrics = computed(() => {
-    const submitted = props.pengumpulan.filter((item) => ['sudah', 'terlambat', 'dinilai'].includes(item.status)).length;
-    const graded = props.pengumpulan.filter((item) => item.status === 'dinilai' || item.nilai !== null).length;
+    const submitted = props.pengumpulan.filter((item) => ['sudah', 'terlambat', 'dinilai', 'perlu_perbaikan'].includes(item.status)).length;
+    const graded = props.pengumpulan.filter((item) => item.nilai !== null).length;
     const pendingGrades = props.pengumpulan.filter((item) => ['sudah', 'terlambat'].includes(item.status) && item.nilai === null).length;
     const missing = props.pengumpulan.filter((item) => item.status === 'belum').length;
 
@@ -46,16 +46,20 @@ const metrics = computed(() => {
     ];
 });
 
+const statusMap = {
+    belum: { color: 'secondary', label: 'Belum' },
+    sudah: { color: 'success', label: 'Sudah' },
+    terlambat: { color: 'danger', label: 'Terlambat' },
+    dinilai: { color: 'primary', label: 'Dinilai' },
+    perlu_perbaikan: { color: 'warning', label: 'Perlu Perbaikan' },
+};
+
 function statusColor(status) {
-    return {
-        sudah: 'success',
-        dinilai: 'primary',
-        terlambat: 'danger',
-    }[status] ?? 'secondary';
+    return statusMap[status]?.color ?? 'secondary';
 }
 
 function statusLabel(status) {
-    return status ? status.replace(/\b\w/g, (char) => char.toUpperCase()) : '-';
+    return statusMap[status]?.label ?? (status ? status.replace(/\b\w/g, (char) => char.toUpperCase()) : '-');
 }
 </script>
 
@@ -94,6 +98,7 @@ function statusLabel(status) {
                         <option value="belum">Belum</option>
                         <option value="sudah">Sudah</option>
                         <option value="terlambat">Terlambat</option>
+                        <option value="perlu_perbaikan">Perlu Perbaikan</option>
                         <option value="dinilai">Dinilai</option>
                     </select>
                     <a :href="kelasMapel.export_excel_url" class="btn btn-sm btn-outline-success">

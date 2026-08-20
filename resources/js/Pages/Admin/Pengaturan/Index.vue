@@ -25,6 +25,7 @@ const systemForm = useForm({
     warna_tema: props.settings.warna_tema ?? 'hijau',
     semester_aktif: props.settings.semester_aktif ?? '1',
     mode_kenaikan: props.settings.mode_kenaikan ?? 'manual',
+    penalty_terlambat_poin: props.settings.penalty_terlambat_poin ?? '1',
 });
 
 const schoolForm = useForm({
@@ -62,6 +63,7 @@ const metrics = computed(() => [
     { label: 'Semester LMS', value: `Semester ${systemForm.semester_aktif}`, icon: 'bi-calendar3', tone: 'info' },
     { label: 'Tahun Ajaran', value: props.tahunAjaranAktif?.tahun ?? 'Belum diatur', icon: 'bi-calendar-check', tone: 'success', href: props.urls.tahun_ajaran },
     { label: 'Mode Kenaikan', value: systemForm.mode_kenaikan === 'auto' ? 'Otomatis' : 'Manual', icon: 'bi-arrow-up-circle', tone: 'warning' },
+    { label: 'Penalti terlambat', value: `${systemForm.penalty_terlambat_poin || 0} poin/hari`, icon: 'bi-clock-history', tone: 'danger' },
 ]);
 
 const quickActions = [
@@ -302,6 +304,19 @@ function saveSchool() {
                             label="Mode Kenaikan Kelas"
                             :options="[{ value: 'manual', label: 'Manual' }, { value: 'auto', label: 'Otomatis' }]"
                             :error="systemForm.errors.mode_kenaikan"
+                        />
+                    </div>
+                    <div class="col-md-4">
+                        <TextInput
+                            v-model="systemForm.penalty_terlambat_poin"
+                            type="number"
+                            name="penalty_terlambat_poin"
+                            label="Penalti Tugas Terlambat (per hari)"
+                            min="0"
+                            max="100"
+                            step="0.01"
+                            help="Jumlah poin yang dipotong dari nilai untuk setiap hari keterlambatan (contoh: 1 hari telat = 1 poin)."
+                            :error="systemForm.errors.penalty_terlambat_poin"
                         />
                     </div>
                 </div>

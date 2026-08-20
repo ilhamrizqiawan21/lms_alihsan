@@ -3,6 +3,7 @@
 namespace App\Services\Reports\Exports;
 
 use App\Models\Kelas;
+use App\Models\PengumpulanTugas;
 use App\Models\Siswa;
 use App\Models\Tugas;
 use App\Services\Reports\ReportMetadataService;
@@ -18,7 +19,7 @@ final class TugasExportService
         $total = Siswa::where('kelas_id', $kelasId)->where('status', 'aktif')->count();
         $tugas = Tugas::with(['kelasMapel.mataPelajaran','kelasMapel.guru'])
             ->whereHas('kelasMapel', fn ($q) => $q->where('kelas_id', $kelasId)->where('tahun_ajaran_id', $context->tahunAjaran?->id)->where('semester', $semester))
-            ->withCount(['pengumpulan as sudah_kumpul' => fn ($q) => $q->whereIn('status', ['sudah','terlambat','dinilai'])->whereHas('siswa', fn ($s) => $s->where('kelas_id', $kelasId)->where('status', 'aktif'))])
+            ->withCount(['pengumpulan as sudah_kumpul' => fn ($q) => $q->whereIn('status', PengumpulanTugas::STATUS_SUBMITTED)->whereHas('siswa', fn ($s) => $s->where('kelas_id', $kelasId)->where('status', 'aktif'))])
             ->orderByDesc('created_at')->get();
 
         [$writer, $path] = $this->excel->open('rekap_tugas_', 9);

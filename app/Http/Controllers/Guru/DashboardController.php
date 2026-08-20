@@ -125,7 +125,7 @@ class DashboardController extends Controller
                 $kelasMapel = $kelasMapelById->get($tugas->kelas_mapel_id);
                 $totalSiswa = (int) ($totalSiswaByKelas[$kelasMapel?->kelas_id] ?? 0);
                 $sudahMengumpulkan = PengumpulanTugas::where('tugas_id', $tugas->id)
-                    ->whereIn('status', ['sudah', 'terlambat', 'dinilai'])
+                    ->whereIn('status', PengumpulanTugas::STATUS_SUBMITTED)
                     ->whereHas('siswa', fn ($query) => $query
                         ->where('kelas_id', $kelasMapel?->kelas_id)
                         ->where('status', 'aktif'))
@@ -215,6 +215,7 @@ class DashboardController extends Controller
             ->join('mata_pelajaran', 'mata_pelajaran.id', '=', 'kelas_mapel.mapel_id')
             ->whereIn('tugas.kelas_mapel_id', $kelasMapelIds)
             ->whereIn('pengumpulan_tugas.status', ['sudah', 'terlambat'])
+            ->whereNull('pengumpulan_tugas.nilai')
             ->select([
                 'tugas.id',
                 'tugas.kelas_mapel_id',

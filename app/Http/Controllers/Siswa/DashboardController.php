@@ -47,7 +47,7 @@ class DashboardController extends Controller
 
         $totalTugas = Tugas::whereIn('kelas_mapel_id', $kelasMapelIds)->count();
         $tugasSelesai = PengumpulanTugas::where('siswa_id', $siswa->id)
-            ->whereIn('status', ['sudah', 'terlambat', 'dinilai'])
+            ->whereIn('status', PengumpulanTugas::STATUS_SUBMITTED)
             ->whereHas('tugas', fn($q) => $q->whereIn('kelas_mapel_id', $kelasMapelIds))
             ->count();
         $tugasBelum = max($totalTugas - $tugasSelesai, 0);

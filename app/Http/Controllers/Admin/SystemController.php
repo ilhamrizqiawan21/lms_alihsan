@@ -145,6 +145,7 @@ class SystemController extends Controller
                 'warna_tema' => $settings['warna_tema'] ?? 'hijau',
                 'semester_aktif' => $settings['semester_aktif'] ?? '1',
                 'mode_kenaikan' => $settings['mode_kenaikan'] ?? 'manual',
+                'penalty_terlambat_poin' => $settings['penalty_terlambat_poin'] ?? '1',
             ],
             'tahunAjaranAktif' => $tahunAjaranAktif ? [
                 'id' => $tahunAjaranAktif->id,
@@ -166,6 +167,7 @@ class SystemController extends Controller
             'warna_tema' => 'nullable|in:hijau,biru-azure,biru-aqua,indigo,marun',
             'semester_aktif' => 'nullable|in:1,2',
             'mode_kenaikan' => 'nullable|in:manual,auto',
+            'penalty_terlambat_poin' => 'nullable|numeric|min:0|max:100',
         ]);
 
         foreach ($data as $key => $value) {

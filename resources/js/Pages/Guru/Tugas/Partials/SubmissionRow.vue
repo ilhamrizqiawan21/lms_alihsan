@@ -45,7 +45,12 @@ defineEmits(['detail']);
             </button>
             <span v-else class="text-muted">-</span>
         </td>
-        <td><SubmissionGradeForm :item="item" compact /></td>
+        <td>
+            <SubmissionGradeForm :item="item" compact />
+            <small v-if="Number(item.penalty_terlambat || 0) > 0" class="text-danger d-block mt-1">
+                Akhir {{ item.nilai }} (-{{ item.penalty_terlambat }})
+            </small>
+        </td>
         <td>
             <span v-if="item.catatan" class="text-muted small">{{ item.catatan.length > 30 ? item.catatan.slice(0, 30) + '...' : item.catatan }}</span>
             <span v-else class="text-muted">-</span>

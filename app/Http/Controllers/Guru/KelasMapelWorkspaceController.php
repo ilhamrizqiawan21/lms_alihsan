@@ -35,7 +35,7 @@ class KelasMapelWorkspaceController extends Controller
 
         $recentTasks = Tugas::where('kelas_mapel_id', $kelasMapel->id)
             ->withCount([
-                'pengumpulan as submitted_count' => fn ($query) => $query->whereIn('status', ['sudah', 'terlambat', 'dinilai']),
+                'pengumpulan as submitted_count' => fn ($query) => $query->whereIn('status', PengumpulanTugas::STATUS_SUBMITTED),
                 'pengumpulan as pending_grading_count' => fn ($query) => $query
                     ->whereIn('status', ['sudah', 'terlambat'])
                     ->whereNull('nilai'),

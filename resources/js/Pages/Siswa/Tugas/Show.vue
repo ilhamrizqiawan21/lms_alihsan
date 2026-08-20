@@ -32,16 +32,20 @@ const uploadFileError = computed(() => {
     return errors.length > 1 ? errors : errors[0] ?? '';
 });
 
+const statusMap = {
+    belum: { color: 'secondary', label: 'Belum' },
+    sudah: { color: 'success', label: 'Sudah' },
+    terlambat: { color: 'danger', label: 'Terlambat' },
+    dinilai: { color: 'primary', label: 'Dinilai' },
+    perlu_perbaikan: { color: 'warning', label: 'Perlu Perbaikan' },
+};
+
 function statusColor(status) {
-    return {
-        sudah: 'success',
-        dinilai: 'primary',
-        terlambat: 'danger',
-    }[status] ?? 'secondary';
+    return statusMap[status]?.color ?? 'secondary';
 }
 
 function statusLabel(status) {
-    return status ? status.replace(/\b\w/g, (char) => char.toUpperCase()) : '-';
+    return statusMap[status]?.label ?? (status ? status.replace(/\b\w/g, (char) => char.toUpperCase()) : '-');
 }
 
 function selectedFiles(files) {

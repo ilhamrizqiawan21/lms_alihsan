@@ -10,14 +10,14 @@ const props = defineProps({
 });
 
 const form = useForm({
-    nilai: props.item.nilai ?? '',
+    nilai: props.item.nilai_input ?? props.item.nilai ?? '',
     catatan: props.item.catatan ?? '',
 });
 
 watch(
     () => props.item,
     (item) => {
-        form.nilai = item.nilai ?? '';
+        form.nilai = item.nilai_input ?? item.nilai ?? '';
         form.catatan = item.catatan ?? '';
         form.clearErrors();
     },
@@ -41,7 +41,6 @@ function submit() {
                 min="0"
                 max="100"
                 step="0.01"
-                required
             >
             <Button type="submit" color="success" size="sm" :disabled="form.processing" title="Simpan nilai" aria-label="Simpan nilai">
                 <i class="bi bi-check" aria-hidden="true"></i>
@@ -61,8 +60,10 @@ function submit() {
                     max="100"
                     step="0.01"
                     placeholder="Nilai"
-                    required
                 >
+                <div v-if="Number(item.penalty_terlambat || 0) > 0" class="form-text text-danger">
+                    Nilai akhir {{ item.nilai }} setelah penalti {{ item.penalty_terlambat }} poin.
+                </div>
             </div>
             <div class="col-md-5">
                 <input

@@ -7,6 +7,7 @@ use App\Models\Absensi;
 use App\Models\Kelas;
 use App\Models\KelasMapel;
 use App\Models\NilaiAkhir;
+use App\Models\PengumpulanTugas;
 use App\Models\SikapSosial;
 use App\Models\SikapSpiritual;
 use App\Models\Siswa;
@@ -47,7 +48,7 @@ class RekapController extends Controller
     public function tugas(Request $request)
     {
         $request->validate(['kelas_id'=>'nullable|exists:kelas,id','semester'=>'nullable|in:1,2']);$kelasList=Kelas::orderBy('tingkat')->orderBy('nama_kelas')->get();$kelasId=$request->input('kelas_id');$taAktif=TahunAjaran::getAktif();$semester=$request->input('semester',\App\Models\Pengaturan::getValue('semester_aktif','1'));$tugasList=[];$kelasNama='';
-        if($kelasId&&$taAktif){$kelas=Kelas::find($kelasId);$kelasNama=$kelas?"{$kelas->tingkat} {$kelas->nama_kelas}":'';$totalSiswa=Siswa::where('kelas_id',$kelasId)->where('status','aktif')->count();$tugasList=Tugas::with(['kelasMapel.mataPelajaran','kelasMapel.guru'])->whereHas('kelasMapel',fn($q)=>$q->where('kelas_id',$kelasId)->where('tahun_ajaran_id',$taAktif->id)->where('semester',$semester))->withCount(['pengumpulan as sudah_kumpul'=>fn($q)=>$q->whereIn('status',['sudah','terlambat','dinilai'])->whereHas('siswa',fn($s)=>$s->where('kelas_id',$kelasId)->where('status','aktif'))])->orderByDesc('created_at')->get()->map(function($t)use($totalSiswa){$t->total_siswa=$totalSiswa;return $t;});}
+        if($kelasId&&$taAktif){$kelas=Kelas::find($kelasId);$kelasNama=$kelas?"{$kelas->tingkat} {$kelas->nama_kelas}":'';$totalSiswa=Siswa::where('kelas_id',$kelasId)->where('status','aktif')->count();$tugasList=Tugas::with(['kelasMapel.mataPelajaran','kelasMapel.guru'])->whereHas('kelasMapel',fn($q)=>$q->where('kelas_id',$kelasId)->where('tahun_ajaran_id',$taAktif->id)->where('semester',$semester))->withCount(['pengumpulan as sudah_kumpul'=>fn($q)=>$q->whereIn('status',PengumpulanTugas::STATUS_SUBMITTED)->whereHas('siswa',fn($s)=>$s->where('kelas_id',$kelasId)->where('status','aktif'))])->orderByDesc('created_at')->get()->map(function($t)use($totalSiswa){$t->total_siswa=$totalSiswa;return $t;});}
         return Inertia::render('Admin/Rekap', compact('kelasList','tugasList','kelasNama','kelasId','semester') + ['type'=>'tugas','title'=>'Rekap Tugas']);
     }
 }

@@ -47,10 +47,10 @@ class TugasController extends Controller
         $tugas = Tugas::with(['kelasMapel.kelas', 'kelasMapel.mataPelajaran'])
             ->whereIn('kelas_mapel_id', $kelasMapel->pluck('id'))
             ->withCount(['pengumpulan as sudah_mengumpulkan' => function ($q) {
-                $q->whereIn('status', ['sudah', 'terlambat', 'dinilai']);
+                $q->whereIn('status', PengumpulanTugas::STATUS_SUBMITTED);
             }])
             ->withCount(['pengumpulan as perlu_dinilai' => function ($q) {
-                $q->whereIn('status', ['sudah', 'terlambat'])
+                $q->whereIn('status', PengumpulanTugas::STATUS_PERLU_DINILAI)
                     ->whereNull('nilai');
             }])
             ->orderBy('created_at', 'desc')
@@ -72,13 +72,13 @@ class TugasController extends Controller
 
         $tugas = Tugas::where('kelas_mapel_id', $kelasMapel->id)
             ->withCount(['pengumpulan as sudah_mengumpulkan' => function ($q) use ($kelasMapel) {
-                $q->whereIn('status', ['sudah', 'terlambat', 'dinilai'])
+                $q->whereIn('status', PengumpulanTugas::STATUS_SUBMITTED)
                     ->whereHas('siswa', fn ($siswa) => $siswa
                         ->where('kelas_id', $kelasMapel->kelas_id)
                         ->where('status', 'aktif'));
             }])
             ->withCount(['pengumpulan as perlu_dinilai' => function ($q) use ($kelasMapel) {
-                $q->whereIn('status', ['sudah', 'terlambat'])
+                $q->whereIn('status', PengumpulanTugas::STATUS_PERLU_DINILAI)
                     ->whereNull('nilai')
                     ->whereHas('siswa', fn ($siswa) => $siswa
                         ->where('kelas_id', $kelasMapel->kelas_id)
@@ -252,6 +252,8 @@ class TugasController extends Controller
                     'teks_jawaban' => $item?->teks_jawaban,
                     'catatan' => $item?->catatan,
                     'nilai' => $item?->nilai,
+                    'nilai_input' => $item?->nilai_sebelum_penalty ?? $item?->nilai,
+                    'penalty_terlambat' => $item?->penalty_terlambat ?? 0,
                     'nilai_url' => route('guru.tugas.nilai', [$kelasMapel, $tugas, $student]),
                     'legacy_file_url' => $item?->file_upload ? route('guru.tugas.pengumpulan.download', [$kelasMapel, $tugas, $item]) : null,
                     'files' => $item?->files->map(fn (PengumpulanFile $file) => [
@@ -271,25 +273,62 @@ class TugasController extends Controller
         $this->ensureSiswaBelongsToKelasMapel($siswa, $kelasMapel);
 
         $validated = $request->validate([
-            'nilai' => 'required|numeric|min:0|max:100',
-            'catatan' => 'nullable|string|max:500',
+            'nilai' => 'nullable|required_without:catatan|numeric|min:0|max:100',
+            'catatan' => 'nullable|required_without:nilai|string|max:500',
         ]);
+
+        $pengumpulan = PengumpulanTugas::where([
+            'tugas_id' => $tugas->id,
+            'siswa_id' => $siswa->id,
+        ])->first();
+        $nilaiInput = array_key_exists('nilai', $validated) && $validated['nilai'] !== null && $validated['nilai'] !== ''
+            ? round((float) $validated['nilai'], 2)
+            : null;
+        $isLate = $pengumpulan?->status === PengumpulanTugas::STATUS_TERLAMBAT
+            || ($pengumpulan?->tanggal_kumpul && $tugas->batas_waktu && $pengumpulan->tanggal_kumpul->gt($tugas->batas_waktu));
+        $penalty = $nilaiInput !== null && $isLate ? min($nilaiInput, $this->latePenaltyPoints($pengumpulan, $tugas)) : 0.0;
+        $nilaiFinal = $nilaiInput !== null ? max(0, round($nilaiInput - $penalty, 2)) : null;
+
+        if ($nilaiInput === null && blank($validated['catatan'] ?? null)) {
+            // Form kosong: jangan ubah status/nilai yang sudah ada.
+            return back()->with('info', 'Tidak ada nilai atau komentar yang diisi.');
+        }
+
+        $values = [
+            'catatan' => $validated['catatan'] ?? null,
+        ];
+
+        if ($nilaiInput !== null) {
+            $values['nilai'] = $nilaiFinal;
+            $values['nilai_sebelum_penalty'] = $nilaiInput;
+            $values['penalty_terlambat'] = $penalty;
+            $values['status'] = PengumpulanTugas::STATUS_DINILAI;
+        } elseif ($pengumpulan && $pengumpulan->nilai === null
+            && in_array($pengumpulan->status, PengumpulanTugas::STATUS_PERLU_DINILAI)) {
+            // Komentar tanpa nilai: kembalikan ke siswa untuk diperbaiki,
+            // sehingga tidak lagi masuk antrian "perlu dinilai".
+            $values['status'] = PengumpulanTugas::STATUS_PERLU_PERBAIKAN;
+            $values['penalty_terlambat'] = 0;
+        } elseif (!$pengumpulan) {
+            $values['status'] = PengumpulanTugas::STATUS_BELUM;
+            $values['penalty_terlambat'] = 0;
+        }
 
         PengumpulanTugas::updateOrCreate(
             [
                 'tugas_id' => $tugas->id,
                 'siswa_id' => $siswa->id,
             ],
-            [
-                'nilai' => $validated['nilai'],
-                'catatan' => $validated['catatan'] ?? null,
-                'status' => 'dinilai',
-            ]
+            $values
         );
 
-        $this->syncNilaiHarian($kelasMapel, $siswa);
+        if ($nilaiInput !== null) {
+            $this->syncNilaiHarian($kelasMapel, $siswa);
+        }
 
-        return back()->with('success', 'Nilai tugas berhasil disimpan dan nilai harian diperbarui.');
+        return back()->with('success', $nilaiInput !== null
+            ? 'Nilai tugas berhasil disimpan dan nilai harian diperbarui.'
+            : 'Komentar tugas berhasil disimpan.');
     }
 
     public function downloadFile(KelasMapel $kelasMapel, Tugas $tugas, PengumpulanFile $file)
@@ -386,6 +425,26 @@ class TugasController extends Controller
             'sas' => $existing?->sas,
             'sat' => $existing?->sat,
         ]);
+    }
+
+    private function latePenaltyPoints(?PengumpulanTugas $pengumpulan, Tugas $tugas): float
+    {
+        if (!$pengumpulan?->tanggal_kumpul || !$tugas->batas_waktu) {
+            return 0.0;
+        }
+
+        $pointsPerDay = max(0, round((float) Pengaturan::getValue('penalty_terlambat_poin', '1'), 2));
+        if ($pointsPerDay <= 0) {
+            return 0.0;
+        }
+
+        // Selisih hari kalender antara tanggal kumpul dan tanggal batas waktu.
+        // 1 hari keterlambatan = 1 poin (atau sesuai pengaturan per hari).
+        $deadlineDay = $tugas->batas_waktu->copy()->startOfDay();
+        $submitDay = $pengumpulan->tanggal_kumpul->copy()->startOfDay();
+        $daysLate = (int) max(0, $deadlineDay->diffInDays($submitDay, false));
+
+        return round($daysLate * $pointsPerDay, 2);
     }
 
     private function downloadPengumpulanPath(?string $path, string $downloadName)

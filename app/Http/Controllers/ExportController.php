@@ -174,7 +174,7 @@ class ExportController extends Controller
         $tugasList = Tugas::with(['kelasMapel.mataPelajaran', 'kelasMapel.guru'])
             ->whereHas('kelasMapel', fn($q) => $q->where('kelas_id', $kelasId)->where('tahun_ajaran_id', $taAktif?->id)->where('semester', $semester))
             ->withCount(['pengumpulan as sudah_kumpul' => fn($q) => $q
-                ->whereIn('status', ['sudah', 'terlambat', 'dinilai'])
+                ->whereIn('status', PengumpulanTugas::STATUS_SUBMITTED)
                 ->whereHas('siswa', fn($siswa) => $siswa->where('kelas_id', $kelasId)->where('status', 'aktif'))])
             ->orderBy('created_at', 'desc')
             ->get();
@@ -528,7 +528,7 @@ class ExportController extends Controller
 
         $rows = $query->orderBy('batas_waktu', 'desc')->get()->values()->map(function (Tugas $item, int $index) {
             $total = $item->pengumpulan->count();
-            $sudah = $item->pengumpulan->whereIn('status', ['sudah', 'terlambat', 'dinilai'])->count();
+            $sudah = $item->pengumpulan->whereIn('status', PengumpulanTugas::STATUS_SUBMITTED)->count();
 
             return [
                 $index + 1,
@@ -727,7 +727,7 @@ class ExportController extends Controller
         $totalSiswa = Siswa::where('kelas_id', $kelasMapel->kelas_id)->where('status', 'aktif')->count();
         $rows = Tugas::where('kelas_mapel_id', $kelasMapel->id)
             ->withCount(['pengumpulan as sudah_mengumpulkan' => fn($q) => $q
-                ->whereIn('status', ['sudah', 'terlambat', 'dinilai'])
+                ->whereIn('status', PengumpulanTugas::STATUS_SUBMITTED)
                 ->whereHas('siswa', fn($siswa) => $siswa->where('kelas_id', $kelasMapel->kelas_id)->where('status', 'aktif'))])
             ->orderBy('created_at', 'desc')
             ->get()
@@ -770,7 +770,7 @@ class ExportController extends Controller
                 return [
                 $index + 1,
                 $siswa->user?->nama_lengkap ?? $siswa->nis,
-                ucfirst((string) ($item?->status ?? 'belum')),
+                ucfirst(str_replace('_', ' ', (string) ($item?->status ?? 'belum'))),
                 $item?->tanggal_kumpul?->format('d/m/Y H:i') ?? '-',
                 $item?->nilai ?? '-',
                 $item?->catatan ?? '-',

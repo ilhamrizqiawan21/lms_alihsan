@@ -9,16 +9,20 @@ const props = defineProps({
 
 const openTasks = () => props.tugas.filter((item) => !item.status).length;
 
+const statusMap = {
+    belum: { color: 'warning text-dark', label: 'Belum Dikumpul' },
+    sudah: { color: 'success', label: 'Sudah' },
+    terlambat: { color: 'danger', label: 'Terlambat' },
+    dinilai: { color: 'primary', label: 'Dinilai' },
+    perlu_perbaikan: { color: 'warning', label: 'Perlu Perbaikan' },
+};
+
 function statusColor(status) {
-    return {
-        sudah: 'success',
-        dinilai: 'primary',
-        terlambat: 'danger',
-    }[status] ?? 'warning text-dark';
+    return statusMap[status]?.color ?? 'warning text-dark';
 }
 
 function statusLabel(status) {
-    return status ? status.replace(/\b\w/g, (char) => char.toUpperCase()) : 'Belum Dikumpul';
+    return statusMap[status]?.label ?? (status ? status.replace(/\b\w/g, (char) => char.toUpperCase()) : 'Belum Dikumpul');
 }
 </script>
 
@@ -46,7 +50,15 @@ function statusLabel(status) {
                 </div>
             </div>
             <TableWrapper v-if="tugas.length">
-                <table class="table table-hover mb-0">
+                <table class="table table-hover mb-0 app-table-proportional">
+                    <colgroup>
+                        <col style="width:30%">
+                        <col style="width:16%">
+                        <col style="width:12%">
+                        <col style="width:13%">
+                        <col style="width:9%">
+                        <col style="width:20%">
+                    </colgroup>
                     <thead>
                         <tr>
                             <th>Judul</th>
@@ -59,7 +71,7 @@ function statusLabel(status) {
                     </thead>
                     <tbody>
                         <tr v-for="item in tugas" :key="item.id">
-                            <td><a :href="item.show_url" class="text-decoration-none fw-bold">{{ item.judul }}</a></td>
+                            <td class="app-table-judul"><a :href="item.show_url" class="text-decoration-none fw-bold">{{ item.judul }}</a></td>
                             <td>
                                 <a v-if="item.workspace_url" :href="item.workspace_url" class="text-decoration-none">{{ item.mata_pelajaran }}</a>
                                 <span v-else>{{ item.mata_pelajaran }}</span>
