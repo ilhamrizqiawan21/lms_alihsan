@@ -165,12 +165,12 @@ async function destroy(item) {
                     <TableWrapper v-if="filteredTugas.length" class="d-none d-md-block">
                         <table class="table table-hover mb-0 app-table-proportional">
                             <colgroup>
-                                <col style="width:34%">
-                                <col style="width:10%">
-                                <col style="width:16%">
-                                <col style="width:12%">
-                                <col style="width:15%">
+                                <col style="width:26%">
+                                <col style="width:11%">
+                                <col style="width:14%">
                                 <col style="width:13%">
+                                <col style="width:18%">
+                                <col style="width:18%">
                             </colgroup>
                             <thead>
                                 <tr>

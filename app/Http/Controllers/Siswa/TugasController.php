@@ -19,8 +19,20 @@ class TugasController extends Controller
 {
     private const MAX_UPLOAD_FILES = 5;
     private const UPLOAD_MAX_KB = 5120;
+    private const UPLOAD_TOTAL_MAX_KB = 20480;
     private const UPLOAD_EXTENSIONS = 'jpg,jpeg,pdf';
-    private const UPLOAD_MIMETYPES = 'image/jpeg,application/pdf';
+
+    /**
+     * Aturan validasi satu file tugas.
+     * Sengaja TANPA validasi MIME/konten (mimetypes/mimes) karena tebakan
+     * MIME server tidak konsisten antar perangkat dan sering menolak file
+     * .jpg/.pdf yang sah walau ukurannya di bawah batas. Cukup validasi
+     * ekstensi + ukuran, konsisten dengan validasi di sisi frontend.
+     */
+    public static function uploadFileRules(): string
+    {
+        return 'nullable|file|extensions:' . self::UPLOAD_EXTENSIONS . '|max:' . self::UPLOAD_MAX_KB;
+    }
 
     public function index()
     {
@@ -114,7 +126,7 @@ class TugasController extends Controller
         $user = Auth::user();
         $siswa = $user->siswa;
 
-        $fileRules = 'nullable|file|extensions:' . self::UPLOAD_EXTENSIONS . '|mimetypes:' . self::UPLOAD_MIMETYPES . '|max:' . self::UPLOAD_MAX_KB;
+        $fileRules = self::uploadFileRules();
         $validated = $request->validate([
             'files' => 'nullable|array|max:' . self::MAX_UPLOAD_FILES,
             'file_upload' => $fileRules,
@@ -123,13 +135,11 @@ class TugasController extends Controller
         ], [
             'file_upload.file' => 'Upload harus berupa file.',
             'file_upload.extensions' => 'Ekstensi file harus .jpg, .jpeg, atau .pdf.',
-            'file_upload.mimetypes' => 'Jenis file tidak sesuai. Hanya JPG/JPEG atau PDF yang diperbolehkan.',
             'file_upload.max' => 'Ukuran file maksimal 5MB.',
             'files.array' => 'Upload file tidak valid. Silakan pilih file ulang.',
             'files.max' => 'Maksimal ' . self::MAX_UPLOAD_FILES . ' file untuk satu pengumpulan tugas.',
             'files.*.file' => 'Upload harus berupa file.',
             'files.*.extensions' => 'Ekstensi file harus .jpg, .jpeg, atau .pdf.',
-            'files.*.mimetypes' => 'Jenis file tidak sesuai. Hanya JPG/JPEG atau PDF yang diperbolehkan.',
             'files.*.max' => 'Ukuran setiap file maksimal 5MB.',
         ]);
 
@@ -148,6 +158,19 @@ class TugasController extends Controller
 
         if ($totalUploadedFiles > self::MAX_UPLOAD_FILES) {
             return back()->withInput()->withErrors(['files' => 'Maksimal ' . self::MAX_UPLOAD_FILES . ' file untuk satu pengumpulan tugas.']);
+        }
+
+        $totalUploadBytes = 0;
+        if ($request->hasFile('file_upload')) {
+            $totalUploadBytes += (int) $request->file('file_upload')->getSize();
+        }
+        foreach (collect($request->file('files', []))->filter() as $file) {
+            $totalUploadBytes += (int) $file->getSize();
+        }
+
+        if ($totalUploadBytes > self::UPLOAD_TOTAL_MAX_KB * 1024) {
+            $limitMb = (int) (self::UPLOAD_TOTAL_MAX_KB / 1024);
+            return back()->withInput()->withErrors(['files' => 'Total ukuran file melebihi batas maksimal ' . $limitMb . 'MB.']);
         }
 
         $existingPengumpulan = PengumpulanTugas::where('tugas_id', $tugas->id)

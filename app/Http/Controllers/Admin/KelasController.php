@@ -110,15 +110,6 @@ class KelasController extends Controller
             ->with('success', 'Kelas berhasil dihapus.');
     }
 
-    /**
-     * Tampilkan daftar siswa dalam kelas.
-     */
-    public function siswa(Kelas $kelas)
-    {
-        $siswa = $kelas->siswa()->with('user')->where('status', 'aktif')->get();
-        return view('admin.kelas.siswa', compact('kelas', 'siswa'));
-    }
-
     private function normalizeNamaKelas(Request $request): void
     {
         $request->merge([

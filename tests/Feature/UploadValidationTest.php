@@ -18,6 +18,8 @@ class UploadValidationTest extends TestCase
 {
     public function test_tugas_upload_accepts_jpeg_and_pdf_extensions_without_mime_guessing(): void
     {
+        $fileRule = str_replace('nullable', 'required', TugasController::uploadFileRules());
+
         $validator = Validator::make([
             'files' => [
                 UploadedFile::fake()->createWithContent('KTP_Ilham.jpeg', 'konten gambar dari perangkat siswa'),
@@ -25,7 +27,7 @@ class UploadValidationTest extends TestCase
             ],
         ], [
             'files' => 'required|array|max:5',
-            'files.*' => 'required|file|extensions:jpg,jpeg,pdf|max:5120',
+            'files.*' => $fileRule,
         ]);
 
         $this->assertTrue($validator->passes(), $validator->errors()->first());

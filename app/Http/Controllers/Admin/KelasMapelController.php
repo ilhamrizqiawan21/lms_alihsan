@@ -46,14 +46,6 @@ class KelasMapelController extends Controller
         ]);
     }
 
-    public function create()
-    {
-        $kelas = Kelas::all(); $mapel = MataPelajaran::orderBy('urutan')->get();
-        $guru = User::whereHas('role', fn($q) => $q->where('nama_role', 'guru'))->where('is_active', true)->orderBy('nama_lengkap')->get();
-        $tahunAjaran = TahunAjaran::orderBy('tahun', 'desc')->get();
-        return view('admin.kelas-mapel.create', compact('kelas', 'mapel', 'guru', 'tahunAjaran'));
-    }
-
     public function store(Request $request)
     {
         $validated = $request->validate([
