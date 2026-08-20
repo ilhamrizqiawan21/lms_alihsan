@@ -1,4 +1,5 @@
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import '../css/responsive-polish.css';
 import { initColorMode } from './theme';
 
 function initLegacySidebar() {
