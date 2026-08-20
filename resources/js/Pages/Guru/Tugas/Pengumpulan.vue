@@ -107,7 +107,7 @@ function statusLabel(status) {
 
             <p v-if="tugas.deskripsi" class="text-muted small px-3 pt-3 mb-0">{{ tugas.deskripsi }}</p>
 
-            <TableWrapper v-if="filteredPengumpulan.length" class="d-none d-lg-block">
+            <TableWrapper v-if="filteredPengumpulan.length" class="d-none d-md-block">
                 <table class="table table-hover mb-0">
                     <thead>
                         <tr>
@@ -135,7 +135,7 @@ function statusLabel(status) {
                 </table>
             </TableWrapper>
 
-            <div v-if="filteredPengumpulan.length" class="app-mobile-list d-lg-none">
+            <div v-if="filteredPengumpulan.length" class="app-mobile-list d-md-none">
                 <div v-for="item in filteredPengumpulan" :key="item.key" class="app-mobile-list-item">
                     <div class="app-mobile-list-row">
                         <span>
