@@ -73,9 +73,9 @@ async function toggleActive(user) {
 }
 
 async function resetPassword(user) {
-    const confirmed = await window.confirmDialog?.(`Generate password sementara baru untuk ${user.nama_lengkap}?`, {
+    const confirmed = await window.confirmDialog?.(`Reset password ${user.nama_lengkap} kembali ke 123456?`, {
         title: 'Reset Password',
-        confirmText: 'Ya, generate password',
+        confirmText: 'Ya, reset ke 123456',
     });
 
     if (!confirmed) {
@@ -195,7 +195,7 @@ async function destroy(user) {
                                     />
                                     <IconButton
                                         icon="bi-key"
-                                        :label="`Reset password ${user.nama_lengkap}`"
+                                        :label="`Reset password ${user.nama_lengkap} ke 123456`"
                                         color="outline-warning"
                                         @click="resetPassword(user)"
                                     />
