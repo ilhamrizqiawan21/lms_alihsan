@@ -193,6 +193,7 @@ class TugasController extends Controller
     {
         $this->authorize('mengajar', $kelasMapel);
         $this->ensureTugasBelongsToKelasMapel($tugas, $kelasMapel);
+        $kelasMapel->loadMissing(['kelas', 'mataPelajaran']);
 
         $pengumpulan = PengumpulanTugas::with(['siswa.user', 'files'])
             ->where('tugas_id', $tugas->id)
@@ -204,6 +205,22 @@ class TugasController extends Controller
             ->where('status', 'aktif')
             ->orderBy('nis')
             ->get();
+
+        $missingSubmittedStudentIds = $pengumpulan->keys()
+            ->diff($siswa->pluck('id'))
+            ->values();
+
+        if ($missingSubmittedStudentIds->isNotEmpty()) {
+            $submittedStudents = Siswa::with('user')
+                ->whereIn('id', $missingSubmittedStudentIds)
+                ->orderBy('nis')
+                ->get();
+
+            $siswa = $siswa
+                ->concat($submittedStudents)
+                ->sortBy('nis', SORT_NATURAL)
+                ->values();
+        }
 
         return Inertia::render('Guru/Tugas/Pengumpulan', [
             'kelasMapel' => [
@@ -228,7 +245,7 @@ class TugasController extends Controller
                     'id' => $item?->id,
                     'key' => $item?->id ? 'pengumpulan-' . $item->id : 'siswa-' . $student->id,
                     'no' => $index + 1,
-                    'siswa' => $student->user?->nama_lengkap ?? $student->nis,
+                    'siswa' => $student->user?->nama_lengkap ?: ($student->user?->username ?: $student->nis),
                     'nis' => $student->nis,
                     'status' => $item?->status ?? 'belum',
                     'tanggal_kumpul' => $item?->tanggal_kumpul?->format('d/m/Y H:i'),
@@ -241,9 +258,9 @@ class TugasController extends Controller
                         'id' => $file->id,
                         'name' => $file->file_name,
                         'url' => route('guru.tugas.file.download', [$kelasMapel, $tugas, $file]),
-                    ])->values() ?? [],
+                    ])->values()->all() ?? [],
                 ];
-            })->values(),
+            })->values()->all(),
         ]);
     }
 

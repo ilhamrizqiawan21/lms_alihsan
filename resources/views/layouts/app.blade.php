@@ -66,6 +66,19 @@
     <meta name="application-name" content="{{ $layoutAppName }}">
     <meta name="theme-color" content="{{ $layoutPrimaryColor }}">
     <title>@yield('title', $layoutAppName . ' - ' . $layoutSchoolName)</title>
+    <script>
+        (() => {
+            const key = 'lms.color-mode';
+            const stored = (() => {
+                try { return window.localStorage.getItem(key); } catch { return null; }
+            })();
+            const mode = ['light', 'dark'].includes(stored)
+                ? stored
+                : (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-bs-theme', mode);
+            document.documentElement.style.colorScheme = mode;
+        })();
+    </script>
     <link rel="icon" href="{{ $layoutFaviconUrl }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -308,6 +321,9 @@
                 </ul>
             </div>
             @endif
+            <button class="btn btn-sm topbar-icon-btn theme-toggle-btn" type="button" data-theme-toggle aria-label="Aktifkan mode gelap" title="Aktifkan mode gelap" aria-pressed="false">
+                <i class="bi bi-moon-stars-fill" data-theme-toggle-icon aria-hidden="true"></i>
+            </button>
             <span class="d-none d-lg-inline me-2 topbar-user-name">{{ auth()->user()->nama_lengkap }}</span>
             <div class="dropdown">
                 <button class="btn btn-sm dropdown-toggle topbar-account-btn" type="button" data-bs-toggle="dropdown" aria-label="Menu akun">

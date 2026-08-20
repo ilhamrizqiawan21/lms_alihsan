@@ -1,4 +1,5 @@
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import { initColorMode } from './theme';
 
 function initLegacySidebar() {
     const sidebar = document.getElementById('sidebar');
@@ -189,5 +190,6 @@ document.addEventListener('submit', (event) => {
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
+    initColorMode();
     initLegacySidebar();
 });

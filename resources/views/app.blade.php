@@ -51,6 +51,19 @@
     <meta name="application-name" content="{{ $inertiaAppName }}">
     <meta name="theme-color" content="{{ $inertiaActiveTheme['primary'] }}">
     <title inertia>{{ $inertiaAppName }} - {{ $inertiaSchoolName }}</title>
+    <script>
+        (() => {
+            const key = 'lms.color-mode';
+            const stored = (() => {
+                try { return window.localStorage.getItem(key); } catch { return null; }
+            })();
+            const mode = ['light', 'dark'].includes(stored)
+                ? stored
+                : (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-bs-theme', mode);
+            document.documentElement.style.colorScheme = mode;
+        })();
+    </script>
     <link rel="icon" href="{{ $inertiaFaviconUrl }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

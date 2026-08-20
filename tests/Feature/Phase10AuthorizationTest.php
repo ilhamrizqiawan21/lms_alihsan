@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Kelas;
 use App\Models\KelasMapel;
 use App\Models\MataPelajaran;
+use App\Models\PengumpulanTugas;
 use App\Models\Role;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
@@ -19,6 +20,79 @@ use Tests\TestCase;
 class Phase10AuthorizationTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_guru_can_open_task_menu_with_assigned_class_links(): void
+    {
+        [, $guruA, , $kelas, $tahunAjaran] = $this->fixture();
+        $mapel = MataPelajaran::create([
+            'kode' => 'TGS',
+            'nama_mapel' => 'Tugas Regression',
+            'urutan' => 1,
+        ]);
+
+        $kelasMapel = KelasMapel::create([
+            'kelas_id' => $kelas->id,
+            'mapel_id' => $mapel->id,
+            'guru_id' => $guruA->id,
+            'tahun_ajaran_id' => $tahunAjaran->id,
+            'semester' => '1',
+            'pertemuan_per_minggu' => 2,
+        ]);
+
+        $this->actingAs($guruA)
+            ->get(route('guru.tugas.index'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Guru/Tugas/Index')
+                ->has('kelasMapel', 1)
+                ->where('kelasMapel.0.id', $kelasMapel->id)
+                ->where('kelasMapel.0.href', route('guru.tugas.list', $kelasMapel))
+            );
+    }
+
+    public function test_guru_task_submissions_include_student_name_and_submission_data(): void
+    {
+        [, $guruA, , $kelas, $tahunAjaran] = $this->fixture();
+        $mapel = MataPelajaran::create(['kode' => 'SUB', 'nama_mapel' => 'Submission Test', 'urutan' => 1]);
+        $kelasMapel = KelasMapel::create([
+            'kelas_id' => $kelas->id,
+            'mapel_id' => $mapel->id,
+            'guru_id' => $guruA->id,
+            'tahun_ajaran_id' => $tahunAjaran->id,
+            'semester' => '1',
+            'pertemuan_per_minggu' => 2,
+        ]);
+        $tugas = Tugas::create([
+            'kelas_mapel_id' => $kelasMapel->id,
+            'judul' => 'Tugas Submission Test',
+            'batas_waktu' => now()->addDay(),
+            'kategori_nilai' => 'NH',
+        ]);
+        $studentUser = $this->createUser('siswa-submission', 'Nama Siswa Submission', 'siswa');
+        $student = Siswa::create([
+            'user_id' => $studentUser->id,
+            'nis' => '9101',
+            'kelas_id' => $kelas->id,
+            'status' => 'aktif',
+        ]);
+        PengumpulanTugas::create([
+            'tugas_id' => $tugas->id,
+            'siswa_id' => $student->id,
+            'status' => 'sudah',
+            'teks_jawaban' => 'Jawaban siswa',
+            'tanggal_kumpul' => now(),
+        ]);
+
+        $this->actingAs($guruA)
+            ->get(route('guru.tugas.pengumpulan', [$kelasMapel, $tugas]))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Guru/Tugas/Pengumpulan')
+                ->where('pengumpulan.0.siswa', 'Nama Siswa Submission')
+                ->where('pengumpulan.0.status', 'sudah')
+                ->where('pengumpulan.0.teks_jawaban', 'Jawaban siswa')
+            );
+    }
 
     public function test_guru_cannot_delete_another_gurus_task_by_id(): void
     {

@@ -184,7 +184,137 @@
     color: var(--bs-danger-text-emphasis);
 }
 
+.theme-toggle-btn {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    padding: 0 !important;
+}
+
+.theme-toggle-btn i {
+    margin: 0 !important;
+}
+
 /* Bootstrap surfaces follow the active color scheme instead of fixed light colors. */
+[data-bs-theme="dark"] {
+    --app-bg: #0f172a;
+    --surface-body: #0f172a;
+    --surface-card: #111827;
+    --surface-muted: #1e293b;
+    --text-strong: #f8fafc;
+    --text-body: #cbd5e1;
+    --text-muted: #94a3b8;
+    --modern-border: rgba(148, 163, 184, 0.24);
+    --modern-shadow: 0 16px 38px rgba(0, 0, 0, 0.36);
+    --modern-shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.26);
+    --bs-body-bg: #0f172a;
+    --bs-body-color: #dbe4f0;
+    --bs-tertiary-bg: #172033;
+    --bs-secondary-bg: #1e293b;
+    --bs-border-color: rgba(148, 163, 184, 0.28);
+    --bs-border-color-translucent: rgba(148, 163, 184, 0.22);
+    --bs-emphasis-color: #f8fafc;
+    --bs-secondary-color: #94a3b8;
+}
+
+[data-bs-theme="dark"] body {
+    background:
+        linear-gradient(180deg, rgba(15, 23, 42, 0.82), rgba(15, 23, 42, 0) 220px),
+        var(--surface-body);
+}
+
+[data-bs-theme="dark"] .modern-sidebar,
+[data-bs-theme="dark"] .modern-topbar {
+    background: rgba(17, 24, 39, 0.92);
+    color: var(--text-body);
+}
+
+[data-bs-theme="dark"] .modern-sidebar {
+    box-shadow: 8px 0 30px rgba(0, 0, 0, 0.22);
+}
+
+[data-bs-theme="dark"] .modern-topbar {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+}
+
+[data-bs-theme="dark"] .modern-sidebar .sidebar-logo-icon,
+[data-bs-theme="dark"] .modern-sidebar .sidebar-user-avatar,
+[data-bs-theme="dark"] .modern-topbar .topbar-toggle-btn,
+[data-bs-theme="dark"] .modern-topbar .topbar-icon-btn,
+[data-bs-theme="dark"] .modern-topbar .topbar-account-btn,
+[data-bs-theme="dark"] .modern-topbar .topbar-actions .dropdown-toggle,
+[data-bs-theme="dark"] .topbar-search,
+[data-bs-theme="dark"] .topbar-search kbd {
+    background: #1e293b !important;
+    color: var(--text-strong) !important;
+    border-color: var(--modern-border) !important;
+}
+
+[data-bs-theme="dark"] .modern-topbar .topbar-toggle-btn:hover,
+[data-bs-theme="dark"] .modern-topbar .topbar-icon-btn:hover,
+[data-bs-theme="dark"] .modern-topbar .topbar-account-btn:hover {
+    background: #253449 !important;
+}
+
+[data-bs-theme="dark"] .modern-sidebar .nav-link:hover,
+[data-bs-theme="dark"] .modern-sidebar .nav-link.active,
+[data-bs-theme="dark"] .workspace-tab:hover,
+[data-bs-theme="dark"] .workspace-tab.is-active,
+[data-bs-theme="dark"] .mobile-bottom-link.active {
+    background: color-mix(in srgb, var(--primary-500) 20%, #111827);
+}
+
+[data-bs-theme="dark"] .card,
+[data-bs-theme="dark"] .workspace-panel,
+[data-bs-theme="dark"] .metric-tile,
+[data-bs-theme="dark"] .workspace-tabs,
+[data-bs-theme="dark"] .command-palette,
+[data-bs-theme="dark"] .mobile-bottom-nav {
+    background: var(--surface-card);
+    border-color: var(--modern-border);
+}
+
+[data-bs-theme="dark"] .dashboard-hero {
+    background:
+        linear-gradient(135deg, rgba(17, 24, 39, 0.96), rgba(15, 23, 42, 0.92)),
+        linear-gradient(135deg, color-mix(in srgb, var(--primary-500) 22%, transparent), transparent);
+}
+
+[data-bs-theme="dark"] .quick-action.btn-light,
+[data-bs-theme="dark"] .btn-light {
+    background: #1e293b;
+    border-color: var(--modern-border);
+    color: var(--text-strong);
+}
+
+[data-bs-theme="dark"] .workspace-summary-item:hover,
+[data-bs-theme="dark"] .action-queue-link:hover,
+[data-bs-theme="dark"] .command-palette-item:hover,
+[data-bs-theme="dark"] .command-palette-item:focus-visible,
+[data-bs-theme="dark"] .command-palette-item.is-active {
+    background: #172033;
+}
+
+[data-bs-theme="dark"] .workspace-summary-icon {
+    background: #1e293b;
+}
+
+[data-bs-theme="dark"] .course-card {
+    background:
+        linear-gradient(135deg, color-mix(in srgb, var(--course-accent) 16%, #111827), #111827 58%),
+        #111827;
+}
+
+[data-bs-theme="dark"] .dashboard-hero-admin .dashboard-hero-orbit,
+[data-bs-theme="dark"] .dashboard-hero-teacher .dashboard-hero-orbit,
+[data-bs-theme="dark"] .dashboard-hero-student .dashboard-hero-orbit,
+[data-bs-theme="dark"] .metric-icon,
+[data-bs-theme="dark"] .course-card-mark,
+[data-bs-theme="dark"] .action-queue-icon,
+[data-bs-theme="dark"] .empty-state-icon {
+    background: color-mix(in srgb, currentColor 18%, #111827);
+}
+
 [data-bs-theme="dark"] .searchable-select-menu,
 [data-bs-theme="dark"] .app-table-wrapper,
 [data-bs-theme="dark"] .modal-content,
