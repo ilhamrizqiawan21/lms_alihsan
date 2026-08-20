@@ -16,6 +16,15 @@ class RequirePasswordChange
             return $next($request);
         }
 
+        $role = $user->role?->nama_role;
+
+        // Students may continue using the default password. Password changes
+        // remain available from the account settings page, but are no longer
+        // mandatory for the siswa role.
+        if ($role === 'siswa') {
+            return $next($request);
+        }
+
         if (
             $request->routeIs('*.pengaturan-akun') ||
             $request->routeIs('*.pengaturan') ||
@@ -29,11 +38,9 @@ class RequirePasswordChange
             return $next($request);
         }
 
-        $role = $user->role?->nama_role;
         $route = match ($role) {
             'admin' => 'admin.pengaturan-akun',
             'guru' => 'guru.pengaturan',
-            'siswa' => 'siswa.pengaturan',
             'kepala_sekolah' => 'kepsek.pengaturan',
             default => null,
         };
