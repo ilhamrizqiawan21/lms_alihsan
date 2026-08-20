@@ -162,15 +162,15 @@ async function destroy(item) {
                         </div>
                     </template>
 
-                    <TableWrapper v-if="filteredTugas.length" class="d-none d-md-block">
-                        <table class="table table-hover mb-0 app-table-proportional">
+                    <TableWrapper v-if="filteredTugas.length" :min-width="980" class="d-none d-md-block">
+                        <table class="table table-hover mb-0 app-table-proportional assignment-table">
                             <colgroup>
-                                <col style="width:26%">
+                                <col style="width:28%">
                                 <col style="width:11%">
-                                <col style="width:14%">
                                 <col style="width:13%">
-                                <col style="width:18%">
-                                <col style="width:18%">
+                                <col style="width:12%">
+                                <col style="width:21%">
+                                <col style="width:15%">
                             </colgroup>
                             <thead>
                                 <tr>
@@ -186,7 +186,7 @@ async function destroy(item) {
                                 <tr v-for="item in filteredTugas" :key="item.id">
                                     <td class="app-table-judul">
                                         <strong>{{ item.judul }}</strong>
-                                        <div v-if="item.deskripsi" class="text-muted small">{{ item.deskripsi }}</div>
+                                        <div v-if="item.deskripsi" class="text-muted small assignment-description">{{ item.deskripsi }}</div>
                                     </td>
                                     <td>{{ item.kelas }}</td>
                                     <td>{{ item.mata_pelajaran }}</td>
@@ -202,7 +202,7 @@ async function destroy(item) {
                                             <small v-if="item.perlu_dinilai" class="text-danger">{{ item.perlu_dinilai }} perlu dinilai</small>
                                         </div>
                                     </td>
-                                    <td>
+                                    <td class="assignment-actions">
                                         <div class="d-inline-flex align-items-center gap-1">
                                             <a v-if="item.pengumpulan_url" :href="item.pengumpulan_url" class="btn btn-sm btn-outline-primary">
                                                 <i class="bi bi-eye me-1" aria-hidden="true"></i> Nilai
@@ -316,16 +316,66 @@ async function destroy(item) {
     padding-left: 30px;
 }
 
+.assignment-table {
+    width: 100%;
+    min-width: 980px;
+}
+
+.assignment-table th,
+.assignment-table td {
+    padding: 0.72rem 0.7rem;
+}
+
+.assignment-table td.app-table-judul {
+    max-width: 0;
+}
+
+.assignment-table td.app-table-judul strong,
+.assignment-description {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.assignment-table td.app-table-judul strong {
+    -webkit-line-clamp: 2;
+}
+
+.assignment-description {
+    -webkit-line-clamp: 2;
+}
+
 .assignment-progress {
     display: grid;
     gap: 4px;
-    min-width: 120px;
+    min-width: 0;
 }
 
 .assignment-progress .progress,
 .app-mobile-list .progress {
     height: 6px;
     background: var(--gray-100);
+}
+
+.assignment-actions {
+    white-space: nowrap !important;
+}
+
+.assignment-actions .d-inline-flex {
+    max-width: 100%;
+}
+
+@media (max-width: 1199.98px) and (min-width: 768px) {
+    .assignment-table {
+        min-width: 900px;
+    }
+
+    .assignment-table th,
+    .assignment-table td {
+        padding-left: 0.55rem;
+        padding-right: 0.55rem;
+    }
 }
 
 @media (max-width: 767.98px) {
