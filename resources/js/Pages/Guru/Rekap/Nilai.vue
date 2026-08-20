@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { router } from '@inertiajs/vue3';
 import AppShell from '../../../Layouts/AppShell.vue';
 import PageHeader from '../../../Components/AppShell/PageHeader.vue';
-import { Card, EmptyState } from '../../../Components/UI';
+import { Card, EmptyState, TableWrapper } from '../../../Components/UI';
 
 const props = defineProps({
     title: { type: String, default: 'Rekap Nilai Siswa' },
@@ -18,31 +18,141 @@ const selectedSemester = ref(props.semester);
 function filter() {
     router.get('/guru/rekap-nilai', { kelas_mapel_id: selectedKelas.value || undefined, semester: selectedSemester.value }, { preserveState: true, replace: true });
 }
+
 function reset() {
     selectedKelas.value = '';
     router.get('/guru/rekap-nilai', { semester: selectedSemester.value }, { preserveState: true, replace: true });
 }
-function page(page) {
-    router.get('/guru/rekap-nilai', { kelas_mapel_id: selectedKelas.value || undefined, semester: selectedSemester.value, page }, { preserveState: true, replace: true });
+
+function page(pageNumber) {
+    router.get('/guru/rekap-nilai', {
+        kelas_mapel_id: selectedKelas.value || undefined,
+        semester: selectedSemester.value,
+        page: pageNumber,
+    }, { preserveState: true, replace: true });
 }
 </script>
 
 <template>
     <AppShell title="Rekap Nilai">
         <PageHeader title="Rekap Nilai Siswa" subtitle="Rekap nilai dari kelas dan mata pelajaran yang Anda ampu." icon="bi-file-earmark-bar-graph-fill" />
+
         <Card class="mb-4">
-            <form class="row g-3 align-items-end" @submit.prevent="filter">
-                <div class="col-md-5"><label class="form-label">Kelas & Mata Pelajaran</label><select v-model="selectedKelas" class="form-select"><option value="">Semua Kelas & Mapel</option><option v-for="item in kelasMapel" :key="item.id" :value="String(item.id)">{{ item.label }}</option></select></div>
-                <div class="col-md-3"><label class="form-label">Semester</label><select v-model="selectedSemester" class="form-select"><option value="1">Semester 1</option><option value="2">Semester 2</option></select></div>
-                <div class="col-md-2"><button class="btn btn-primary w-100" type="submit"><i class="bi bi-search me-1"></i>Tampilkan</button></div>
-                <div class="col-md-2"><button class="btn btn-outline-secondary w-100" type="button" @click="reset">Reset</button></div>
+            <form class="row g-3 align-items-end app-table-filter" @submit.prevent="filter">
+                <div class="col-12 col-md-5">
+                    <label class="form-label" for="rekap-nilai-kelas">Kelas & Mata Pelajaran</label>
+                    <select id="rekap-nilai-kelas" v-model="selectedKelas" class="form-select">
+                        <option value="">Semua Kelas & Mapel</option>
+                        <option v-for="item in kelasMapel" :key="item.id" :value="String(item.id)">{{ item.label }}</option>
+                    </select>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label" for="rekap-nilai-semester">Semester</label>
+                    <select id="rekap-nilai-semester" v-model="selectedSemester" class="form-select">
+                        <option value="1">Semester 1</option>
+                        <option value="2">Semester 2</option>
+                    </select>
+                </div>
+                <div class="col-12 col-sm-6 col-md-2 d-grid">
+                    <button class="btn btn-primary" type="submit"><i class="bi bi-search me-1" aria-hidden="true"></i>Tampilkan</button>
+                </div>
+                <div class="col-12 col-md-2 d-grid">
+                    <button class="btn btn-outline-secondary" type="button" @click="reset">Reset</button>
+                </div>
             </form>
         </Card>
+
         <Card body-class="p-0">
-            <div class="d-flex justify-content-between align-items-center px-3 py-3 border-bottom"><strong>Data Nilai</strong><span class="badge text-bg-secondary">{{ nilai.total ?? 0 }} siswa</span></div>
-            <div v-if="!nilai.data?.length" class="p-5"><EmptyState title="Tidak ada data nilai." icon="bi-inbox" /></div>
-            <div v-else class="table-responsive"><table class="table table-hover align-middle mb-0" style="min-width: 1050px"><thead class="table-light"><tr><th>#</th><th>Nama Siswa</th><th>Kelas</th><th>Mapel</th><th>SUM1</th><th>SUM2</th><th>SUM3</th><th>SUM4</th><th>Harian</th><th>STS</th><th>SAS</th><th>SAT</th><th>Rata²</th><th>Predikat</th></tr></thead><tbody><tr v-for="(row, index) in nilai.data" :key="row.id"><td>{{ (nilai.from || 1) + index }}</td><td>{{ row.siswa?.user?.nama_lengkap || row.siswa?.nis || '-' }}</td><td>{{ row.siswa?.kelas?.nama_kelas || '-' }}</td><td>{{ row.kelas_mapel?.mata_pelajaran?.nama_mapel || row.kelasMapel?.mataPelajaran?.nama_mapel || '-' }}</td><td>{{ row.sum1 ?? '-' }}</td><td>{{ row.sum2 ?? '-' }}</td><td>{{ row.sum3 ?? '-' }}</td><td>{{ row.sum4 ?? '-' }}</td><td>{{ row.nilai_harian ?? '-' }}</td><td>{{ row.sts ?? '-' }}</td><td>{{ row.sas ?? '-' }}</td><td>{{ row.sat ?? '-' }}</td><td><strong>{{ row.rata_akhir != null ? Number(row.rata_akhir).toFixed(1) : '-' }}</strong></td><td><span v-if="row.rata_akhir != null" class="badge" :class="row.rata_akhir >= 92 ? 'text-bg-success' : row.rata_akhir >= 83 ? 'text-bg-primary' : row.rata_akhir >= 75 ? 'text-bg-warning' : 'text-bg-danger'">{{ row.rata_akhir >= 92 ? 'A' : row.rata_akhir >= 83 ? 'B' : row.rata_akhir >= 75 ? 'C' : 'D' }}</span><span v-else>-</span></td></tr></tbody></table></div>
-            <div v-if="nilai.last_page > 1" class="p-3 border-top d-flex justify-content-between align-items-center"><span class="text-muted small">Halaman {{ nilai.current_page }} dari {{ nilai.last_page }}</span><div class="d-flex gap-2"><button class="btn btn-sm btn-outline-secondary" :disabled="nilai.current_page <= 1" @click="page(nilai.current_page - 1)">Sebelumnya</button><button class="btn btn-sm btn-outline-secondary" :disabled="nilai.current_page >= nilai.last_page" @click="page(nilai.current_page + 1)">Berikutnya</button></div></div>
+            <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap px-3 py-3 border-bottom">
+                <strong>Data Nilai</strong>
+                <span class="badge text-bg-secondary">{{ nilai.total ?? 0 }} siswa</span>
+            </div>
+
+            <div v-if="!nilai.data?.length" class="p-5">
+                <EmptyState title="Tidak ada data nilai." icon="bi-inbox" />
+            </div>
+
+            <TableWrapper v-else :min-width="1100">
+                <table class="table table-hover align-middle mb-0 app-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col" class="text-center">#</th>
+                            <th scope="col" class="min-w-student">Nama Siswa</th>
+                            <th scope="col">Kelas</th>
+                            <th scope="col" class="min-w-subject">Mapel</th>
+                            <th scope="col" class="text-center">SUM1</th>
+                            <th scope="col" class="text-center">SUM2</th>
+                            <th scope="col" class="text-center">SUM3</th>
+                            <th scope="col" class="text-center">SUM4</th>
+                            <th scope="col" class="text-center">Harian</th>
+                            <th scope="col" class="text-center">STS</th>
+                            <th scope="col" class="text-center">SAS</th>
+                            <th scope="col" class="text-center">SAT</th>
+                            <th scope="col" class="text-center">Rata²</th>
+                            <th scope="col" class="text-center">Predikat</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(row, index) in nilai.data" :key="row.id">
+                            <td class="text-center text-muted">{{ (nilai.from || 1) + index }}</td>
+                            <td>{{ row.siswa?.user?.nama_lengkap || row.siswa?.nis || '-' }}</td>
+                            <td>{{ row.siswa?.kelas?.nama_kelas || '-' }}</td>
+                            <td>{{ row.kelas_mapel?.mata_pelajaran?.nama_mapel || row.kelasMapel?.mataPelajaran?.nama_mapel || '-' }}</td>
+                            <td class="text-center">{{ row.sum1 ?? '-' }}</td>
+                            <td class="text-center">{{ row.sum2 ?? '-' }}</td>
+                            <td class="text-center">{{ row.sum3 ?? '-' }}</td>
+                            <td class="text-center">{{ row.sum4 ?? '-' }}</td>
+                            <td class="text-center">{{ row.nilai_harian ?? '-' }}</td>
+                            <td class="text-center">{{ row.sts ?? '-' }}</td>
+                            <td class="text-center">{{ row.sas ?? '-' }}</td>
+                            <td class="text-center">{{ row.sat ?? '-' }}</td>
+                            <td class="text-center">
+                                <strong>{{ row.rata_akhir != null ? Number(row.rata_akhir).toFixed(1) : '-' }}</strong>
+                            </td>
+                            <td class="text-center">
+                                <span
+                                    v-if="row.rata_akhir != null"
+                                    class="badge"
+                                    :class="row.rata_akhir >= 92 ? 'text-bg-success' : row.rata_akhir >= 83 ? 'text-bg-primary' : row.rata_akhir >= 75 ? 'text-bg-warning' : 'text-bg-danger'"
+                                >
+                                    {{ row.rata_akhir >= 92 ? 'A' : row.rata_akhir >= 83 ? 'B' : row.rata_akhir >= 75 ? 'C' : 'D' }}
+                                </span>
+                                <span v-else>-</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </TableWrapper>
+
+            <div v-if="nilai.last_page > 1" class="p-3 border-top d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                <span class="text-muted small">Halaman {{ nilai.current_page }} dari {{ nilai.last_page }}</span>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-secondary" :disabled="nilai.current_page <= 1" @click="page(nilai.current_page - 1)">Sebelumnya</button>
+                    <button class="btn btn-sm btn-outline-secondary" :disabled="nilai.current_page >= nilai.last_page" @click="page(nilai.current_page + 1)">Berikutnya</button>
+                </div>
+            </div>
         </Card>
     </AppShell>
 </template>
+
+<style scoped>
+.min-w-student {
+    min-width: 180px;
+}
+
+.min-w-subject {
+    min-width: 160px;
+}
+
+.app-table th,
+.app-table td {
+    white-space: nowrap;
+}
+
+@media (max-width: 767.98px) {
+    .app-table th,
+    .app-table td {
+        font-size: 0.8rem;
+    }
+}
+</style>
