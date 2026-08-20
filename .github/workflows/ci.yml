@@ -3,9 +3,11 @@ name: CI
 on:
   push:
     branches:
+      - main
       - experimental/demo-lms
   pull_request:
     branches:
+      - main
       - experimental/demo-lms
 
 jobs:

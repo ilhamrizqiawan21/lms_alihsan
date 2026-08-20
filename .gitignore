@@ -26,5 +26,10 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 /.deepseek
-/docs/*
-!/docs/LMS_MODERN_UI_TODO.md
+
+# Local development / generated artifacts
+coverage/
+.phpunit.cache/
+
+# Keep project documentation versioned.
+# Do not add a blanket docs/ ignore rule here.
